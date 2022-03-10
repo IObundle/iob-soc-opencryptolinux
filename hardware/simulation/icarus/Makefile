@@ -12,24 +12,21 @@ SIM_PROC=a.out
 include ../simulation.mk
 
 ifeq ($(INIT_MEM),0)
-	CONSOLE_CMD+=-f
+CONSOLE_CMD+=-f
 endif
 
 #simulator flags
 VLOG = iverilog -W all -g2005-sv $(INCLUDE) $(DEFINE)
 
 #simulator object
-a.out: $(VSRC) $(VHDR) $(IMAGES)
+a.out:
 	$(VLOG) $(VSRC)
 
-.PHONY: run build clean debug
+.PHONY: run clean debug
 
-run: build
-	-pkill -f console
+run: a.out
 	$(CONSOLE_CMD) &
 	./a.out $(TEST_LOG)
-
-build: a.out
 
 clean: clean-remote
 	@rm -f a.out

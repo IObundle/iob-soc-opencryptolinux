@@ -11,7 +11,7 @@ module system_top (
    output                   trap,
    //tester uart
    input                    uart_valid,
-   input [`UART_ADDR_W-1:0] uart_addr,
+   input [`iob_uart_swreg_ADDR_W-1:0] uart_addr,
    input [`DATA_W-1:0]      uart_wdata,
    input [3:0]              uart_wstrb,
    output [`DATA_W-1:0]     uart_rdata,

@@ -6,14 +6,15 @@ TEST_BENCH:=0
 
 INCLUDE+=-I$(UART_DIR)/software -I$(FIRM_DIR)
 
-HDR:=$(UART_DIR)/software $(FIRM_DIR)/UARTsw_reg.h
+HDR:=$(UART_DIR)/software $(FIRM_DIR)/iob_uart_swreg.h
 
 CONSOLE_CMD=./console -s $(SERIAL)
 ifeq ($(INIT_MEM),0)
-	CONSOLE_CMD+=-f
+CONSOLE_CMD+=-f
 endif
+
 ifeq ($(TEST_BENCH),1)
-	CONSOLE_CMD+=-L
+CONSOLE_CMD+=-L
 endif
 
 $(FIRM_DIR)/firmware.bin: $(FIRM_DIR)/firmware.c
@@ -25,7 +26,7 @@ firmware.bin: $(FIRM_DIR)/firmware.bin
 run: firmware.bin
 	$(CONSOLE_CMD) $(TEST_LOG)
 
-clean:
-	rm -f *# *~ firmware.bin
+clean: gen-clean
+	@rm -f firmware.bin
 
 .PHONY: run clean
