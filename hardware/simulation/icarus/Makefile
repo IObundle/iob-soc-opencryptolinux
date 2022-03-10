@@ -27,6 +27,7 @@ a.out: $(VSRC) $(VHDR) $(IMAGES)
 run: build
 	-pkill -f console
 	$(CONSOLE_CMD) &
+	cp $(VEXRISCV_DIR)/VexRiscv/VexRiscv.v_toplevel_RegFilePlugin_regFile.bin ./
 	./a.out $(TEST_LOG)
 
 build: a.out

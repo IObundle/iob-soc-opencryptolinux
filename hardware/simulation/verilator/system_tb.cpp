@@ -101,7 +101,7 @@ int main(int argc, char **argv, char **env){
   FILE *cnsl2soc_fd;
   char cpu_char = 0;
   char rxread_reg = 0, txread_reg = 0;
-  int n = 0;
+  int n = 0, i = 0;
 
   while ((soc2cnsl_fd = fopen("./soc2cnsl", "rb+")) == NULL){
     //printf("Could not open \"soc2cnsl\"\n");
@@ -118,9 +118,10 @@ int main(int argc, char **argv, char **env){
         break;
     }
     while(!rxread_reg && !txread_reg){
-      //$write("Loop %d: RX = %x; TX = %x\n", i, rxread_reg[0], txread_reg[0]);
+      printf("Loop %d: RX = %x; TX = %x\n", i, rxread_reg, txread_reg);
       uartread(UART_RXREADY_ADDR, &rxread_reg);
       uartread(UART_TXREADY_ADDR, &txread_reg);
+      i = i+1;
     }
     if(rxread_reg){
       n = fread(&cpu_char, sizeof(char), 1, soc2cnsl_fd);
