@@ -68,6 +68,7 @@ Vsystem_top:
 #run the simulator
 run: Vsystem_top
 	$(CONSOLE_CMD) &
+	cp $(VEXRISCV_DIR)/VexRiscv/VexRiscv.v_toplevel_RegFilePlugin_regFile.bin ./
 	./Vsystem_top $(TEST_LOG)
 
 clean: clean-remote
