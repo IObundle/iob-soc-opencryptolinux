@@ -89,8 +89,8 @@ module system_tb;
           cpu_uartread(`UART_RXDATA_ADDR, cpu_char);
           $fwriteh(soc2cnsl_fd, "%c", cpu_char);
           rxread_reg = 0;
+          while($fseek(soc2cnsl_fd, 0, 0));
         end
-        n = $fseek(soc2cnsl_fd, 0, 0);
       end
       if(txread_reg) begin
         cnsl2soc_fd = $fopen("cnsl2soc", "r");
@@ -247,20 +247,20 @@ module system_tb;
 		 .s_axi_awcache  (ddr_awcache),
      		 .s_axi_awvalid  (ddr_awvalid),
 		 .s_axi_awready  (ddr_awready),
-      
+
 		 //write
 		 .s_axi_wvalid   (ddr_wvalid),
 		 .s_axi_wready   (ddr_wready),
 		 .s_axi_wdata    (ddr_wdata),
 		 .s_axi_wstrb    (ddr_wstrb),
                  .s_axi_wlast    (ddr_wlast),
-      
+
 		 //write response
 		 .s_axi_bready   (ddr_bready),
                  .s_axi_bid      (ddr_bid),
                  .s_axi_bresp    (ddr_bresp),
 		 .s_axi_bvalid   (ddr_bvalid),
-      
+
 		 //address read
 		 .s_axi_arid     ({8{ddr_arid}}),
 		 .s_axi_araddr   (ddr_araddr[`DDR_ADDR_W-1:0]),
@@ -305,7 +305,7 @@ module system_tb;
    wire [`SRAM_ADDR_W-1:0] sram_iaddr = uut.int_mem0.int_sram.i_addr;
    wire [`DATA_W-1:0] sram_irdata = uut.int_mem0.int_sram.i_rdata;
 
-   
+
    always @(posedge sram_dwstrb)
       if(sram_daddr == 13'h090d)  begin
          #10 $display("Found CPU memory condition at %f : %x : %x", $time, sram_daddr, sram_dwdata );
