@@ -126,7 +126,6 @@ int main(int argc, char **argv, char **env){
     while(!rxread_reg && !txread_reg){
       uartread(UART_RXREADY_ADDR, &rxread_reg);
       uartread(UART_TXREADY_ADDR, &txread_reg);
-      i = i+1;
     }
     if(rxread_reg){
       while(able2read != 0){
