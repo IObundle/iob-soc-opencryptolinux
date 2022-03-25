@@ -20,7 +20,7 @@ include $(MEM_DIR)/hardware/rom/iob_rom_sp/hardware.mk
 include $(MEM_DIR)/hardware/ram/iob_ram_dp_be/hardware.mk
 
 #CPU
-include $(PICORV32_DIR)/hardware/hardware.mk
+include $(VEXRISCV_DIR)/hardware/hardware.mk
 
 #CACHE
 include $(CACHE_DIR)/hardware/hardware.mk

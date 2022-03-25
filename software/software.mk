@@ -11,12 +11,16 @@ CFLAGS=-Os -nostdlib -march=$(MFLAGS) -mabi=ilp32 --specs=nano.specs -Wcast-alig
 LFLAGS+= -Wl,-Bstatic,-T,../template.lds,--strip-debug
 LLIBS=-lgcc -lc -lnosys
 
-MFLAGS=$(MFLAGS_BASE)$(MFLAG_M)$(MFLAG_C)
+MFLAGS=$(MFLAGS_BASE)$(MFLAG_M)$(MFLAG_A)$(MFLAG_C)
 
 MFLAGS_BASE:=rv32i
 
 ifeq ($(USE_MUL_DIV),1)
 MFLAG_M=m
+endif
+
+ifeq ($(USE_ATOMIC),1)
+MFLAG_A=a
 endif
 
 ifeq ($(USE_COMPRESSED),1)
