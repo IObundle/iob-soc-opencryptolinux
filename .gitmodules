@@ -15,4 +15,4 @@
 	url = git@github.com:IObundle/iob-lib.git
 [submodule "submodules/VEXRISCV"]
 	path = submodules/VEXRISCV
-	url = git@github.com:PedroAntunes178/iob-VexRiscv.git
+	url = git@github.com:PedroAntunes178/iob-vexriscv.git
