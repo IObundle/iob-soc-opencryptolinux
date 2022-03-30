@@ -158,6 +158,13 @@ module ext_mem
            .mem_rdata (dcache_be_resp[`rdata(0)]),
            .mem_ready (dcache_be_resp[`ready(0)])
            );
+`else
+`ifdef RUN_EXTMEM_USE_SRAM
+  wire [1+`DCACHE_ADDR_W+`WRITE_W-1:0]       i_be_req;
+  assign i_be_req = {i_req[1+`FIRM_ADDR_W-2+`WRITE_W-1], {(`DCACHE_ADDR_W-`FIRM_ADDR_W){1'b0}}, i_req[`address(0, `FIRM_ADDR_W-2)], i_req[`write(0)]};
+`endif
+  wire [1+`DCACHE_ADDR_W+`WRITE_W-1:0]       d_be_req;
+  assign d_be_req = {d_req[2+`DCACHE_ADDR_W-2+`WRITE_W-1], d_req[`address(0, `DCACHE_ADDR_W-1)], d_req[`write(0)]};
 `endif
 
    //l2 cache interface signals
@@ -207,10 +214,10 @@ module ext_mem
 `endif
 `else
 `ifdef RUN_EXTMEM_USE_SRAM
-      .m_req  ({i_req, d_req}),
+      .m_req  ({i_be_req, d_be_req}),
       .m_resp ({i_resp, d_resp}),
 `else
-      .m_req  (d_req),
+      .m_req  (d_be_req),
       .m_resp (d_resp),
 `endif
 `endif
