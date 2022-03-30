@@ -66,6 +66,28 @@ module ext_mem
     output                                   axi_rready
     );
 
+    //l2 cache interface signals
+    wire [1+`DCACHE_ADDR_W+`WRITE_W-1:0]       l2cache_req;
+    wire [`RESP_W-1:0]                        l2cache_resp;
+
+    //ext_mem control signals
+    wire                                      l2_wtb_empty;
+    wire                                      invalidate;
+    reg                                       invalidate_reg;
+    wire                                      l2_valid = l2cache_req[1+`DCACHE_ADDR_W+`WRITE_W-1];
+    //Necessary logic to avoid invalidating L2 while it's being accessed by a request
+    always @(posedge clk, posedge rst)
+      if (rst)
+        invalidate_reg <= 1'b0;
+      else
+        if (invalidate)
+          invalidate_reg <= 1'b1;
+        else
+          if(~l2_valid)
+            invalidate_reg <= 1'b0;
+          else
+            invalidate_reg <= invalidate_reg;
+
 `ifdef USE_L1_CACHE
 `ifdef RUN_EXTMEM_USE_SRAM
    //
@@ -166,28 +188,6 @@ module ext_mem
   wire [1+`DCACHE_ADDR_W+`WRITE_W-1:0]       d_be_req;
   assign d_be_req = {d_req[2+`DCACHE_ADDR_W-2+`WRITE_W-1], d_req[`address(0, `DCACHE_ADDR_W-1)], d_req[`write(0)]};
 `endif
-
-   //l2 cache interface signals
-   wire [1+`DCACHE_ADDR_W+`WRITE_W-1:0]       l2cache_req;
-   wire [`RESP_W-1:0]                        l2cache_resp;
-
-   //ext_mem control signals
-   wire                                      l2_wtb_empty;
-   wire                                      invalidate;
-   reg                                       invalidate_reg;
-   wire                                      l2_valid = l2cache_req[1+`DCACHE_ADDR_W+`WRITE_W-1];
-   //Necessary logic to avoid invalidating L2 while it's being accessed by a request
-   always @(posedge clk, posedge rst)
-     if (rst)
-       invalidate_reg <= 1'b0;
-     else
-       if (invalidate)
-         invalidate_reg <= 1'b1;
-       else
-         if(~l2_valid)
-           invalidate_reg <= 1'b0;
-         else
-           invalidate_reg <= invalidate_reg;
 
    // Merge cache back-ends
    iob_merge
