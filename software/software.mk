@@ -1,6 +1,8 @@
 defmacro:=-D
 incdir:=-I
 include $(ROOT_DIR)/config.mk
+#Include CPU configurations that might influence software
+include $(VEXRISCV_DIR)/config.mk
 
 DEFINE+=$(defmacro)BAUD=$(BAUD)
 DEFINE+=$(defmacro)FREQ=$(FREQ)
@@ -46,4 +48,3 @@ periphs.h: periphs_tmp.h
 
 periphs_tmp.h:
 	$(foreach p, $(PERIPHERALS), $(shell echo "#define $p_BASE (1<<$P) |($p<<($P-N_SLAVES_W))" >> $@) )
-
