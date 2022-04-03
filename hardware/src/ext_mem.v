@@ -12,7 +12,7 @@ module ext_mem
     input                                    clk,
     input                                    rst,
 
-`ifdef RUN_EXTMEM_USE_SRAM
+`ifdef RUN_EXTMEM
     // Instruction bus
     input [1+`FIRM_ADDR_W-2+`WRITE_W-1:0]    i_req,
     output [`RESP_W-1:0]                     i_resp,
@@ -89,7 +89,7 @@ module ext_mem
             invalidate_reg <= invalidate_reg;
 
 `ifdef USE_L1_CACHE
-`ifdef RUN_EXTMEM_USE_SRAM
+`ifdef RUN_EXTMEM
    //
    // INSTRUCTION CACHE
    //
@@ -135,7 +135,7 @@ module ext_mem
            .mem_rdata (icache_be_resp[`rdata(0)]),
            .mem_ready (icache_be_resp[`ready(0)])
            );
-`endif //  `ifdef RUN_EXTMEM_USE_SRAM
+`endif //  `ifdef RUN_EXTMEM
 
    //
    // DATA CACHE
@@ -193,7 +193,7 @@ module ext_mem
    iob_merge
      #(
        .ADDR_W(`DCACHE_ADDR_W),
-`ifdef RUN_EXTMEM_USE_SRAM
+`ifdef RUN_EXTMEM
        .N_MASTERS(2)
 `else
        .N_MASTERS(1)
@@ -205,7 +205,7 @@ module ext_mem
       .rst(rst),
       // masters
 `ifdef USE_L1_CACHE
-`ifdef RUN_EXTMEM_USE_SRAM
+`ifdef RUN_EXTMEM
       .m_req  ({icache_be_req, dcache_be_req}),
       .m_resp ({icache_be_resp, dcache_be_resp}),
 `else
