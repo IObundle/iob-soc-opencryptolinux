@@ -47,7 +47,7 @@ VERILATOR_FLAGS += --trace # Make waveforms
 #VERILATOR_FLAGS += --assert # Check SystemVerilog assertions
 #VERILATOR_FLAGS += --coverage # Generate coverage analysis
 #VERILATOR_FLAGS += --debug # Run Verilator in debug mode
-VERILATOR_FLAGS += --gdbbt # Add this trace to get a backtrace in gdb
+#VERILATOR_FLAGS += --gdbbt # Add this trace to get a backtrace in gdb
 VERILATOR_FLAGS += +1800-2005ext+v # Use SystemVerilog 2005 with file extension .v
 VERILATOR_FLAGS += --error-limit 1000 # Exit if number of errors passes 1000
 
