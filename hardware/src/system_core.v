@@ -89,6 +89,10 @@ module system
    wire [`REQ_W-1:0]         cpu_d_req;
    wire [`RESP_W-1:0]        cpu_d_resp;
 
+   wire [`N_CORES-1:0]       timerInterrupt;
+   wire [`N_CORES-1:0]       softwareInterrupt;
+
+
    //instantiate the cpu
    iob_VexRiscv cpu
        (
@@ -104,6 +108,10 @@ module system
         //data bus
         .dbus_req(cpu_d_req),
         .dbus_resp(cpu_d_resp)
+
+        // interupts
+        .timerInterrupt(timerInterrupt),
+        .softwareInterrupt(softwareInterrupt)
         );
 
 
@@ -249,7 +257,7 @@ module system
      (
       .clk                  (clk),
       .rst                  (cpu_reset),
-      
+
  `ifdef RUN_EXTMEM
       // instruction bus
       .i_req                ({ext_mem_i_req[`valid(0)], ext_mem_i_req[`address(0, `FIRM_ADDR_W)-2], ext_mem_i_req[`write(0)]}),
