@@ -3,12 +3,13 @@ SHELL := /bin/bash
 ROOT_DIR:=../../..
 
 defmacro:=-D
-incdir:=-I
+incdir:=-I 
 
 SIMULATOR=verilator
 SIM_SERVER=$(VSIM_SERVER)
 SIM_USER=$(VSIM_USER)
 SIM_PROC=Vsystem_top
+
 
 include ../simulation.mk
 
@@ -55,18 +56,20 @@ VERILATOR_FLAGS += --error-limit 1000 # Exit if number of errors passes 1000
 VERILATOR_INPUT = $(INCLUDE_VERI) $(DEFINE) $(VSRC) --top-module system_top system_tb.cpp
 ######################################################################
 
-#simulator object
+comp: $(SIM_PROC)
+
+#simulator executable
 $(SIM_PROC):
 	$(VERILATOR) $(VERILATOR_FLAGS) $(VERILATOR_INPUT)
 	cp obj_dir/$@ .
 
 #run the simulator
-run:
-	cp $(VEXRISCV_DIR)/hardware/src/VexRiscv.v_toplevel_RegFilePlugin_regFile.bin ./
+exec:
+	cp $(VEXRISCV_DIR)/hardware/src/VexRiscv.v_toplevel_RegFilePlugin_regFile.bin .
 	./$(SIM_PROC)
 
 clean: clean-remote
 	@rm -f $(SIM_PROC)
 	@rm -rf obj_dir
 
-.PHONY: run clean
+.PHONY: exec clean
