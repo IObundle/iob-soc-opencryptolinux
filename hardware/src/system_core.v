@@ -107,7 +107,7 @@ module system
 
         //data bus
         .dbus_req(cpu_d_req),
-        .dbus_resp(cpu_d_resp)
+        .dbus_resp(cpu_d_resp),
 
         // interupts
         .timerInterrupt(timerInterrupt),
