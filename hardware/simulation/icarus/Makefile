@@ -13,14 +13,16 @@ include ../simulation.mk
 #simulator flags
 VLOG = iverilog -W all -g2005-sv $(INCLUDE) $(DEFINE)
 
-#simulator object
+comp: $(SIM_PROC)
+
+#simulation executable
 $(SIM_PROC):
 	$(VLOG) $(VSRC)
 
 .PHONY: run clean debug
 
-run:
-	cp $(VEXRISCV_DIR)/hardware/src/VexRiscv.v_toplevel_RegFilePlugin_regFile.bin ./
+exec:
+	cp $(VEXRISCV_DIR)/hardware/src/VexRiscv.v_toplevel_RegFilePlugin_regFile.bin .
 	./$(SIM_PROC)
 
 clean: clean-remote
@@ -41,3 +43,5 @@ debug:
 	@echo $(INCLUDE)
 	@echo $(DEFINE)
 	@echo $(MODULE)
+
+.PHONY: comp exec clean debug
