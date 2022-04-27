@@ -37,7 +37,7 @@ INIT_MEM ?=1
 #PERIPHERAL LIST
 #must match respective submodule CORE_NAME in the core.mk file of the submodule
 #PERIPHERALS:=UART
-PERIPHERALS ?=UART CLINT
+PERIPHERALS ?=UART 
 
 #ROOT DIRECTORY ON REMOTE MACHINES
 REMOTE_ROOT_DIR ?=sandbox/iob-soc-vexriscv
@@ -109,6 +109,7 @@ DOC_DIR=$(ROOT_DIR)/document/$(DOC)
 #define macros
 DEFINE+=$(defmacro)DATA_W=$(DATA_W)
 DEFINE+=$(defmacro)ADDR_W=$(ADDR_W)
+DEFINE+=$(defmacro)N_CORES=$(N_CORES)
 DEFINE+=$(defmacro)BOOTROM_ADDR_W=$(BOOTROM_ADDR_W)
 DEFINE+=$(defmacro)SRAM_ADDR_W=$(SRAM_ADDR_W)
 DEFINE+=$(defmacro)FIRM_ADDR_W=$(FIRM_ADDR_W)
