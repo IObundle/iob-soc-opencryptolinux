@@ -46,25 +46,26 @@ endif
 #axi memory
 include $(AXI_DIR)/hardware/axiram/hardware.mk
 
+VSRC+=system_top.v
+
 #testbench
 ifneq ($(SIMULATOR),verilator)
 VSRC+=system_tb.v
 endif
 
-VSRC+=system_top.v
-
 #RULES
 build: $(VSRC) $(VHDR) $(HEXPROGS)
 ifeq ($(SIM_SERVER),)
-	bash -c "trap 'make kill-sim' INT TERM KILL EXIT; make comp"
+	make comp
 else
 	ssh $(SIM_SSH_FLAGS) $(SIM_USER)@$(SIM_SERVER) "if [ ! -d $(REMOTE_ROOT_DIR) ]; then mkdir -p $(REMOTE_ROOT_DIR); fi"
 	rsync -avz --delete --force --exclude .git $(SIM_SYNC_FLAGS) $(ROOT_DIR) $(SIM_USER)@$(SIM_SERVER):$(REMOTE_ROOT_DIR)
-	bash -c "trap 'make kill-remote-sim' INT TERM KILL; ssh $(SIM_SSH_FLAGS) $(SIM_USER)@$(SIM_SERVER) 'make -C $(REMOTE_ROOT_DIR) sim-build SIMULATOR=$(SIMULATOR) INIT_MEM=$(INIT_MEM) USE_DDR=$(USE_DDR) RUN_EXTMEM=$(RUN_EXTMEM) VCD=$(VCD) TEST_LOG=\"$(TEST_LOG)\"'"
+	ssh $(SIM_SSH_FLAGS) $(SIM_USER)@$(SIM_SERVER) 'make -C $(REMOTE_ROOT_DIR) sim-build SIMULATOR=$(SIMULATOR) INIT_MEM=$(INIT_MEM) USE_DDR=$(USE_DDR) RUN_EXTMEM=$(RUN_EXTMEM) VCD=$(VCD) TEST_LOG=\"$(TEST_LOG)\"'
 endif
 
 run:
 ifeq ($(SIM_SERVER),)
+	cp $(FIRM_DIR)/firmware.bin .
 	@rm -f soc2cnsl cnsl2soc
 	$(CONSOLE_CMD) $(TEST_LOG) &
 	bash -c "trap 'make kill-sim' INT TERM KILL EXIT; make exec"
@@ -89,7 +90,8 @@ endif
 #
 
 system_tb.v:
-	cp $(TB_DIR)/system_core_tb.v system_tb.v
+	cp $(TB_DIR)/system_core_tb.v $@
+	$(if $(HFILES), $(foreach f, $(HFILES), sed -i '/PHEADER/a `include \"$f\"' $@;),) # insert header files
 
 #create  simulation top module
 system_top.v: $(TB_DIR)/system_top_core.v
