@@ -22,7 +22,7 @@ $(SIM_PROC):
 .PHONY: run clean debug
 
 exec:
-	cp $(VEXRISCV_DIR)/hardware/src/VexRiscv.v_toplevel_RegFilePlugin_regFile.bin ./
+	cp $(VEXRISCV_DIR)/hardware/src/VexRiscv.v_toplevel_RegFilePlugin_regFile.bin .
 	./$(SIM_PROC)
 
 clean: clean-remote
