@@ -13,11 +13,11 @@ int main()
   //init uart
   uart_init(UART_BASE,FREQ/BAUD);
   clint_init(CLINT_BASE);
-  
+
   uart_puts("\n\n\nHello world!\n\n\n");
   printf("Value of Pi = %f\n\n", 3.1415);
 
   elapsed = clint_get_timer();
-  printf("\nCLINT timer value: %x\n", elapsed);
+  printf("\nCLINT timer value: %d\n", (unsigned int) elapsed);
   uart_finish();
 }
