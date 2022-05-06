@@ -37,7 +37,7 @@ INIT_MEM ?=1
 #PERIPHERAL LIST
 #must match respective submodule CORE_NAME in the core.mk file of the submodule
 #PERIPHERALS:=UART
-PERIPHERALS ?=UART 
+PERIPHERALS ?=UART CLINT
 
 #ROOT DIRECTORY ON REMOTE MACHINES
 REMOTE_ROOT_DIR ?=sandbox/iob-soc-vexriscv
@@ -89,6 +89,7 @@ UART_DIR=$(ROOT_DIR)/submodules/UART
 LIB_DIR=$(ROOT_DIR)/submodules/LIB
 MEM_DIR=$(ROOT_DIR)/submodules/MEM
 AXI_DIR=$(ROOT_DIR)/submodules/AXI
+CLINT_DIR=$(ROOT_DIR)/submodules/CLINT
 
 #sw paths
 SW_DIR:=$(ROOT_DIR)/software
