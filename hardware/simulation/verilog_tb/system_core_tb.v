@@ -108,10 +108,10 @@ module TOP;
   end
 
 system_top system_top(
-   .clk               (clk),
-   .reset           (reset),
-   .trap             (trap),
-   .rtc               (rtc),
+   .clk                (clk),
+   .reset            (reset),
+   .trap              (trap),
+   .rtc_in             (rtc),
    .uart_valid  (uart_valid),
    .uart_addr    (uart_addr),
    .uart_wdata  (uart_wdata),

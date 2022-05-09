@@ -9,7 +9,7 @@ module system_top (
    input                    clk,
    input                    reset,
    output                   trap,
-   input                    rtc,
+   input                    rtc_in,
    //tester uart
    input                    uart_valid,
    input [`iob_uart_swreg_ADDR_W-1:0] uart_addr,
