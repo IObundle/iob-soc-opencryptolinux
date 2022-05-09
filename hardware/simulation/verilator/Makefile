@@ -3,7 +3,7 @@ SHELL := /bin/bash
 ROOT_DIR:=../../..
 
 defmacro:=-D
-incdir:=-I 
+incdir:=-I
 
 SIMULATOR=verilator
 SIM_SERVER=$(VSIM_SERVER)

@@ -8,10 +8,13 @@
 module TOP;
 
   parameter realtime clk_per = 1s/`FREQ;
+  parameter realtime rtc_per = 1s/`RTC_FREQ;
 
   //clock
   reg clk = 1;
   always #(clk_per/2) clk = ~clk;
+  reg rtc = 1;
+  always #(rtc_per/2) rtc = ~rtc;
 
   //reset
   reg reset = 0;
@@ -105,10 +108,10 @@ module TOP;
   end
 
 system_top system_top(
-   .clk               (clk),
-   .reset           (reset),
-   .trap             (trap),
-
+   .clk                (clk),
+   .reset            (reset),
+   .trap              (trap),
+   .rtc_in             (rtc),
    .uart_valid  (uart_valid),
    .uart_addr    (uart_addr),
    .uart_wdata  (uart_wdata),

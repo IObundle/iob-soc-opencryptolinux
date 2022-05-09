@@ -3,10 +3,12 @@
 #default baud and freq for simulation
 BAUD ?=5000000
 FREQ ?=100000000
+RTC_FREQ ?=32768
 
 #define for testbench
 DEFINE+=$(defmacro)BAUD=$(BAUD)
 DEFINE+=$(defmacro)FREQ=$(FREQ)
+DEFINE+=$(defmacro)RTC_FREQ=$(RTC_FREQ)
 
 #ddr controller address width
 DDR_ADDR_W=$(DCACHE_ADDR_W)

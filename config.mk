@@ -13,6 +13,7 @@ IOBSOC_NAME:=IOBSOC
 #CPU ARCHITECTURE
 DATA_W := 32
 ADDR_W := 32
+N_CORES := 1
 
 #FIRMWARE SIZE (LOG2)
 FIRM_ADDR_W ?=15
@@ -36,7 +37,7 @@ INIT_MEM ?=1
 #PERIPHERAL LIST
 #must match respective submodule CORE_NAME in the core.mk file of the submodule
 #PERIPHERALS:=UART
-PERIPHERALS ?=UART
+PERIPHERALS ?=UART CLINT
 
 #ROOT DIRECTORY ON REMOTE MACHINES
 REMOTE_ROOT_DIR ?=sandbox/iob-soc-vexriscv
@@ -88,6 +89,7 @@ UART_DIR=$(ROOT_DIR)/submodules/UART
 LIB_DIR=$(ROOT_DIR)/submodules/LIB
 MEM_DIR=$(ROOT_DIR)/submodules/MEM
 AXI_DIR=$(ROOT_DIR)/submodules/AXI
+CLINT_DIR=$(ROOT_DIR)/submodules/CLINT
 
 #sw paths
 SW_DIR:=$(ROOT_DIR)/software
@@ -108,6 +110,7 @@ DOC_DIR=$(ROOT_DIR)/document/$(DOC)
 #define macros
 DEFINE+=$(defmacro)DATA_W=$(DATA_W)
 DEFINE+=$(defmacro)ADDR_W=$(ADDR_W)
+DEFINE+=$(defmacro)N_CORES=$(N_CORES)
 DEFINE+=$(defmacro)BOOTROM_ADDR_W=$(BOOTROM_ADDR_W)
 DEFINE+=$(defmacro)SRAM_ADDR_W=$(SRAM_ADDR_W)
 DEFINE+=$(defmacro)FIRM_ADDR_W=$(FIRM_ADDR_W)
