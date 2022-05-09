@@ -5,7 +5,7 @@
 
 //PHEADER
 
-module system_tb;
+module TOP;
 
   parameter realtime clk_per = 1s/`FREQ;
   parameter realtime rtc_per = 1s/`RTC_FREQ;
@@ -107,7 +107,7 @@ module system_tb;
     end
   end
 
-system_top top(
+system_top system_top(
    .clk               (clk),
    .reset           (reset),
    .trap             (trap),
