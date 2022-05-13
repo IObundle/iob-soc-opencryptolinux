@@ -23,7 +23,6 @@ software/*/*
 #HARDWARE
 #sources
 hardware/src/system.v
-hardware/testbench/system_tb.v
 
 #simulation
 hardware/simulation/*/*
@@ -32,6 +31,7 @@ hardware/simulation/*/*
 !hardware/simulation/*/Makefile
 !hardware/simulation/*/*.expected
 !hardware/simulation/*/*.sh
+!hardware/verilator/system_tb.cpp
 
 #fpga
 hardware/fpga/*/*/*
