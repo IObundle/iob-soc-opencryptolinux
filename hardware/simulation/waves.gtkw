@@ -1,18 +1,19 @@
 [*]
-[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
-[*] Fri Feb 12 03:28:18 2021
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Mon May 16 23:27:06 2022
 [*]
-[dumpfile] "(null)"
-[savefile] "/home/jsousa/sandbox/iob-soc/hardware/simulation/waves.gtkw"
-[timestart] 13966554000
-[size] 1918 1031
+[dumpfile] "/media/data/Documentos/Tese/SoC/iob-soc-vexriscv/hardware/simulation/icarus/system.vcd"
+[dumpfile_mtime] "Mon May 16 23:26:28 2022"
+[dumpfile_size] 214672565
+[savefile] "/media/data/Documentos/Tese/SoC/iob-soc-vexriscv/hardware/simulation/waves.gtkw"
+[timestart] 0
+[size] 1920 1002
 [pos] -1 -1
-*-20.371645 13971110000 14260000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-27.371645 252142100 14260000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
 [treeopen] TOP.system_top.
 [treeopen] TOP.system_top.uut.
-[treeopen] TOP.system_top.uut.cpu.picorv32_core.
-[treeopen] TOP.system_top.uut.cpu.picorv32_core.genblk1.
-[treeopen] TOP.system_top.uut.cpu.picorv32_core.genblk5.
+[treeopen] TOP.system_top.uut.cpu.
 [treeopen] TOP.system_top.uut.int_mem0.
 [treeopen] TOP.system_top.uut.int_mem0.int_sram.
 [sst_width] 324
@@ -29,7 +30,6 @@ TOP.system_top.uut.int_mem0.ram_i_resp[32:0]
 TOP.system_top.uut.int_mem0.d_req[68:0]
 TOP.system_top.uut.int_mem0.d_resp[32:0]
 @200
--TIMER
 -sram
 @28
 TOP.system_top.uut.int_mem0.int_sram.i_valid
@@ -40,11 +40,10 @@ TOP.system_top.uut.int_mem0.int_sram.i_rdata[31:0]
 TOP.system_top.uut.int_mem0.int_sram.i_ready
 TOP.system_top.uut.int_mem0.int_sram.d_valid
 @22
-TOP.system_top.uut.int_mem0.int_sram.d_addr[13:0]
 TOP.system_top.uut.int_mem0.int_sram.d_wdata[31:0]
 TOP.system_top.uut.int_mem0.int_sram.d_wstrb[3:0]
 TOP.system_top.uut.int_mem0.int_sram.d_rdata[31:0]
-@29
+@28
 TOP.system_top.uut.int_mem0.int_sram.d_ready
 @200
 -SYSTEM
@@ -65,49 +64,20 @@ TOP.system_top.uut.int_mem_d_resp[32:0]
 @22
 TOP.system_top.uut.cpu.ibus_req[68:0]
 TOP.system_top.uut.cpu.dbus_req[68:0]
-TOP.system_top.uut.cpu.cpu_i_req[68:0]
-TOP.system_top.uut.cpu.cpu_d_req[68:0]
-TOP.system_top.uut.cpu.cpu_req[68:0]
-@28
-TOP.system_top.uut.cpu.cpu_instr
-TOP.system_top.uut.cpu.cpu_valid
 @200
--PICORV32
-@28
-TOP.system_top.uut.cpu.clk
-TOP.system_top.uut.cpu.picorv32_core.resetn
-TOP.system_top.uut.cpu.picorv32_core.mem_instr
-TOP.system_top.uut.cpu.picorv32_core.mem_valid
+-CLINT
 @22
-TOP.system_top.uut.cpu.picorv32_core.mem_addr[31:0]
-TOP.system_top.uut.cpu.picorv32_core.mem_wdata[31:0]
-TOP.system_top.uut.cpu.picorv32_core.mem_wstrb[3:0]
-TOP.system_top.uut.cpu.picorv32_core.mem_rdata[31:0]
-@28
-TOP.system_top.uut.cpu.picorv32_core.mem_ready
-TOP.system_top.uut.cpu.picorv32_core.trap
+TOP.system_top.uut.clint.mtime_reg[63:0]
 @200
 -UART
-@28
-TOP.system_top.uut.uart.txd
-TOP.system_top.uut.uart.rxd
-TOP.system_top.uut.uart.tx_ready
-TOP.system_top.uut.uart.rx_ready
-TOP.system_top.uut.uart.valid
 @24
 TOP.system_top.uut.uart.address[2:0]
 @22
-TOP.system_top.uut.uart.wdata[15:0]
 TOP.system_top.uut.uart.wstrb[3:0]
 TOP.system_top.uut.uart.rdata[31:0]
-@28
-TOP.system_top.uut.uart.ready
 @200
 -test_uart
 @28
-TOP.system_top.uart_tb.valid
 TOP.system_top.uart_tb.address[2:0]
-TOP.system_top.uart_tb.rxd
-TOP.system_top.uart_tb.txd
 [pattern_trace] 1
 [pattern_trace] 0
