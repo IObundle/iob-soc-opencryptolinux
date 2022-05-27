@@ -16,7 +16,7 @@ fw-clean:
 #
 
 pc-emul-build:
-	make fw-build BAUD=5000000
+	make fw-build
 	make -C $(PC_DIR) build
 
 pc-emul-run: pc-emul-build
@@ -33,7 +33,7 @@ pc-emul-test: pc-emul-clean
 #
 
 sim-build:
-	make fw-build BAUD=5000000
+	make fw-build
 	make -C $(SIM_DIR) build
 
 sim-run: sim-build

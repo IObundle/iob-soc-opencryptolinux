@@ -17,7 +17,7 @@
 
 // other macros
 #define FREQ 100000000
-#define BAUD 5000000
+#define BAUD 115200
 #define CLK_PERIOD 10 // 10 ns
 #define RTC_PERIOD 30517 // 30.517us
 
@@ -46,7 +46,7 @@ void Timer(unsigned int ns){
 }
 
 // 1-cycle write
-void uartwrite(unsigned int cpu_address, char cpu_data){
+void uartwrite(unsigned int cpu_address, int cpu_data){
 
     dut->uart_addr = cpu_address;
     dut->uart_valid = 1;
