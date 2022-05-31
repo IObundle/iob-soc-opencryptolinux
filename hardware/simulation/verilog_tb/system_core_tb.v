@@ -5,7 +5,7 @@
 
 //PHEADER
 
-module TOP;
+module system_tb;
 
   parameter realtime clk_per = 1s/`FREQ;
   parameter realtime rtc_per = 1s/`RTC_FREQ;
