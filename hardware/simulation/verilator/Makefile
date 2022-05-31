@@ -67,9 +67,12 @@ $(SIM_PROC):
 exec:
 	cp $(VEXRISCV_DIR)/hardware/src/VexRiscv.v_toplevel_RegFilePlugin_regFile.bin .
 	./$(SIM_PROC)
+ifeq ($(VCD),1)
+	sed -i 's/TOP/system_tb/g' *.vcd
+endif
 
 clean: clean-remote
 	@rm -f $(SIM_PROC)
 	@rm -rf obj_dir
 
-.PHONY: exec clean
+.PHONY: comp exec clean
