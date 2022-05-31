@@ -17,8 +17,9 @@
 
 // other macros
 #define FREQ 100000000
-#define BAUD 5000000
-#define CLK_PERIOD 10000 // 10 ns
+#define BAUD 115200
+#define CLK_PERIOD 10 // 10 ns
+#define RTC_PERIOD 30517 // 30.517us
 
 vluint64_t main_time = 0;
 VerilatedVcdC* tfp = NULL;
@@ -28,25 +29,30 @@ double sc_time_stamp () {
   return main_time;
 }
 
-void Timer(unsigned int half_cycles){
-  for(int i = 0; i<half_cycles; i++){
-    dut->clk = !(dut->clk);
+void Timer(unsigned int ns){
+  for(int i = 0; i<ns; i++){
+    if(!(main_time%(CLK_PERIOD/2))){
+      dut->clk = !(dut->clk);
+    }
+    if(!(main_time%(RTC_PERIOD/2))){
+      dut->rtc_in = !(dut->rtc_in);
+    }
     dut->eval();
 #ifdef VCD
     tfp->dump(main_time);
 #endif
-    main_time += CLK_PERIOD/2;
+    main_time += 1;
   }
 }
 
 // 1-cycle write
-void uartwrite(unsigned int cpu_address, char cpu_data){
+void uartwrite(unsigned int cpu_address, int cpu_data){
 
     dut->uart_addr = cpu_address;
     dut->uart_valid = 1;
     dut->uart_wstrb = -1;
     dut->uart_wdata = cpu_data;
-    Timer(2);
+    Timer(CLK_PERIOD);
     dut->uart_wstrb = 0;
     dut->uart_valid = 0;
 
@@ -56,9 +62,9 @@ void uartwrite(unsigned int cpu_address, char cpu_data){
 void uartread(unsigned int cpu_address, char *read_reg){
     dut->uart_addr = cpu_address;
     dut->uart_valid = 1;
-    Timer(2);
+    Timer(CLK_PERIOD);
     *read_reg = dut->uart_rdata;
-    Timer(2);
+    Timer(CLK_PERIOD);
     dut->uart_valid = 0;
 }
 

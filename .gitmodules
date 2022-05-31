@@ -18,4 +18,4 @@
 	url = git@github.com:PedroAntunes178/iob-vexriscv.git
 [submodule "submodules/CLINT"]
 	path = submodules/CLINT
-	url = git@github.com:PedroAntunes178/MyCLINT.git
+	url = git@github.com:IObundle/iob-clint.git
