@@ -14,7 +14,7 @@
 int main() {
 
   //init uart
-  uart_init(UART_BASE, FREQ/(16*BAUD));
+  uart_init(UART_BASE, FREQ/BAUD);
 
   //connect with console
   // do {

@@ -10,7 +10,7 @@ int main()
   unsigned long long elapsed;
 
   //init uart
-  uart_init(UART_BASE,FREQ/(16*BAUD));
+  uart_init(UART_BASE,FREQ/BAUD);
   clint_init(CLINT_BASE);
 
   uart_puts("\n\n\nHello world!\n\n\n");
