@@ -1,7 +1,7 @@
 #DEFINES
 
 #default baud and freq for simulation
-BAUD ?=5000000
+BAUD ?=3000000
 FREQ ?=100000000
 RTC_FREQ ?=32768
 
@@ -39,6 +39,9 @@ TB_DIR:=$(HW_DIR)/simulation/verilog_tb
 
 #axi memory
 include $(AXI_DIR)/hardware/axiram/hardware.mk
+
+# iob-UART test
+include $(UART_DIR)/hardware/hardware.mk
 
 VSRC+=system_top.v
 

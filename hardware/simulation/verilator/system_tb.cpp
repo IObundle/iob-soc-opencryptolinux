@@ -17,7 +17,7 @@
 
 // other macros
 #define FREQ 100000000
-#define BAUD 5000000
+#define BAUD 3000000
 #define CLK_PERIOD 10 // 10 ns
 #define RTC_PERIOD 30517 // 30.517us
 
