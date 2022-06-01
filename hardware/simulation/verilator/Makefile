@@ -13,9 +13,6 @@ SIM_PROC=Vsystem_top
 
 include ../simulation.mk
 
-# remove space between -I and directory for verilator
-INCLUDE_VERI=$(subst -I ,-I,$(INCLUDE))
-
 ######################################################################
 # Check for sanity to avoid later confusion
 ifneq ($(words $(CURDIR)),1)
@@ -53,7 +50,7 @@ VERILATOR_FLAGS += +1800-2005ext+v # Use SystemVerilog 2005 with file extension 
 VERILATOR_FLAGS += --error-limit 1000 # Exit if number of errors passes 1000
 
 # Verilator source files
-VERILATOR_INPUT = $(INCLUDE_VERI) $(DEFINE) $(VSRC) --top-module system_top system_tb.cpp
+VERILATOR_INPUT = $(INCLUDE) $(DEFINE) $(VSRC) --top-module system_top system_tb.cpp
 ######################################################################
 
 comp: $(SIM_PROC)
