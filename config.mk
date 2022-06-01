@@ -37,7 +37,7 @@ INIT_MEM ?=1
 #PERIPHERAL LIST
 #must match respective submodule CORE_NAME in the core.mk file of the submodule
 #PERIPHERALS:=UART
-PERIPHERALS ?=UART CLINT
+PERIPHERALS ?=UART16550 CLINT
 
 #ROOT DIRECTORY ON REMOTE MACHINES
 REMOTE_ROOT_DIR ?=sandbox/iob-soc-vexriscv
@@ -80,6 +80,7 @@ endif
 VEXRISCV_DIR=$(ROOT_DIR)/submodules/VEXRISCV
 CACHE_DIR=$(ROOT_DIR)/submodules/CACHE
 UART_DIR=$(ROOT_DIR)/submodules/UART
+UART16550_DIR=$(ROOT_DIR)/submodules/UART16550
 LIB_DIR=$(ROOT_DIR)/submodules/LIB
 MEM_DIR=$(ROOT_DIR)/submodules/MEM
 AXI_DIR=$(ROOT_DIR)/submodules/AXI
@@ -136,7 +137,7 @@ DEFINE+=$(defmacro)N_SLAVES_W=$(N_SLAVES_W)
 
 
 #default baud and system clock freq
-BAUD ?=5000000 #simulation default
+BAUD ?=3000000 #simulation default
 FREQ ?=100000000
 
 SHELL = /bin/bash
