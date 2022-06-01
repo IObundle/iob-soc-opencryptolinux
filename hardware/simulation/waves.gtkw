@@ -40,10 +40,11 @@ system_tb.system_top.uut.int_mem0.int_sram.i_rdata[31:0]
 system_tb.system_top.uut.int_mem0.int_sram.i_ready
 system_tb.system_top.uut.int_mem0.int_sram.d_valid
 @22
+system_tb.system_top.uut.int_mem0.int_sram.d_addr[13:0]
 system_tb.system_top.uut.int_mem0.int_sram.d_wdata[31:0]
 system_tb.system_top.uut.int_mem0.int_sram.d_wstrb[3:0]
 system_tb.system_top.uut.int_mem0.int_sram.d_rdata[31:0]
-@28
+@29
 system_tb.system_top.uut.int_mem0.int_sram.d_ready
 @200
 -SYSTEM

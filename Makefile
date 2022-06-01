@@ -122,14 +122,6 @@ test-fpga-clean:
 	make fpga-clean BOARD=CYCLONEV-GT-DK
 	make fpga-clean BOARD=AES-KU040-DB-G
 
-test-asic:
-	make asic-test ASIC_NODE=umc130
-	make asic-test ASIC_NODE=skywater
-
-test-asic-clean:
-	make asic-clean ASIC_NODE=umc130
-	make asic-clean ASIC_NODE=skywater
-
 test-doc:
 	make fpga-clean BOARD=CYCLONEV-GT-DK
 	make fpga-clean BOARD=AES-KU040-DB-G
@@ -155,13 +147,11 @@ debug:
 	pc-emul-build pc-emul-run pc-emul-clean pc-emul-test \
 	sim-build sim-run sim-clean sim-test \
 	fpga-build fpga-run fpga-clean fpga-test \
-	asic-synth asic-sim-post-synth asic-test \
 	doc-build doc-clean doc-test \
 	clean \
 	test-pc-emul test-pc-emul-clean \
 	test-sim test-sim-clean \
 	test-fpga test-fpga-clean \
-	test-asic test-asic-clean \
 	test-doc test-doc-clean \
 	test test-clean \
 	debug
