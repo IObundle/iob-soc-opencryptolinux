@@ -7,14 +7,14 @@
 
 //defined here (and not in periphs.h) because it is the only peripheral used
 //by the bootloader
-#define UART_BASE (1<<P) |(UART<<(ADDR_W-2-N_SLAVES_W))
+#define UART16550_BASE (1<<P) |(UART16550<<(ADDR_W-2-N_SLAVES_W))
 
 #define PROGNAME "IOb-Bootloader"
 
 int main() {
 
   //init uart
-  uart_init(UART_BASE, FREQ/BAUD);
+  uart_init(UART16550_BASE, FREQ/(16*BAUD));
 
   //connect with console
   // do {
