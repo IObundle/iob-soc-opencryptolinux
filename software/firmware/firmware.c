@@ -2,7 +2,7 @@
 #include "system.h"
 #include "periphs.h"
 #include "iob-uart.h"
-#include "myclint.h"
+#include "iob_clint.h"
 #include "printf.h"
 
 int main()
