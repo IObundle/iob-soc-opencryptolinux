@@ -69,8 +69,8 @@ ifeq ($(VCD),1)
 	sed -i 's/TOP/system_tb/g' *.vcd
 endif
 
-iob_uart_swreg.h: $(FIRM_DIR)/iob_uart_swreg.h
-	cp $< $@
+iob_uart_swreg.h:
+	$(MKREGS) iob_uart $(UART_DIR) SW
 
 clean: clean-remote
 	@rm -f $(SIM_PROC) $(HDR)
