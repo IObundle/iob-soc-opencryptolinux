@@ -18,6 +18,6 @@ int main()
 
   elapsed = clint_get_timer();
   printf("Timer Value = %d\n\n", (int)elapsed);
-
+  
   uart_finish();
 }
