@@ -17,10 +17,10 @@ int main() {
   uart_init(UART16550_BASE, FREQ/(16*BAUD));
 
   //connect with console
-  // do {
-  //  if(IOB_UART_GET_TXREADY())
+  do {
+    if(IOB_UART_GET_TXREADY())
       uart_putc((char) ENQ);
-  //} while(!IOB_UART_GET_RXREADY());
+  } while(!IOB_UART_GET_RXREADY());
 
   //welcome message
   uart_puts (PROGNAME);

@@ -10,6 +10,7 @@ SIM_SERVER=$(VSIM_SERVER)
 SIM_USER=$(VSIM_USER)
 SIM_PROC=Vsystem_top
 
+HDR=iob_uart_swreg.h
 
 include ../simulation.mk
 
@@ -56,7 +57,7 @@ VERILATOR_INPUT = $(INCLUDE) $(DEFINE) $(VSRC) --top-module system_top system_tb
 comp: $(SIM_PROC)
 
 #simulator executable
-$(SIM_PROC):
+$(SIM_PROC): $(HDR)
 	$(VERILATOR) $(VERILATOR_FLAGS) $(VERILATOR_INPUT)
 	cp obj_dir/$@ .
 
@@ -68,8 +69,11 @@ ifeq ($(VCD),1)
 	sed -i 's/TOP/system_tb/g' *.vcd
 endif
 
+iob_uart_swreg.h:
+	$(MKREGS) iob_uart $(UART_DIR) SW
+
 clean: clean-remote
-	@rm -f $(SIM_PROC)
+	@rm -f $(SIM_PROC) $(HDR)
 	@rm -rf obj_dir
 
 .PHONY: comp exec clean
