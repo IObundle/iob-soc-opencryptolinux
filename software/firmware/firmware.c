@@ -16,5 +16,8 @@ int main()
   uart_puts("\n\n\nHello world!\n\n\n");
   printf("Value of Pi = %f\n\n", 3.1415);
 
+  elapsed = clint_get_timer();
+  printf("Timer Value = %d\n\n", (int)elapsed);
+  
   uart_finish();
 }
