@@ -3,7 +3,7 @@
 #default baud and freq for simulation
 BAUD ?=3000000
 FREQ ?=100000000
-RTC_FREQ ?=32768
+RTC_FREQ ?=1000000
 
 #define for testbench
 DEFINE+=$(defmacro)BAUD=$(BAUD)
