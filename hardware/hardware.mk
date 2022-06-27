@@ -72,8 +72,9 @@ PYTHON_DIR=$(MEM_DIR)/software/python
 boot.hex: $(BOOT_DIR)/boot.bin
 	$(PYTHON_DIR)/makehex.py $< $(BOOTROM_ADDR_W) > $@
 
+OPENSBI_DIR = ../../../../../fw/opensbi/build/platform/iob_soc/firmware/fw_payload.bin
 firmware.hex: $(FIRM_DIR)/firmware.bin
-	$(PYTHON_DIR)/makehex.py $< $(FIRM_ADDR_W) > $@
+	$(PYTHON_DIR)/makehex.py $(OPENSBI_DIR) $(FIRM_ADDR_W) > $@
 	$(PYTHON_DIR)/hex_split.py firmware .
 
 #clean general hardware files
