@@ -14,8 +14,8 @@ PROGNAME = "IOb-Console"
 EOT = b'\x04' # End of Transmission in Hexadecimal
 ENQ = b'\x05' # Enquiry in Hexadecimal
 ACK = b'\x06' # Acknowledgement in Hexadecimal
-FTX = b'\x07' # Receive file request
-FRX = b'\x08' # Send file request
+FTX = b'\x04' # Receive file request
+FRX = b'\x04' # Send file request
 
 
 def tb_write(data, number_of_bytes = 1, is_file = False):
