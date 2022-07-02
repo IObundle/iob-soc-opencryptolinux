@@ -11,7 +11,7 @@
 #define FREQ 100000000
 #define BAUD 3000000
 #define CLK_PERIOD 10 // 10 ns
-#define RTC_PERIOD 30517 // 30.517us
+#define RTC_PERIOD 1000 // 1 us
 
 vluint64_t main_time = 0;
 VerilatedVcdC* tfp = NULL;
