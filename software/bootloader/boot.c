@@ -67,6 +67,17 @@ int main() {
 #ifdef RUN_EXTMEM
   while( !cache_wtb_empty() );
 #endif
+
+  // Clear CPU registers, to not pass arguments to the next 
+  asm volatile("and     a0,a0,zero");
+  asm volatile("and     a1,a1,zero");
+  asm volatile("and     a2,a2,zero");
+  asm volatile("and     a3,a3,zero");
+  asm volatile("and     a4,a4,zero");
+  asm volatile("and     a5,a5,zero");
+  asm volatile("and     a6,a6,zero");
+  asm volatile("and     a7,a7,zero");
+
   //reboot and run firmware (not bootloader)
   *((int *) BOOTCTR_BASE) = 0b10;
 
