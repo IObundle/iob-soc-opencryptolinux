@@ -31,7 +31,7 @@ void Timer(unsigned int ns){
     }
     dut->eval();
 #ifdef VCD
-    tfp->dump(main_time);
+      tfp->dump(main_time);
 #endif
     main_time += 1;
   }

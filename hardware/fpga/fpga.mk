@@ -13,7 +13,11 @@ include $(ROOT_DIR)/hardware/hardware.mk
 #SOURCES
 VSRC+=./verilog/top_system.v
 
-#console command
+ifeq ($(RUN_EXTMEM),1)
+INIT_MEM=0
+endif
+
+#console command 
 CONSOLE_CMD=$(CONSOLE_DIR)/console -s /dev/usb-uart
 ifeq ($(INIT_MEM),0)
 CONSOLE_CMD+=-f
@@ -84,8 +88,7 @@ queue-out:
 
 queue-out-remote:
 ifeq ($(BOARD_SERVER),)
-	@if [ "`ps aux | grep $(USER) | grep console | grep python3 | grep -v grep`" ]; then \
-	kill -9 $$(ps aux | grep $(USER) | grep console | grep python3 | grep -v grep | awk '{print $$2}'); fi
+	make kill-cnsl
 	make queue-out
 else
 	ssh $(BOARD_USER)@$(BOARD_SERVER) 'make -C $(REMOTE_ROOT_DIR)/hardware/fpga/$(TOOL)/$(BOARD) $@'
@@ -96,7 +99,7 @@ endif
 #
 
 test: clean-testlog test1 test2 test3
-	diff -q test.log test.expected
+	diff test.log test.expected
 
 test1:
 	make -C $(ROOT_DIR) fpga-clean
@@ -116,7 +119,7 @@ test3:
 #
 
 clean-all: hw-clean
-	@rm -f $(FPGA_OBJ) $(FPGA_LOG)
+	@rm -f $(FPGA_OBJ) $(FPGA_LOG) *.txt
 ifneq ($(FPGA_SERVER),)
 	ssh $(BOARD_USER)@$(BOARD_SERVER) "if [ ! -d $(REMOTE_ROOT_DIR) ]; then mkdir -p $(REMOTE_ROOT_DIR); fi"
 	rsync -avz --delete --force --exclude=.git --exclude=submodules/VEXRISCV/submodules $(ROOT_DIR) $(FPGA_USER)@$(FPGA_SERVER):$(REMOTE_ROOT_DIR)
@@ -138,7 +141,7 @@ ifneq ($(BOARD_SERVER),)
 endif
 
 
-.PRECIOUS: $(FPGA_OBJ)
+.PRECIOUS: $(FPGA_OBJ) test.log
 
 .PHONY: run build \
 	queue-in queue-out queue-wait queue-out-remote \

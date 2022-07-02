@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "system.h"
 #include "periphs.h"
 #include "iob-uart.h"
@@ -14,10 +13,12 @@ int main()
   clint_init(CLINT_BASE);
 
   uart_puts("\n\n\nHello world!\n\n\n");
+
+  //test printf with floats
   printf("Value of Pi = %f\n\n", 3.1415);
 
   elapsed = clint_get_timer();
   printf("Timer Value = %d\n\n", (int)elapsed);
-  
+
   uart_finish();
 }
