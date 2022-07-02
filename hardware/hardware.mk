@@ -72,20 +72,20 @@ PYTHON_DIR=$(MEM_DIR)/software/python
 boot.hex: $(BOOT_DIR)/boot.bin
 	$(PYTHON_DIR)/makehex.py $< $(BOOTROM_ADDR_W) > $@
 
-OPENSBI_DIR = $(VEX_OS_DIR)/fw_payload.bin
-OPENSBI_ADDR = 00000000
+OPENSBI_DIR = $(VEX_OS_DIR)/fw_jump.bin
 DTB_DIR = $(VEX_OS_DIR)/iob_soc.dtb
 DTB_ADDR = 00F80000
 LINUX_DIR = $(VEX_OS_DIR)/Image
 LINUX_ADDR = 00400000
 ROOTFS_DIR = $(VEX_OS_DIR)/rootfs.cpio
 ROOTFS_ADDR = 01000000
-FIRM_ARGS = $(OPENSBI_DIR) $(OPENSBI_ADDR)
+#FIRM_ARGS = $(OPENSBI_DIR)
 #FIRM_ARGS += $(DTB_DIR) $(DTB_ADDR)
 #FIRM_ARGS += $(LINUX_DIR) $(LINUX_ADDR)
 #FIRM_ARGS += $(ROOTFS_DIR) $(ROOTFS_ADDR)
+FIRM_ARGS = $<
 firmware.hex: $(FIRM_DIR)/firmware.bin
-	$(VEX_PYTHON_DIR)/makehex.py $(FIRM_ARGS) $(FIRM_ADDR_W) > $@
+	$(PYTHON_DIR)/makehex.py $(FIRM_ARGS) $(FIRM_ADDR_W) > $@
 	$(PYTHON_DIR)/hex_split.py firmware .
 
 #clean general hardware files
