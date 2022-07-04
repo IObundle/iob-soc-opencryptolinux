@@ -159,46 +159,68 @@ module system
 
    // DATA BUS
 
-   //internal memory data bus
-   wire [`REQ_W-1:0]         int_mem_d_req;
-   wire [`RESP_W-1:0]        int_mem_d_resp;
-
 `ifdef USE_DDR
    //external memory data bus
    wire [`REQ_W-1:0]         ext_mem_d_req;
    wire [`RESP_W-1:0]        ext_mem_d_resp;
+   //internal data bus
+   wire [`REQ_W-1:0]         int_d_req;
+   wire [`RESP_W-1:0]        int_d_resp;
+
+   iob_split
+     #(
+       .N_SLAVES(2), //E,{P,I}
+       .P_SLAVES(`E_BIT)
+       )
+   dbus_split
+     (
+      .clk    ( clk   ),
+      .rst    ( reset ),
+
+      // master interface
+      .m_req  ( cpu_d_req  ),
+      .m_resp ( cpu_d_resp ),
+
+      // slaves interface
+      .s_req  ( {ext_mem_d_req, int_d_req}   ),
+      .s_resp ( {ext_mem_d_resp, int_d_resp} )
+      );
 `endif
 
+   //
+   // SPLIT INTERNAL MEMORY AND PERIPHERALS BUS
+   //
+
+   //internal memory data bus
+   wire [`REQ_W-1:0]         int_mem_d_req;
+   wire [`RESP_W-1:0]        int_mem_d_resp;
    //peripheral bus
    wire [`REQ_W-1:0]         pbus_req;
    wire [`RESP_W-1:0]        pbus_resp;
 
    iob_split
      #(
-`ifdef USE_DDR
-       .N_SLAVES(3), //E,P,I
-`else
-       .N_SLAVES(2),//P,I
-`endif
-       .P_SLAVES(`E_BIT)
+       .N_SLAVES(2), //P,I
+       .P_SLAVES(`P_BIT)
        )
-   dbus_split
+   int_dbus_split
      (
-      .clk    ( clk                      ),
-      .rst    ( reset                    ),
+      .clk    ( clk   ),
+      .rst    ( reset ),
 
+`ifdef USE_DDR
       // master interface
-      .m_req  ( cpu_d_req                                  ),
-      .m_resp ( cpu_d_resp                                 ),
+      .m_req  ( int_d_req  ),
+      .m_resp ( int_d_resp ),
+`else
+      // master interface
+      .m_req  ( cpu_d_req  ),
+      .m_resp ( cpu_d_resp ),
+`endif
 
       // slaves interface
-`ifdef USE_DDR
-      .s_req  ( {ext_mem_d_req, pbus_req, int_mem_d_req}   ),
-      .s_resp ({ext_mem_d_resp, pbus_resp, int_mem_d_resp} )
-`else
-      .s_req  ({pbus_req, int_mem_d_req}                   ),
-      .s_resp ({pbus_resp, int_mem_d_resp}                 )
-`endif
+      .s_req  ( {pbus_req, int_mem_d_req}   ),
+      .s_resp ( {pbus_resp, int_mem_d_resp} )
       );
 
 
@@ -217,8 +239,8 @@ module system
        )
    pbus_split
      (
-      .clk    ( clk                      ),
-      .rst    ( reset                    ),
+      .clk    ( clk   ),
+      .rst    ( reset ),
       // master interface
       .m_req   ( pbus_req    ),
       .m_resp  ( pbus_resp   ),
