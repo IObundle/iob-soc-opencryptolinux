@@ -17,8 +17,8 @@ ifeq ($(RUN_EXTMEM),1)
 INIT_MEM=0
 endif
 
-#console command 
-CONSOLE_CMD=$(CONSOLE_DIR)/console -s /dev/usb-uart
+#console command
+CONSOLE_CMD=$(PYTHON_DIR)/console -s /dev/usb-uart
 ifeq ($(INIT_MEM),0)
 CONSOLE_CMD+=-f
 endif

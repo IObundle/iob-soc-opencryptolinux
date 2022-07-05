@@ -13,7 +13,7 @@ DEFINE+=$(defmacro)RTC_FREQ=$(RTC_FREQ)
 #ddr controller address width
 DDR_ADDR_W=$(DCACHE_ADDR_W)
 
-CONSOLE_CMD=$(CONSOLE_DIR)/console -L
+CONSOLE_CMD=$(PYTHON_DIR)/console -L
 
 #produce waveform dump
 VCD ?=0
