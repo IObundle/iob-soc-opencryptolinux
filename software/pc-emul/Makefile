@@ -15,7 +15,7 @@ $(foreach p, $(PERIPHERALS), $(eval include $($p_DIR)/software/pc-emul/pc-emul.m
 HDR+=periphs.h
 
 #SOURCES
-SRC+= $(FIRM_DIR)/firmware.c $(UART_DIR)/software/printf.c
+SRC+= $(FIRM_DIR)/firmware.c $(UART16550_DIR)/software/printf.c
 
 #CONSOLE
 CONSOLE_CMD=$(PYTHON_DIR)/console -L
