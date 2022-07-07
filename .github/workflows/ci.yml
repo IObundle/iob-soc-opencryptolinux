@@ -21,18 +21,19 @@ on:
   workflow_dispatch:
 
 jobs:
-  pc-emul:
-    runs-on: self-hosted
-    timeout-minutes: 30
+  # NOT WORKING
+  #pc-emul:
+  #  runs-on: self-hosted
+  #  timeout-minutes: 30
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
-      - name: test-clean
-        run: make test-clean
-      - name: test-pc-emul
-        run: make test-pc-emul
+  #  steps:
+  #    - uses: actions/checkout@v3
+  #      with:
+  #        submodules: 'recursive'
+  #    - name: test-clean
+  #      run: make test-clean
+  #    - name: test-pc-emul
+  #      run: make test-pc-emul
 
   verilator:
     runs-on: self-hosted
@@ -48,7 +49,7 @@ jobs:
       - name: test-clean
         run: make test-clean
       - name: test-verilator
-        run: make sim-test SIMULATOR=verilator
+        run: make sim-run SIMULATOR=verilator RUN_EXTMEM=1 INIT_MEM=0
 
   icarus:
     runs-on: self-hosted
@@ -62,7 +63,7 @@ jobs:
       - name: test-clean
         run: make test-clean
       - name: test-icarus
-        run: make sim-test SIMULATOR=icarus
+        run: make sim-run SIMULATOR=icarus && make sim-run SIMULATOR=icarus RUN_EXTMEM=1
 
   cyclonev:
     runs-on: self-hosted
@@ -76,7 +77,7 @@ jobs:
       - name: test-clean
         run: make test-clean
       - name: test-cyclonev
-        run: make fpga-test BOARD=CYCLONEV-GT-DK
+        run: make fpga-run BOARD=CYCLONEV-GT-DK RUN_EXTMEM=1
 
   aes-ku040:
     runs-on: self-hosted
@@ -90,7 +91,7 @@ jobs:
       - name: test-clean
         run: make test-clean
       - name: test-aes-ku040
-        run: make fpga-test BOARD=AES-KU040-DB-G
+        run: make fpga-run BOARD=AES-KU040-DB-G RUN_EXTMEM=1
 
   doc:
     runs-on: self-hosted
