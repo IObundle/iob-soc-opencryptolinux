@@ -3,7 +3,7 @@
 #default baud and freq for simulation
 BAUD ?=3000000
 FREQ ?=100000000
-RTC_FREQ ?=32768
+RTC_FREQ ?=1000000
 
 #define for testbench
 DEFINE+=$(defmacro)BAUD=$(BAUD)
@@ -13,7 +13,7 @@ DEFINE+=$(defmacro)RTC_FREQ=$(RTC_FREQ)
 #ddr controller address width
 DDR_ADDR_W=$(DCACHE_ADDR_W)
 
-CONSOLE_CMD=$(CONSOLE_DIR)/console -L
+CONSOLE_CMD=$(PYTHON_DIR)/console -L
 
 #produce waveform dump
 VCD ?=0
@@ -70,7 +70,7 @@ ifeq ($(SIM_SERVER),)
 	cp $(FIRM_DIR)/firmware.bin .
 	@rm -f soc2cnsl cnsl2soc
 	$(CONSOLE_CMD) $(TEST_LOG) &
-	bash -c "trap 'make kill-sim' INT TERM KILL EXIT; make exec"
+	bash -c "trap 'make kill-cnsl' INT TERM KILL EXIT; make exec"
 else
 	ssh $(SIM_SSH_FLAGS) $(SIM_USER)@$(SIM_SERVER) "if [ ! -d $(REMOTE_ROOT_DIR) ]; then mkdir -p $(REMOTE_ROOT_DIR); fi"
 	rsync -avz --force --exclude .git --exclude=submodules/VEXRISCV/VexRiscv --exclude=submodules/VEXRISCV/buildroot $(SIM_SYNC_FLAGS) $(ROOT_DIR) $(SIM_USER)@$(SIM_SERVER):$(REMOTE_ROOT_DIR)
@@ -108,18 +108,13 @@ VSRC+=$(foreach p, $(PERIPHERALS), $(shell if test -f $($p_DIR)/hardware/testben
 kill-remote-sim:
 	@echo "INFO: Remote simulator $(SIMULATOR) will be killed"
 	ssh $(SIM_SSH_FLAGS) $(SIM_USER)@$(SIM_SERVER) 'killall -q -u $(SIM_USER) -9 $(SIM_PROC); \
-	make -C $(REMOTE_ROOT_DIR)/hardware/simulation/$(SIMULATOR) kill-sim'
+	make -C $(REMOTE_ROOT_DIR)/hardware/simulation/$(SIMULATOR) kill-cnsl'
 ifeq ($(VCD),1)
 	scp $(SIM_USER)@$(SIM_SERVER):$(REMOTE_ROOT_DIR)/hardware/simulation/$(SIMULATOR)/*.vcd $(SIM_DIR)
 endif
 
-kill-sim:
-	@if [ "`ps aux | grep $(USER) | grep console | grep python3 | grep -v grep`" ]; then \
-	kill -9 $$(ps aux | grep $(USER) | grep console | grep python3 | grep -v grep | awk '{print $$2}'); fi
-
-
 test: clean-testlog test1 test2 test3 test4 test5
-	diff -q test.log ../test.expected
+	diff test.log ../test.expected
 
 test1:
 	make -C $(ROOT_DIR) sim-clean
@@ -140,7 +135,7 @@ test5:
 
 #clean target common to all simulators
 clean-remote: hw-clean
-	@rm -f soc2cnsl cnsl2soc
+	@rm -f soc2cnsl cnsl2soc *.txt
 	@rm -f system.vcd
 ifneq ($(SIM_SERVER),)
 	ssh $(SIM_SSH_FLAGS) $(SIM_USER)@$(SIM_SERVER) "if [ ! -d $(REMOTE_ROOT_DIR) ]; then mkdir -p $(REMOTE_ROOT_DIR); fi"
@@ -160,5 +155,5 @@ endif
 .PRECIOUS: system.vcd test.log
 
 .PHONY: build run sim \
-	kill-remote-sim clean-remote kill-sim \
+	kill-remote-sim clean-remote \
 	test test1 test2 test3 test4 test5 clean-testlog

@@ -18,9 +18,9 @@ int main() {
 
   //connect with console
   do {
-    if(IOB_UART_GET_TXREADY())
+    if(uart_txready())
       uart_putc((char) ENQ);
-  } while(!IOB_UART_GET_RXREADY());
+  } while(!uart_rxready());
 
   //welcome message
   uart_puts (PROGNAME);
@@ -48,7 +48,7 @@ int main() {
   int file_size = 0;
   char r_fw[] = "firmware.bin";
   if (uart_getc() == FRX) {//file receive: load firmware
-    file_size = uart_recvfile(r_fw, &prog_start_addr);
+    file_size = uart_recvfile(r_fw, prog_start_addr);
     uart_puts (PROGNAME);
     uart_puts (": Loading firmware...\n");
   }
@@ -67,6 +67,17 @@ int main() {
 #ifdef RUN_EXTMEM
   while( !cache_wtb_empty() );
 #endif
+
+  // Clear CPU registers, to not pass arguments to the next 
+  asm volatile("and     a0,a0,zero");
+  asm volatile("and     a1,a1,zero");
+  asm volatile("and     a2,a2,zero");
+  asm volatile("and     a3,a3,zero");
+  asm volatile("and     a4,a4,zero");
+  asm volatile("and     a5,a5,zero");
+  asm volatile("and     a6,a6,zero");
+  asm volatile("and     a7,a7,zero");
+
   //reboot and run firmware (not bootloader)
   *((int *) BOOTCTR_BASE) = 0b10;
 
