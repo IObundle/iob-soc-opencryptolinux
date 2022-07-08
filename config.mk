@@ -15,6 +15,9 @@ DATA_W := 32
 ADDR_W := 32
 N_CORES := 1
 
+#FIRMWARE TO RUN
+RUN_LINUX ?=0
+
 #FIRMWARE SIZE (LOG2)
 FIRM_ADDR_W ?=15
 
@@ -62,6 +65,13 @@ UART_HW_DIR:=$(UART_DIR)/hardware
 ####################################################################
 # DERIVED FROM PRIMARY PARAMETERS: DO NOT CHANGE BELOW THIS POINT
 ####################################################################
+
+ifeq ($(RUN_LINUX),1)
+DEFINE+=$(defmacro)RUN_LINUX
+RUN_EXTMEM=1
+FIRM_ADDR_W=25
+DCACHE_ADDR_W=28
+endif
 
 ifeq ($(RUN_EXTMEM),1)
 DEFINE+=$(defmacro)RUN_EXTMEM
