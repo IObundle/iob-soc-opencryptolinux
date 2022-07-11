@@ -22,3 +22,6 @@
 [submodule "submodules/UART16550"]
 	path = submodules/UART16550
 	url = git@github.com:IObundle/iob-uart16550.git
+[submodule "submodules/ETHERNET"]
+	path = submodules/ETHERNET
+	url = git@github.com:IObundle/iob-eth.git
