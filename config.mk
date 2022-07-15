@@ -146,6 +146,7 @@ DEFINE+=$(defmacro)N_SLAVES_W=$(N_SLAVES_W)
 #default baud and system clock freq
 BAUD ?=3000000 #simulation default
 FREQ ?=100000000
+RTC_FREQ ?=100000
 
 SHELL = /bin/bash
 
