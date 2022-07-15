@@ -50,9 +50,9 @@ int main() {
   //receive firmware from host
   int  file_size = 0;
   char opensbi[] = "fw_jump.bin";
-  char kernel[]  =       "Image";
+  char kernel[]  = "Image";
   char dtb[]     = "iob_soc.dtb";
-  char rootfs[]  = "rootfs.cpio";
+  char rootfs[]  = "rootfs.cpio.gz";
   if (uart_getc() == FRX) {//file receive: load firmware
     file_size = uart_recvfile(opensbi, prog_start_addr);
     prog_start_addr = (char *)(EXTRA_BASE + 0x00400000);
