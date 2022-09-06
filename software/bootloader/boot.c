@@ -29,21 +29,21 @@ int main() {
   uart_puts (": connected!\n");
 
 #ifdef USE_DDR
-    uart_puts (PROGNAME);
-    uart_puts(": DDR in use\n");
+  uart_puts (PROGNAME);
+  uart_puts(": DDR in use\n");
 #endif
 
 #ifdef RUN_EXTMEM
-    uart_puts (PROGNAME);
-    uart_puts(": program to run from DDR\n");
+  uart_puts (PROGNAME);
+  uart_puts(": program to run from DDR\n");
 #endif
 
   // address to copy firmware to
   char *prog_start_addr;
 #ifdef RUN_EXTMEM
-    prog_start_addr = (char *) EXTRA_BASE;
+  prog_start_addr = (char *) EXTRA_BASE;
 #else
-    prog_start_addr = (char *) (1<<BOOTROM_ADDR_W);
+  prog_start_addr = (char *) (1<<BOOTROM_ADDR_W);
 #endif
 
 #ifdef RUN_LINUX
