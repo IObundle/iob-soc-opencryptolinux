@@ -16,17 +16,17 @@ ADDR_W := 32
 N_CORES := 1
 
 #FIRMWARE TO RUN
-RUN_LINUX ?=0
+RUN_LINUX ?=1
 
 #FIRMWARE SIZE (LOG2)
-FIRM_ADDR_W ?=15
+FIRM_ADDR_W ?=25
 
 #SRAM SIZE (LOG2)
 SRAM_ADDR_W ?=15
 
 #DDR
 USE_DDR ?=0
-RUN_EXTMEM ?=0
+RUN_EXTMEM ?=1
 
 #DATA CACHE ADDRESS WIDTH (tag + index + offset)
 DCACHE_ADDR_W:=28
@@ -40,7 +40,7 @@ INIT_MEM ?=1
 #PERIPHERAL LIST
 #must match respective submodule CORE_NAME in the core.mk file of the submodule
 #PERIPHERALS:=UART
-PERIPHERALS ?=UART16550 CLINT
+PERIPHERALS ?=UART16550 PLIC CLINT
 
 #ROOT DIRECTORY ON REMOTE MACHINES
 REMOTE_ROOT_DIR ?=sandbox/iob-soc-vexriscv
@@ -71,6 +71,7 @@ DEFINE+=$(defmacro)RUN_LINUX
 BAUD=115200
 FIRM_ADDR_W=25
 RUN_EXTMEM=1
+DCACHE_ADDR_W=28
 endif
 
 ifeq ($(RUN_EXTMEM),1)
@@ -95,6 +96,7 @@ LIB_DIR=$(ROOT_DIR)/submodules/LIB
 MEM_DIR=$(ROOT_DIR)/submodules/MEM
 AXI_DIR=$(ROOT_DIR)/submodules/AXI
 CLINT_DIR=$(ROOT_DIR)/submodules/CLINT
+PLIC_DIR=$(ROOT_DIR)/submodules/PLIC
 
 #sw paths
 SW_DIR:=$(ROOT_DIR)/software

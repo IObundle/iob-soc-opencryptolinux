@@ -91,6 +91,7 @@ module system
 
    wire [`N_CORES-1:0]       timerInterrupt;
    wire [`N_CORES-1:0]       softwareInterrupt;
+   wire [`N_CORES-1:0]       externalInterrupt;
 
 
    //instantiate the cpu
@@ -111,7 +112,8 @@ module system
 
         // interupts
         .timerInterrupt(timerInterrupt),
-        .softwareInterrupt(softwareInterrupt)
+        .softwareInterrupt(softwareInterrupt),
+        .externalInterrupt(externalInterrupt)
         );
 
 
