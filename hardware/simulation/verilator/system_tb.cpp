@@ -8,10 +8,8 @@
 #include "iob_uart_swreg.h"
 
 // other macros
-#define FREQ 100000000
-#define BAUD 3000000
-#define CLK_PERIOD 10 // 10 ns
-#define RTC_PERIOD 1000 // 1 us
+#define CLK_PERIOD 1000000000/FREQ // 1/100MHz*10^9 = 10 ns
+#define RTC_PERIOD 1000000000/RTC_FREQ // 1/1MHz*10^9 = 1 us
 
 vluint64_t main_time = 0;
 VerilatedVcdC* tfp = NULL;
@@ -97,21 +95,13 @@ int main(int argc, char **argv, char **env){
 
   dut->clk = 0;
   dut->reset = 0;
-  dut->eval();
-#ifdef VCD
-  tfp->dump(main_time);
-#endif
 
   // Reset sequence
-  for(int i = 0; i<5; i++){
-    dut->clk = !(dut->clk);
-    if(i==2 || i==4) dut->reset = !(dut->reset);
-    dut->eval();
-#ifdef VCD
-    tfp->dump(main_time);
-#endif
-    main_time += CLK_PERIOD/2;
-  }
+  Timer(100);
+  dut->reset = 1;
+  Timer(100);
+  dut->reset = 0;
+
   dut->uart_valid = 0;
   dut->uart_wstrb = 0;
   inituart();

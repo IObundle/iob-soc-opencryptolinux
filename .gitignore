@@ -23,12 +23,12 @@ hardware/src/system.v
 
 #simulation
 hardware/simulation/*/*
-!hardware/simulation/verilog_tb
+!hardware/simulation/verilog_tb/*
 !hardware/simulation/simulation.mk
 !hardware/simulation/*/Makefile
 !hardware/simulation/*/*.expected
 !hardware/simulation/*/*.sh
-!hardware/simulation/verilator/system_tb.cpp
+!hardware/simulation/verilator/*.cpp
 
 #fpga
 hardware/fpga/*/*/*

@@ -15,18 +15,21 @@ DATA_W := 32
 ADDR_W := 32
 N_CORES := 1
 
+#FIRMWARE TO RUN
+RUN_LINUX ?=1
+
 #FIRMWARE SIZE (LOG2)
-FIRM_ADDR_W ?=15
+FIRM_ADDR_W ?=25
 
 #SRAM SIZE (LOG2)
 SRAM_ADDR_W ?=15
 
 #DDR
 USE_DDR ?=0
-RUN_EXTMEM ?=0
+RUN_EXTMEM ?=1
 
 #DATA CACHE ADDRESS WIDTH (tag + index + offset)
-DCACHE_ADDR_W:=24
+DCACHE_ADDR_W:=28
 
 #ROM SIZE (LOG2)
 BOOTROM_ADDR_W:=12
@@ -37,7 +40,7 @@ INIT_MEM ?=1
 #PERIPHERAL LIST
 #must match respective submodule CORE_NAME in the core.mk file of the submodule
 #PERIPHERALS:=UART
-PERIPHERALS ?=UART16550 CLINT
+PERIPHERALS ?=UART16550 PLIC CLINT
 
 #ROOT DIRECTORY ON REMOTE MACHINES
 REMOTE_ROOT_DIR ?=sandbox/iob-soc-vexriscv
@@ -63,6 +66,14 @@ UART_HW_DIR:=$(UART_DIR)/hardware
 # DERIVED FROM PRIMARY PARAMETERS: DO NOT CHANGE BELOW THIS POINT
 ####################################################################
 
+ifeq ($(RUN_LINUX),1)
+DEFINE+=$(defmacro)RUN_LINUX
+BAUD=115200
+FIRM_ADDR_W=25
+RUN_EXTMEM=1
+DCACHE_ADDR_W=28
+endif
+
 ifeq ($(RUN_EXTMEM),1)
 DEFINE+=$(defmacro)RUN_EXTMEM
 USE_DDR=1
@@ -85,6 +96,7 @@ LIB_DIR=$(ROOT_DIR)/submodules/LIB
 MEM_DIR=$(ROOT_DIR)/submodules/MEM
 AXI_DIR=$(ROOT_DIR)/submodules/AXI
 CLINT_DIR=$(ROOT_DIR)/submodules/CLINT
+PLIC_DIR=$(ROOT_DIR)/submodules/PLIC
 
 #sw paths
 SW_DIR:=$(ROOT_DIR)/software
@@ -136,6 +148,7 @@ DEFINE+=$(defmacro)N_SLAVES_W=$(N_SLAVES_W)
 #default baud and system clock freq
 BAUD ?=3000000 #simulation default
 FREQ ?=100000000
+RTC_FREQ ?=100000
 
 SHELL = /bin/bash
 
