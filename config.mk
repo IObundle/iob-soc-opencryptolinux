@@ -48,7 +48,7 @@ REMOTE_ROOT_DIR ?=sandbox/iob-soc-vexriscv
 #SIMULATION
 #default simulator running locally or remotely
 #check the respective Makefile in hardware/simulation/$(SIMULATOR) for specific settings
-SIMULATOR ?=icarus
+SIMULATOR ?=verilator
 
 #BOARD
 #default board running locally or remotely
