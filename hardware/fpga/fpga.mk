@@ -23,6 +23,7 @@ ifeq ($(INIT_MEM),0)
 CONSOLE_CMD+=-f
 endif
 
+TERMINAL_NONCANONICAL_CMD=$(PYTHON_DIR)/noncanonical.py
 
 #RULES
 
@@ -45,7 +46,9 @@ ifeq ($(BOARD_SERVER),)
 else
 	ssh $(BOARD_USER)@$(BOARD_SERVER) "if [ ! -d $(REMOTE_ROOT_DIR) ]; then mkdir -p $(REMOTE_ROOT_DIR); fi"
 	rsync -avz --delete --force --exclude=.git --exclude=submodules/VEXRISCV/submodules $(ROOT_DIR) $(BOARD_USER)@$(BOARD_SERVER):$(REMOTE_ROOT_DIR)
+	$(TERMINAL_NONCANONICAL_CMD)
 	bash -c "trap 'make queue-out-remote' INT TERM KILL; ssh $(BOARD_USER)@$(BOARD_SERVER) 'make -C $(REMOTE_ROOT_DIR)/hardware/fpga/$(TOOL)/$(BOARD) $@ INIT_MEM=$(INIT_MEM) FORCE=$(FORCE) TEST_LOG=\"$(TEST_LOG)\"'"
+	$(TERMINAL_NONCANONICAL_CMD)
 ifneq ($(TEST_LOG),)
 	scp $(BOARD_USER)@$(BOARD_SERVER):$(REMOTE_ROOT_DIR)/hardware/fpga/$(TOOL)/$(BOARD)/test.log .
 endif
