@@ -2,6 +2,18 @@
 
 .section .init
 .global main
+// The 'norelax' option is critical here.
+// Without 'norelax' the global pointer will
+// be loaded relative to the global pointer!
+.option push
+.option norelax
+la gp, 0x800
+.option pop
+
+.global varPrinter
+.extern var1
+.extern var2
+.extern var3
 
 //set stack pointer
 lui sp, %hi(1<<FIRM_ADDR_W)
@@ -20,3 +32,14 @@ li s6, BOOTCTR_BASE
 sw s5, 0(s6)//cpu_rst_req=1, boot=1
 
 ebreak
+
+.align 8
+.func
+varPrinter:
+	lw a0, var1
+	lw a1, var2
+	lw a2, var3
+	jal printVar
+
+	ret
+	.endfunc

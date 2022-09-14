@@ -1,23 +1,91 @@
 #include <stdio.h>
+#include <stdint.h>
 #include "system.h"
 #include "periphs.h"
 #include "iob-uart.h"
 #include "iob_clint.h"
 #include "printf.h"
 
-int main()
-{
-  unsigned long long elapsed;
+#include "riscv-csr.h"
+#include "riscv-interrupts.h"
+#include "iob_clint_timer.h"
 
-  //init uart
-  uart_init(UART_BASE,FREQ/BAUD);
-  clint_init(CLINT_BASE);
+// Machine mode interrupt service routine
+static void irq_entry(void) __attribute__ ((interrupt ("machine")));
 
-  uart_puts("\n\n\nHello world!\n\n\n");
-  printf("Value of Pi = %f\n\n", 3.1415);
+// Global to hold current timestamp
+static volatile uint64_t timestamp = 0;
 
-  elapsed = clint_get_timer();
-  printf("Timer Value = %d\n\n", (int)elapsed);
-  
-  uart_finish();
+void varPrinter(void);
+
+uint32_t       var1;
+uint32_t       var2 = 666;
+uint32_t const var3 = 667;
+
+
+int main() {
+    //init uart
+    uart_init(UART_BASE,FREQ/BAUD);
+    clint_init(CLINT_BASE);
+
+    printf("\n\n\nHello world!\n\n\n");
+
+    // Global interrupt disable
+    csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+    csr_write_mie(0);
+    csr_clr_bits_mcause(MCAUSE_INTERRUPT_ALL_SET_MASK);
+    csr_write_mcause(0);
+
+    // Setup timer for 1 second interval
+    timestamp = mtimer_get_raw_time();
+    mtimer_set_raw_time_cmp(MTIMER_SECONDS_TO_CLOCKS(0.001));
+
+    // Setup the IRQ handler entry point
+    csr_write_mtvec((uint_xlen_t) irq_entry);
+
+    // Enable MIE.MTI
+    csr_set_bits_mie(MIE_MTI_BIT_MASK);
+
+    // Global interrupt enable
+    csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+
+    printf("Waiting...\n");
+    // Wait for interrupt
+    __asm__ volatile ("wfi");
+
+    printf("Exit...\n");
+
+    var1 = 665;
+    varPrinter();
+    uart_finish();
+    return 0;
+
 }
+
+void printVar(uint32_t arg1, uint32_t arg2, uint32_t arg3)
+{
+    printf("var1: %u\n", arg1);
+    printf("var2: %u\n", arg2);
+    printf("var3: %u\n", arg3);
+}
+
+#pragma GCC push_options
+// Force the alignment for mtvec.BASE. A 'C' extension program could be aligned to to bytes.
+#pragma GCC optimize ("align-functions=4")
+static void irq_entry(void)  {
+    printf("Entered IRQ.\n");
+    uint_xlen_t this_cause = csr_read_mcause();
+    if (this_cause &  MCAUSE_INTERRUPT_BIT_MASK) {
+        this_cause &= 0xFF;
+        // Known exceptions
+        switch (this_cause) {
+        case RISCV_INT_POS_MTI :
+            printf("Time interrupt.\n");
+            // Timer exception, keep up the one second tick.
+            mtimer_set_raw_time_cmp(MTIMER_SECONDS_TO_CLOCKS(1));
+            timestamp = mtimer_get_raw_time();
+            break;
+        }
+    }
+}
+#pragma GCC pop_options
