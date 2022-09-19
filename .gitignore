@@ -47,3 +47,4 @@ document/*/*
 !document/*/*.expected
 !document/*/*.pdf
 !document/presentation/presentation.tex
+.vscode/settings.json
