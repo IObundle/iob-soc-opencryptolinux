@@ -16,12 +16,3 @@
 [submodule "submodules/VEXRISCV"]
 	path = submodules/VEXRISCV
 	url = git@github.com:IObundle/iob-vexriscv.git
-[submodule "submodules/CLINT"]
-	path = submodules/CLINT
-	url = git@github.com:IObundle/iob-clint.git
-[submodule "submodules/UART16550"]
-	path = submodules/UART16550
-	url = git@github.com:IObundle/iob-uart16550.git
-[submodule "submodules/PLIC"]
-	path = submodules/PLIC
-	url = git@github.com:IObundle/iob-plic.git
