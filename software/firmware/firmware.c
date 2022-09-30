@@ -8,7 +8,7 @@ int main()
   uint64_t elapsed;
 
   //init uart
-  uart_init(UART16550_BASE,FREQ/(16*BAUD));
+  uart_init(UART_BASE,FREQ/(BAUD));
 
   uart_puts("\n\n\nHello world!\n\n\n");
 
