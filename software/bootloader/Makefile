@@ -12,7 +12,7 @@ endif
 endif
 
 #UART
-include $(UART16550_DIR)/software/embedded/embedded.mk
+include $(UART_DIR)/software/embedded/embedded.mk
 
 #SOURCES
 SRC+=boot.S boot.c

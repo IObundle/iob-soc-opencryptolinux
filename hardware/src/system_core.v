@@ -111,9 +111,9 @@ module system
         .dbus_resp(cpu_d_resp),
 
         // interupts
-        .timerInterrupt(timerInterrupt),
-        .softwareInterrupt(softwareInterrupt),
-        .externalInterrupt(externalInterrupt)
+        .timerInterrupt(1'b0),
+        .softwareInterrupt(1'b0),
+        .externalInterrupt(1'b0)
         );
 
 

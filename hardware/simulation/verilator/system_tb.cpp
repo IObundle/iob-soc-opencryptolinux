@@ -28,9 +28,6 @@ void Timer(unsigned int ns){
       dut->rtc_in = !(dut->rtc_in);
     }
     dut->eval();
-#ifdef VCD
-      tfp->dump(main_time);
-#endif
     main_time += 1;
   }
 }
@@ -94,13 +91,13 @@ int main(int argc, char **argv, char **env){
 #endif
 
   dut->clk = 0;
-  dut->reset = 0;
+  dut->rst = 0;
 
   // Reset sequence
   Timer(100);
-  dut->reset = 1;
+  dut->rst = 1;
   Timer(100);
-  dut->reset = 0;
+  dut->rst = 0;
 
   dut->uart_valid = 0;
   dut->uart_wstrb = 0;

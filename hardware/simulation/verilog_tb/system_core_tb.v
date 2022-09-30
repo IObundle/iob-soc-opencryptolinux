@@ -109,7 +109,7 @@ module system_tb;
 
 system_top system_top(
    .clk                (clk),
-   .reset            (reset),
+   .rst              (reset),
    .trap              (trap),
    .rtc_in             (rtc),
    .uart_valid  (uart_valid),

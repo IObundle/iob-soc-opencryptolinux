@@ -7,7 +7,7 @@
 
 module system_top (
    input                    clk,
-   input                    reset,
+   input                    rst,
    output                   trap,
    input                    rtc_in,
    //tester uart
@@ -139,7 +139,7 @@ module system_top (
 	       .m_axi_rready  (ddr_rready),
 `endif
 	       .clk           (clk),
-	       .reset         (reset),
+	       .reset         (rst),
 	       .trap          (trap)
 	       );
 
@@ -158,7 +158,7 @@ module system_top (
    ddr_model_mem(
                  //address write
                  .clk            (clk),
-                 .rst            (reset),
+                 .rst            (rst),
 		 .s_axi_awid     ({8{ddr_awid}}),
 		 .s_axi_awaddr   (ddr_awaddr[`DDR_ADDR_W-1:0]),
                  .s_axi_awlen    (ddr_awlen),
