@@ -10,14 +10,14 @@ include $(CACHE_DIR)/software/software.mk
 endif
 
 #uart
-include $(UART_DIR)/software/embedded/embedded.mk
+include $(UART16550_DIR)/software/embedded/embedded.mk
 include $(CLINT_DIR)/software/embedded/embedded.mk
 
 #HEADERS
 HDR+=periphs.h
 
 #SOURCES
-SRC+= firmware.S firmware.c $(UART_DIR)/software/printf.c
+SRC+= firmware.S firmware.c $(UART16550_DIR)/software/printf.c
 
 #RULES
 

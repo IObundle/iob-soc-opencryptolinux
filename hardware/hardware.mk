@@ -1,6 +1,3 @@
-#default baud rate for hardware
-BAUD ?=115200
-
 include $(ROOT_DIR)/config.mk
 
 #add itself to MODULES list
@@ -13,6 +10,8 @@ HW_MODULES+=$(IOBSOC_NAME)
 #include LIB modules
 include $(LIB_DIR)/hardware/iob_merge/hardware.mk
 include $(LIB_DIR)/hardware/iob_split/hardware.mk
+include $(LIB_DIR)/hardware/iob_pulse_gen/hardware.mk
+include $(LIB_DIR)/hardware/iob_edge_detect/hardware.mk
 
 #include MEM modules
 include $(MEM_DIR)/hardware/rom/iob_rom_sp/hardware.mk
@@ -25,8 +24,9 @@ include $(VEXRISCV_DIR)/hardware/hardware.mk
 include $(CACHE_DIR)/hardware/hardware.mk
 
 #UART
-include $(UART_DIR)/hardware/hardware.mk
+include $(UART16550_DIR)/hardware/hardware.mk
 include $(CLINT_DIR)/hardware/hardware.mk
+include $(PLIC_DIR)/hardware/hardware.mk
 
 
 
@@ -35,6 +35,7 @@ INC_DIR:=$(HW_DIR)/include
 SRC_DIR:=$(HW_DIR)/src
 
 #DEFINES
+DEFINE+=$(defmacro)DDR_DATA_W=$(DDR_DATA_W)
 DEFINE+=$(defmacro)DDR_ADDR_W=$(DDR_ADDR_W)
 
 #INCLUDES
@@ -42,6 +43,11 @@ INCLUDE+=$(incdir). $(incdir)$(INC_DIR) $(incdir)$(LIB_DIR)/hardware/include
 
 #HEADERS
 VHDR+=$(INC_DIR)/system.vh $(LIB_DIR)/hardware/include/iob_intercon.vh
+
+#axi wires to connect cache to external memory in system top
+VHDR+=m_axi_wire.vh
+m_axi_wire.vh:
+	$(LIB_DIR)/software/python/axi_gen.py axi_wire 'm_' 'm_' 'm_'
 
 #SOURCES
 
@@ -67,13 +73,26 @@ system.v: $(SRC_DIR)/system_core.v
 
 
 # make and copy memory init files
-PYTHON_DIR=$(MEM_DIR)/software/python
-
 boot.hex: $(BOOT_DIR)/boot.bin
 	$(PYTHON_DIR)/makehex.py $< $(BOOTROM_ADDR_W) > $@
 
+ifeq ($(RUN_LINUX),1)
+OPENSBI_DIR = $(VEX_OS_DIR)/fw_jump.bin
+DTB_DIR = $(VEX_OS_DIR)/iob_soc.dtb
+DTB_ADDR:=00F80000
+LINUX_DIR = $(VEX_OS_DIR)/Image
+LINUX_ADDR:=00400000
+ROOTFS_DIR = $(VEX_OS_DIR)/rootfs.cpio.gz
+ROOTFS_ADDR:=01000000
+FIRM_ARGS = $(OPENSBI_DIR)
+FIRM_ARGS += $(DTB_DIR) $(DTB_ADDR)
+FIRM_ARGS += $(LINUX_DIR) $(LINUX_ADDR)
+FIRM_ARGS += $(ROOTFS_DIR) $(ROOTFS_ADDR)
+else
+FIRM_ARGS = $<
+endif
 firmware.hex: $(FIRM_DIR)/firmware.bin
-	$(PYTHON_DIR)/makehex.py $< $(FIRM_ADDR_W) > $@
+	$(PYTHON_DIR)/makehex.py $(FIRM_ARGS) $(FIRM_ADDR_W) > $@
 	$(PYTHON_DIR)/hex_split.py firmware .
 
 #clean general hardware files

@@ -1,96 +1,138 @@
-ROOT_DIR:=.
-include ./config.mk
+SHELL = /bin/bash
+export 
+
+#run on external memory implies DDR use
+ifeq ($(RUN_EXTMEM),1)
+USE_DDR=1
+endif
+
 
 #
 # BUILD EMBEDDED SOFTWARE
 #
+SW_DIR:=./software
+FIRM_DIR:=$(SW_DIR)/firmware
+
+#default baud and frequency if not given
+BAUD ?=$(SIM_BAUD)
+FREQ ?=$(SIM_FREQ)
 
 fw-build:
-	make -C $(FIRM_DIR) build-all
+	$(MAKE) -C $(FIRM_DIR) build-all
 
 fw-clean:
-	make -C $(FIRM_DIR) clean-all
+	$(MAKE) -C $(FIRM_DIR) clean-all
+
+fw-debug:
+	make -C $(FIRM_DIR) debug
 
 #
 # EMULATE ON PC
 #
 
+PC_DIR:=$(SW_DIR)/pc-emul
 pc-emul-build:
-	make fw-build
-	make -C $(PC_DIR)
+	$(MAKE) fw-build
+	$(MAKE) -C $(PC_DIR)
 
 pc-emul-run: pc-emul-build
-	make -C $(PC_DIR) run
+	$(MAKE) -C $(PC_DIR) run
 
 pc-emul-clean: fw-clean
-	make -C $(PC_DIR) clean
+	$(MAKE) -C $(PC_DIR) clean
 
 pc-emul-test: pc-emul-clean
-	make -C $(PC_DIR) test
+	$(MAKE) -C $(PC_DIR) test
 
+
+HW_DIR=./hardware
 #
 # SIMULATE RTL
 #
-
+#default simulator running locally or remotely
+SIMULATOR ?=verilator
+SIM_DIR=$(HW_DIR)/simulation/$(SIMULATOR)
+#default baud and system clock frequency
+SIM_BAUD = 115200
+SIM_FREQ =100000000
 sim-build:
-	make fw-build
-	make -C $(SIM_DIR) build
+	$(MAKE) fw-build
+	$(MAKE) -C $(SIM_DIR) build
 
 sim-run: sim-build
-	make -C $(SIM_DIR) run
+	$(MAKE) -C $(SIM_DIR) run
 
 sim-clean: fw-clean
-	make -C $(SIM_DIR) clean
+	$(MAKE) -C $(SIM_DIR) clean
 
 sim-test:
-	make -C $(SIM_DIR) test
+	$(MAKE) -C $(SIM_DIR) test
+
+sim-debug:
+	make -C $(SIM_DIR) debug
 
 #
 # BUILD, LOAD AND RUN ON FPGA BOARD
 #
+#default board running locally or remotely
+BOARD ?=AES-KU040-DB-G
+BOARD_DIR =$(shell find hardware -name $(BOARD))
+#default baud and system clock freq for boards
+BOARD_BAUD = 115200
+#default board frequency
+BOARD_FREQ ?=100000000
+ifeq ($(BOARD), CYCLONEV-GT-DK)
+BOARD_FREQ =50000000
+endif
 
 fpga-build:
-	make fw-build BAUD=115200
+	make fw-build BAUD=$(BOARD_BAUD) FREQ=$(BOARD_FREQ)
 	make -C $(BOARD_DIR) build
 
 fpga-run: fpga-build
-	make -C $(BOARD_DIR) run TEST_LOG="$(TEST_LOG)"
+	$(MAKE) -C $(BOARD_DIR) run TEST_LOG="$(TEST_LOG)"
 
 fpga-clean: fw-clean
-	make -C $(BOARD_DIR) clean
+	$(MAKE) -C $(BOARD_DIR) clean
+
+fpga-veryclean:
+	make -C $(BOARD_DIR) veryclean
+
+fpga-debug:
+	make -C $(BOARD_DIR) debug
 
 fpga-test:
-	make -C $(BOARD_DIR) test
+	$(MAKE) -C $(BOARD_DIR) test
 
 #
 # SYNTHESIZE AND SIMULATE ASIC
 #
 
 asic-synth:
-	make fw-build BAUD=115200
-	make -C $(ASIC_DIR) synth
+	$(MAKE) fw-build BAUD=115200
+	$(MAKE) -C $(ASIC_DIR) synth
 
 asic-sim-post-synth:
-	make -C $(ASIC_DIR) all TEST_LOG="$(TEST_LOG)" BAUD=115200
+	$(MAKE) -C $(ASIC_DIR) all TEST_LOG="$(TEST_LOG)" BAUD=115200
 
 asic-clean:
-	make -C $(ASIC_DIR) clean-all
+	$(MAKE) -C $(ASIC_DIR) clean-all
 
 asic-test:
-	make -C $(ASIC_DIR) test
+	$(MAKE) -C $(ASIC_DIR) test
 
 #
 # COMPILE DOCUMENTS
 #
-
+DOC_DIR=document/$(DOC)
 doc-build:
-	make -C $(DOC_DIR) $(DOC).pdf
+	$(MAKE) -C $(DOC_DIR) $(DOC).pdf
 
 doc-clean:
-	make -C $(DOC_DIR) clean
+	$(MAKE) -C $(DOC_DIR) clean
 
 doc-test:
-	make -C $(DOC_DIR) test
+	$(MAKE) -C $(DOC_DIR) test
 
 #
 # CLEAN
@@ -107,32 +149,32 @@ test-pc-emul: pc-emul-test
 test-pc-emul-clean: pc-emul-clean
 
 test-sim:
-	make sim-test SIMULATOR=verilator
-	make sim-test SIMULATOR=icarus
+	$(MAKE) sim-test SIMULATOR=verilator
+	$(MAKE) sim-test SIMULATOR=icarus
 
 test-sim-clean:
-	make sim-clean SIMULATOR=verilator
-	make sim-clean SIMULATOR=icarus
+	$(MAKE) sim-clean SIMULATOR=verilator
+	$(MAKE) sim-clean SIMULATOR=icarus
 
 test-fpga:
-	make fpga-test BOARD=CYCLONEV-GT-DK
-	make fpga-test BOARD=AES-KU040-DB-G
+	$(MAKE) fpga-test BOARD=CYCLONEV-GT-DK
+	$(MAKE) fpga-test BOARD=AES-KU040-DB-G
 
 test-fpga-clean:
-	make fpga-clean BOARD=CYCLONEV-GT-DK
-	make fpga-clean BOARD=AES-KU040-DB-G
+	$(MAKE) fpga-clean BOARD=CYCLONEV-GT-DK
+	$(MAKE) fpga-clean BOARD=AES-KU040-DB-G
 
 test-doc:
-	make fpga-clean BOARD=CYCLONEV-GT-DK
-	make fpga-clean BOARD=AES-KU040-DB-G
-	make fpga-build BOARD=CYCLONEV-GT-DK
-	make fpga-build BOARD=AES-KU040-DB-G
-	make doc-test DOC=pb
-	make doc-test DOC=presentation
+	$(MAKE) fpga-clean BOARD=CYCLONEV-GT-DK
+	$(MAKE) fpga-clean BOARD=AES-KU040-DB-G
+	$(MAKE) fpga-build BOARD=CYCLONEV-GT-DK
+	$(MAKE) fpga-build BOARD=AES-KU040-DB-G
+	$(MAKE) doc-test DOC=pb
+	$(MAKE) doc-test DOC=presentation
 
 test-doc-clean:
-	make doc-clean DOC=pb
-	make doc-clean DOC=presentation
+	$(MAKE) doc-clean DOC=pb
+	$(MAKE) doc-clean DOC=presentation
 
 test: test-clean test-pc-emul test-sim test-fpga test-doc
 
@@ -143,7 +185,7 @@ debug:
 	@echo $(CACHE_DIR)
 
 
-.PHONY: fw-build fw-clean \
+.PHONY: fw-build fw-clean fw-debug\
 	pc-emul-build pc-emul-run pc-emul-clean pc-emul-test \
 	sim-build sim-run sim-clean sim-test \
 	fpga-build fpga-run fpga-clean fpga-test \

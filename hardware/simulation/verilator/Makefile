@@ -49,6 +49,7 @@ VERILATOR_FLAGS += --trace # Make waveforms
 #VERILATOR_FLAGS += --gdbbt # Add this trace to get a backtrace in gdb
 VERILATOR_FLAGS += +1800-2005ext+v # Use SystemVerilog 2005 with file extension .v
 VERILATOR_FLAGS += --error-limit 1000 # Exit if number of errors passes 1000
+VERILATOR_FLAGS += -MAKEFLAGS "CXXFLAGS=\"$(DEFINE)\"" # Pass defines to the verilator cpp testbench compilation
 
 # Verilator source files
 VERILATOR_INPUT = $(INCLUDE) $(DEFINE) $(VSRC) --top-module system_top system_tb.cpp
@@ -65,12 +66,9 @@ $(SIM_PROC): $(HDR)
 exec:
 	cp $(VEXRISCV_DIR)/hardware/src/VexRiscv.v_toplevel_RegFilePlugin_regFile.bin .
 	./$(SIM_PROC)
-ifeq ($(VCD),1)
-	sed -i 's/TOP/system_tb/g' *.vcd
-endif
 
-iob_uart_swreg.h: $(FIRM_DIR)/iob_uart_swreg.h
-	cp $< $@
+iob_uart_swreg.h:
+	$(MKREGS) iob_uart $(UART_DIR) SW
 
 clean: clean-remote
 	@rm -f $(SIM_PROC) $(HDR)

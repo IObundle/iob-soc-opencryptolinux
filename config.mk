@@ -15,18 +15,21 @@ DATA_W := 32
 ADDR_W := 32
 N_CORES := 1
 
+#FIRMWARE TO RUN
+RUN_LINUX ?=1
+
 #FIRMWARE SIZE (LOG2)
-FIRM_ADDR_W ?=15
+FIRM_ADDR_W ?=25
 
 #SRAM SIZE (LOG2)
 SRAM_ADDR_W ?=15
 
 #DDR
 USE_DDR ?=0
-RUN_EXTMEM ?=0
+RUN_EXTMEM ?=1
 
 #DATA CACHE ADDRESS WIDTH (tag + index + offset)
-DCACHE_ADDR_W:=24
+DCACHE_ADDR_W:=28
 
 #ROM SIZE (LOG2)
 BOOTROM_ADDR_W:=12
@@ -37,7 +40,7 @@ INIT_MEM ?=1
 #PERIPHERAL LIST
 #must match respective submodule CORE_NAME in the core.mk file of the submodule
 #PERIPHERALS:=UART
-PERIPHERALS ?=UART CLINT
+PERIPHERALS ?=UART16550 PLIC CLINT
 
 #ROOT DIRECTORY ON REMOTE MACHINES
 REMOTE_ROOT_DIR ?=sandbox/iob-soc-vexriscv
@@ -45,7 +48,7 @@ REMOTE_ROOT_DIR ?=sandbox/iob-soc-vexriscv
 #SIMULATION
 #default simulator running locally or remotely
 #check the respective Makefile in hardware/simulation/$(SIMULATOR) for specific settings
-SIMULATOR ?=icarus
+SIMULATOR ?=verilator
 
 #BOARD
 #default board running locally or remotely
@@ -62,6 +65,14 @@ UART_HW_DIR:=$(UART_DIR)/hardware
 ####################################################################
 # DERIVED FROM PRIMARY PARAMETERS: DO NOT CHANGE BELOW THIS POINT
 ####################################################################
+
+ifeq ($(RUN_LINUX),1)
+DEFINE+=$(defmacro)RUN_LINUX
+BAUD=115200
+FIRM_ADDR_W=25
+RUN_EXTMEM=1
+DCACHE_ADDR_W=28
+endif
 
 ifeq ($(RUN_EXTMEM),1)
 DEFINE+=$(defmacro)RUN_EXTMEM
@@ -80,17 +91,21 @@ endif
 VEXRISCV_DIR=$(ROOT_DIR)/submodules/VEXRISCV
 CACHE_DIR=$(ROOT_DIR)/submodules/CACHE
 UART_DIR=$(ROOT_DIR)/submodules/UART
+UART16550_DIR=$(ROOT_DIR)/submodules/UART16550
 LIB_DIR=$(ROOT_DIR)/submodules/LIB
 MEM_DIR=$(ROOT_DIR)/submodules/MEM
 AXI_DIR=$(ROOT_DIR)/submodules/AXI
 CLINT_DIR=$(ROOT_DIR)/submodules/CLINT
+PLIC_DIR=$(ROOT_DIR)/submodules/PLIC
 
 #sw paths
 SW_DIR:=$(ROOT_DIR)/software
 PC_DIR:=$(SW_DIR)/pc-emul
 FIRM_DIR:=$(SW_DIR)/firmware
 BOOT_DIR:=$(SW_DIR)/bootloader
-CONSOLE_DIR:=$(SW_DIR)/console
+
+#scripts paths
+PYTHON_DIR=$(LIB_DIR)/software/python
 
 #hw paths
 HW_DIR=$(ROOT_DIR)/hardware
@@ -112,13 +127,8 @@ DEFINE+=$(defmacro)N_SLAVES=$(N_SLAVES) #peripherals
 
 #address selection bits
 E:=31 #extra memory bit
-ifeq ($(USE_DDR),1)
 P:=30 #periphs
 B:=29 #boot controller
-else
-P:=31
-B:=30
-endif
 
 DEFINE+=$(defmacro)E=$E
 DEFINE+=$(defmacro)P=$P
@@ -134,15 +144,16 @@ $(foreach p, $(PERIPHERALS), $(eval DEFINE+=$(defmacro)$p=$($p)))
 N_SLAVES_W = $(shell echo "import math; print(math.ceil(math.log($(N_SLAVES),2)))"|python3 )
 DEFINE+=$(defmacro)N_SLAVES_W=$(N_SLAVES_W)
 
-
-#default baud and system clock freq
-BAUD ?=5000000 #simulation default
-FREQ ?=100000000
-
-SHELL = /bin/bash
-
 #RULES
+
+#kill "console", the background running program seriving simulators,
+#emulators and boards
+CNSL_PID:=ps aux | grep $(USER) | grep console | grep python3 | grep -v grep
+kill-cnsl:
+	@if [ "`$(CNSL_PID)`" ]; then \
+	kill -9 $$($(CNSL_PID) | awk '{print $$2}'); fi
+
 gen-clean:
 	@rm -f *# *~
 
-.PHONY: gen-clean
+.PHONY: gen-clean kill-cnsl

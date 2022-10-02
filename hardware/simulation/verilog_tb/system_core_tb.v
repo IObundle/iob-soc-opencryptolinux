@@ -8,13 +8,13 @@
 module system_tb;
 
   parameter realtime clk_per = 1s/`FREQ;
-  parameter realtime rtc_per = 1s/`RTC_FREQ;
+  //parameter realtime rtc_per = 1s/`RTC_FREQ;
 
   //clock
   reg clk = 1;
   always #(clk_per/2) clk = ~clk;
-  reg rtc = 1;
-  always #(rtc_per/2) rtc = ~rtc;
+  //reg rtc = 1;
+  //always #(rtc_per/2) rtc = ~rtc;
 
   //reset
   reg reset = 0;
@@ -107,17 +107,18 @@ module system_tb;
     end
   end
 
-system_top system_top(
-   .clk                (clk),
-   .reset            (reset),
-   .trap              (trap),
-   .rtc_in             (rtc),
-   .uart_valid  (uart_valid),
-   .uart_addr    (uart_addr),
-   .uart_wdata  (uart_wdata),
-   .uart_wstrb  (uart_wstrb),
-   .uart_rdata  (uart_rdata),
-   .uart_ready  (uart_ready)
+system_top system_top
+  (
+   .clk (clk),
+   .rst (reset),
+   .trap (trap),
+
+   .uart_valid (uart_valid),
+   .uart_addr (uart_addr),
+   .uart_wdata (uart_wdata),
+   .uart_wstrb (uart_wstrb),
+   .uart_rdata (uart_rdata),
+   .uart_ready (uart_ready)
    );
 
 
