@@ -8,13 +8,13 @@
 module system_tb;
 
   parameter realtime clk_per = 1s/`FREQ;
-  parameter realtime rtc_per = 1s/`RTC_FREQ;
+  //parameter realtime rtc_per = 1s/`RTC_FREQ;
 
   //clock
   reg clk = 1;
   always #(clk_per/2) clk = ~clk;
-  reg rtc = 1;
-  always #(rtc_per/2) rtc = ~rtc;
+  //reg rtc = 1;
+  //always #(rtc_per/2) rtc = ~rtc;
 
   //reset
   reg reset = 0;
