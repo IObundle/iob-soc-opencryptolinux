@@ -144,14 +144,6 @@ $(foreach p, $(PERIPHERALS), $(eval DEFINE+=$(defmacro)$p=$($p)))
 N_SLAVES_W = $(shell echo "import math; print(math.ceil(math.log($(N_SLAVES),2)))"|python3 )
 DEFINE+=$(defmacro)N_SLAVES_W=$(N_SLAVES_W)
 
-
-#default baud and system clock freq
-BAUD ?=3000000 #simulation default
-FREQ ?=100000000
-RTC_FREQ ?=100000
-
-SHELL = /bin/bash
-
 #RULES
 
 #kill "console", the background running program seriving simulators,
