@@ -66,9 +66,6 @@ $(SIM_PROC): $(HDR)
 exec:
 	cp $(VEXRISCV_DIR)/hardware/src/VexRiscv.v_toplevel_RegFilePlugin_regFile.bin .
 	./$(SIM_PROC)
-ifeq ($(VCD),1)
-	sed -i 's/TOP/system_tb/g' *.vcd
-endif
 
 iob_uart_swreg.h:
 	$(MKREGS) iob_uart $(UART_DIR) SW
