@@ -1,19 +1,6 @@
-# IOb-SoC
+# IOb-SoC-OpenCryptoLinux
 
-IOb-SoC is a System-on-Chip (SoC) template comprising an open-source RISC-V
-processor (picorv32), an internal SRAM memory subsystem, a UART (iob-uart), and
-an optional interface to an external memory. If the external memory interface is
-selected, an instruction L1 cache, a data L1 cache and a shared L2 cache are
-added to the system. The L2 cache communicates with a 3rd party memory
-controller IP (typically a DDR controller) using an AXI4 master bus.
-
-## Virtual Machine
-
-IOb-SoC can be run on a VirtualBox VM. This way, the system can be quickly tried
-without investing much time installing the tools:
-
-1. Donwload and install [Oracle's VirtualBox](https://www.virtualbox.org/wiki/Downloads)
-2. Download [IOb-SoC VM](https://drive.google.com/file/d/1gb9O4K4H6fDPyzebjzteXBuiTqnbt2Wi/view?usp=sharing)
+OpenCryptoLinux aims to develop an open, secure, and user-friendly SoC template capable of running the Linux operating system, with cryptography functions running on a RISC-V processor. The processor will control a low-cost Coarse-Grained Reconfigurable Arrays (CGRAS) for enhanced security, performance, and energy efficiency. Running Linux on this SoC allows non-hardware experts to use this platform, democratizing it. This project will help build an Internet of Things (IoT) that does not compromise security and privacy. The project will be fully open-source, which guarantees public scrutiny and quality. It will use other open-source solutions funded by the NLnet Foundation, such as the RISC-V processors from SpinalHDL and the OpenCryptoHW project.
 
 
 ## Operating Systems
@@ -356,3 +343,9 @@ export PATH=$PATH:/path/to/riscv/bin
 
 The above command should be added to your `~/.bashrc` file, so that
 you do not have to type it on every session.
+
+# Acknowledgement
+This project is funded through the NGI Assure Fund, a fund established by NLnet
+with financial support from the European Commission's Next Generation Internet
+programme, under the aegis of DG Communications Networks, Content and Technology
+under grant agreement No 957073.
