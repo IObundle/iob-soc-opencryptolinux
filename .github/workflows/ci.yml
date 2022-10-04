@@ -13,7 +13,7 @@ concurrency:
 
 on:
   push:
-    branches: [ master milestone1.1_2 ]
+    branches: [ master milestones_1_1_and_1_2 ]
   # Don't forget to require approval for all outside collaborators
   pull_request:
     branches: '*'
