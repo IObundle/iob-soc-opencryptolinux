@@ -1,74 +1,77 @@
+#include <stdio.h>
+#include <stdint.h>
 #include "system.h"
 #include "periphs.h"
 #include "iob-uart.h"
+#include "iob_clint.h"
 #include "printf.h"
 
-char *send_string = "Sending this string as a file to console.\n"
-                    "The file is then requested back from console.\n"
-                    "The sent file is compared to the received file to confirm " 
-                    "correct file transfer via UART using console.\n"
-                    "Generating the file in the firmware creates an uniform "
-                    "file transfer between pc-emul, simulation and fpga without"
-                    " adding extra targets for file generation.\n";
+#include "riscv-csr.h"
+#include "riscv-interrupts.h"
+#include "iob_clint_timer.h"
 
-// copy src to dst
-// return number of copied chars (excluding '\0')
-int string_copy(char *dst, char *src) {
-    if (dst == NULL || src == NULL) {
-        return -1;
-    }
-    int cnt = 0;
-    while(src[cnt] != 0){
-        dst[cnt] = src[cnt];
-        cnt++;
-    }
-    dst[cnt] = '\0';
-    return cnt;
-}
+// Machine mode interrupt service routine
+static void irq_entry(void) __attribute__ ((interrupt ("machine")));
 
-// 0: same string
-// otherwise: different
-int compare_str(char *str1, char *str2, int str_size) {
-    int c = 0;
-    while(c < str_size) {
-        if (str1[c] != str2[c]){
-            return str1[c] - str2[c];
-        }
-        c++;
-    }
-    return 0;
-}
+// Global to hold current timestamp
+static volatile uint64_t timestamp = 0;
 
 int main() {
-  //init uart
-  uart_init(UART_BASE, FREQ/BAUD);
+    //init uart
+    uart_init(UART_BASE,FREQ/BAUD);
+    clint_init(CLINT_BASE);
 
-  //test puts
-  uart_puts("\n\n\nHello world!\n\n\n");
+    printf("\n\n\nHello world!\n\n\n");
 
-  //test printf with floats 
-  printf("Value of Pi = %f\n\n", 3.1415);
+    // Global interrupt disable
+    csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+    csr_write_mie(0);
+    csr_clr_bits_mcause(MCAUSE_INTERRUPT_ALL_SET_MASK);
+    csr_write_mcause(0);
 
-  //test file send
-  char *sendfile = malloc(1000);
-  int send_file_size = 0;
-  send_file_size = string_copy(sendfile, send_string);
-  uart_sendfile("Sendfile.txt", send_file_size, sendfile);
+    // Setup timer for 1 second interval
+    timestamp = mtimer_get_raw_time();
+    mtimer_set_raw_time_cmp(MTIMER_SECONDS_TO_CLOCKS(1));
 
-  //test file receive
-  char *recvfile = malloc(10000);
-  int file_size = 0;
-  file_size = uart_recvfile("Sendfile.txt", recvfile);
+    // Setup the IRQ handler entry point
+    csr_write_mtvec((uint_xlen_t) irq_entry);
 
-  //compare files
-  if (compare_str(sendfile, recvfile, send_file_size)) {
-      printf("FAILURE: Send and received file differ!\n");
-  } else {
-      printf("SUCCESS: Send and received file match!\n");
-  }
+    // Enable MIE.MTI
+    csr_set_bits_mie(MIE_MTI_BIT_MASK);
 
-  free(sendfile);
-  free(recvfile);
+    // Global interrupt enable
+    csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 
-  uart_finish();
+    printf("Waiting...\n");
+    // Wait for interrupt
+    __asm__ volatile ("wfi");
+
+    printf("Exit...\n");
+    uart_finish();
+    return 0;
+
 }
+
+#pragma GCC push_options
+// Force the alignment for mtvec.BASE. A 'C' extension program could be aligned to to bytes.
+#pragma GCC optimize ("align-functions=4")
+static void irq_entry(void)  {
+    printf("Entered IRQ.\n");
+    uint_xlen_t this_cause = csr_read_mcause();
+    if (this_cause &  MCAUSE_INTERRUPT_BIT_MASK) {
+        this_cause &= 0xFF;
+        // Known exceptions
+        switch (this_cause) {
+        case RISCV_INT_POS_MTI :
+            printf("Time interrupt.\n");
+            // Timer exception, keep up the one second tick.
+            mtimer_set_raw_time_cmp(MTIMER_SECONDS_TO_CLOCKS(1));
+            timestamp = mtimer_get_raw_time();
+            float aux = (float)timestamp/MTIME_FREQ_HZ;
+            printf("Current time passed:   %.3f seconds.\n", aux);
+            printf("MTIMER register value: %lld.\n", timestamp);
+            break;
+        }
+    }
+}
+#pragma GCC pop_options
