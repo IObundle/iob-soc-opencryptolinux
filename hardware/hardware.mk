@@ -26,6 +26,8 @@ include $(CACHE_DIR)/hardware/hardware.mk
 #UART
 include $(UART_DIR)/hardware/hardware.mk
 
+#CLINT
+include $(CLINT_DIR)/hardware/hardware.mk
 
 
 #HARDWARE PATHS
