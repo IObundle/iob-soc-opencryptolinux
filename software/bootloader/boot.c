@@ -79,10 +79,6 @@ int main() {
     uart_sendfile(s_fw, file_size, prog_start_addr);
 #endif
 
-#ifdef RUN_EXTMEM
-  while( !cache_wtb_empty() );
-#endif
-
   // Clear CPU registers, to not pass arguments to the next
   asm volatile("and     a0,a0,zero");
   asm volatile("and     a1,a1,zero");
@@ -96,9 +92,10 @@ int main() {
   //run firmware
   uart_puts (PROGNAME);
   uart_puts (": Restart CPU to run user program...\n");
-  uart_putc(DC1);
   uart_txwait();
-  //reboot and run firmware (not bootloader)
-  *((int *) BOOTCTR_BASE) = 0b10;
+
+#ifdef RUN_EXTMEM
+  while( !cache_wtb_empty() );
+#endif
 
 }
