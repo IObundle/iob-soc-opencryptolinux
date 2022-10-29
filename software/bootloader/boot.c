@@ -88,6 +88,7 @@ int main() {
   asm volatile("and     a5,a5,zero");
   asm volatile("and     a6,a6,zero");
   asm volatile("and     a7,a7,zero");
+  uart_putc((char) DC1);
 
   //run firmware
   uart_puts (PROGNAME);
