@@ -77,9 +77,7 @@ jobs:
           submodules: 'recursive'
       - name: test-clean
         run: make test-clean
-      - name: test-build-aes-ku040
-        run: make fpga-build BOARD=AES-KU040-DB-G
-      - name: test-run-aes-ku040
+      - name: test-aes-ku040
         run: make fpga-run BOARD=AES-KU040-DB-G
 
   doc:
