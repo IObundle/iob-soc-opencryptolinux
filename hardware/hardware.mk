@@ -12,6 +12,7 @@ include $(LIB_DIR)/hardware/iob_merge/hardware.mk
 include $(LIB_DIR)/hardware/iob_split/hardware.mk
 include $(LIB_DIR)/hardware/iob_pulse_gen/hardware.mk
 include $(LIB_DIR)/hardware/iob_edge_detect/hardware.mk
+include $(LIB_DIR)/hardware/iob_reg/hardware.mk
 
 #include MEM modules
 include $(MEM_DIR)/hardware/rom/iob_rom_sp/hardware.mk
@@ -26,6 +27,8 @@ include $(CACHE_DIR)/hardware/hardware.mk
 #UART
 include $(UART_DIR)/hardware/hardware.mk
 
+#CLINT
+include $(CLINT_DIR)/hardware/hardware.mk
 
 
 #HARDWARE PATHS
