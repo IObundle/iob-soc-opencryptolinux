@@ -53,7 +53,7 @@ SIMULATOR ?=verilator
 #BOARD
 #default board running locally or remotely
 #check the respective Makefile in hardware/fpga/$(BOARD) for specific settings
-BOARD ?=AES-KU040-DB-G# CYCLONEV-GT-DK
+BOARD ?=CYCLONEV-GT-DK
 
 #DOCUMENTATION
 #default document to compile

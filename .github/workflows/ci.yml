@@ -15,7 +15,7 @@ on:
   push:
     branches:
         - master
-        - milestones_1_1_and_1_2
+        - milestone_2_2
   # Don't forget to require approval for all outside collaborators
   pull_request:
     branches: '*'
@@ -23,19 +23,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  pc-emul:
-    runs-on: self-hosted
-    timeout-minutes: 30
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
-      - name: test-clean
-        run: make test-clean
-      - name: test-pc-emul
-        run: make test-pc-emul
-
   verilator:
     runs-on: self-hosted
     timeout-minutes: 30
@@ -56,7 +43,6 @@ jobs:
     runs-on: self-hosted
     timeout-minutes: 90
     if: ${{ !cancelled() }}
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -91,8 +77,10 @@ jobs:
           submodules: 'recursive'
       - name: test-clean
         run: make test-clean
-      - name: test-aes-ku040
-        run: make fpga-build BOARD=AES-KU040-DB-G && make fpga-run BOARD=AES-KU040-DB-G
+      - name: test-build-aes-ku040
+        run: make fpga-build BOARD=AES-KU040-DB-G
+      - name: test-run-aes-ku040
+        run: make fpga-run BOARD=AES-KU040-DB-G
 
   doc:
     runs-on: self-hosted
