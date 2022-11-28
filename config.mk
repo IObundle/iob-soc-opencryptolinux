@@ -53,7 +53,7 @@ SIMULATOR ?=verilator
 #BOARD
 #default board running locally or remotely
 #check the respective Makefile in hardware/fpga/$(BOARD) for specific settings
-BOARD ?=AES-KU040-DB-G # CYCLONEV-GT-DK
+BOARD ?=CYCLONEV-GT-DK
 
 #DOCUMENTATION
 #default document to compile
@@ -97,6 +97,7 @@ MEM_DIR=$(ROOT_DIR)/submodules/MEM
 AXI_DIR=$(ROOT_DIR)/submodules/AXI
 CLINT_DIR=$(ROOT_DIR)/submodules/CLINT
 PLIC_DIR=$(ROOT_DIR)/submodules/PLIC
+LINUX_OS_DIR=$(ROOT_DIR)/submodules/OS
 
 #sw paths
 SW_DIR:=$(ROOT_DIR)/software
