@@ -36,7 +36,7 @@ FORCE ?= 1
 run:
 ifeq ($(NORUN),0)
 ifeq ($(RUN_LINUX),1)
-	cp $(VEXRISCV_DIR)/software/OS_build/* $(ROOT_DIR)/hardware/fpga/$(TOOL)/$(BOARD)
+	cp $(OS_DIR)/* $(ROOT_DIR)/hardware/fpga/$(TOOL)/$(BOARD)
 endif
 ifeq ($(BOARD_SERVER),)
 	cp $(FIRM_DIR)/firmware.bin .
