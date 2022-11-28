@@ -80,6 +80,7 @@ jobs:
         run: make test-clean
       - name: test-aes-ku040
         run: make fpga-run BOARD=AES-KU040-DB-G RUN_LINUX=0 FIRM_ADDR_W=15
+        
   doc:
     runs-on: self-hosted
     timeout-minutes: 60
