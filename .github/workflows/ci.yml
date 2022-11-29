@@ -15,7 +15,6 @@ on:
   push:
     branches:
         - master
-        - milestones_1_1_and_1_2
   # Don't forget to require approval for all outside collaborators
   pull_request:
     branches: '*'
@@ -54,20 +53,19 @@ jobs:
   #    - name: test-icarus
   #      run: make sim-run SIMULATOR=icarus RUN_LINUX=0 RUN_EXTMEM=0 FIRM_ADDR_W=15
 
-  #Does not work
-  #cyclonev:
-  #  runs-on: self-hosted
-  #  timeout-minutes: 60
-  #  if: ${{ !cancelled() }}
-  #
-  #  steps:
-  #    - uses: actions/checkout@v3
-  #      with:
-  #        submodules: 'recursive'
-  #    - name: test-clean
-  #      run: make test-clean
-  #    - name: test-cyclonev
-  #      run: make fpga-run BOARD=CYCLONEV-GT-DK RUN_LINUX=0 RUN_EXTMEM=0 FIRM_ADDR_W=15
+  cyclonev:
+    runs-on: self-hosted
+    timeout-minutes: 60
+    if: ${{ !cancelled() }}
+  
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: test-clean
+        run: make test-clean
+      - name: test-cyclonev
+        run: make fpga-run BOARD=CYCLONEV-GT-DK RUN_LINUX=0 RUN_EXTMEM=0 FIRM_ADDR_W=15
 
   aes-ku040:
     runs-on: self-hosted
@@ -82,6 +80,7 @@ jobs:
         run: make test-clean
       - name: test-aes-ku040
         run: make fpga-run BOARD=AES-KU040-DB-G RUN_LINUX=0 FIRM_ADDR_W=15
+        
   doc:
     runs-on: self-hosted
     timeout-minutes: 60
