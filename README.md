@@ -3,19 +3,34 @@
 OpenCryptoLinux aims to develop an open, secure, and user-friendly SoC template capable of running the Linux operating system, with cryptography functions running on a RISC-V processor. The processor will control a low-cost Coarse-Grained Reconfigurable Arrays (CGRAS) for enhanced security, performance, and energy efficiency. Running Linux on this SoC allows non-hardware experts to use this platform, democratizing it. This project will help build an Internet of Things (IoT) that does not compromise security and privacy. The project will be fully open-source, which guarantees public scrutiny and quality. It will use other open-source solutions funded by the NLnet Foundation, such as the RISC-V processors from SpinalHDL and the OpenCryptoHW project.
 
 
-## Operating Systems
 
-IOb-SoC can be used in Linux Operating Systems. The following instructions work
+## Table of Contents
+1. [Setup Development Environment](#setup)
+2. [Simulate the system](#simulation)
+3. [Emulate the system on PC (WIP)](#emulation)
+4. [Build and run on FPGA board](#fpga)
+5. [Compile the documentation](#doc)
+6. [Testing (WIP)](#testing)
+7. [Required Software](#requirements)
+8. [Acknowledgement](#acknowledgement)
+
+
+
+## Setup Development Environment <a name="setup"></a>
+
+### Operating Systems
+
+IOb-SoC-OpenCryptoLinux can be used in Linux Operating Systems. The following instructions work
 for CentOS 7 and Ubuntu 18.04 or 20.04 LTS.
 
-## Clone the repository
+### Clone the repository
 
 The first step is to clone this repository. IOb-SoC uses git sub-module trees, and
 GitHub will ask for your password for each downloaded module if you clone by *https*. To avoid this,
 setup GitHub access with *ssh* and type:
 ```
-git clone --recursive git@github.com:IObundle/iob-soc.git
-cd iob-soc
+git clone --recursive git@github.com:IObundle/iob-soc-opencryptolinux.git
+cd iob-soc-opencryptolinux
 ```
 
 Alternatively, you can still clone this repository using *https* if you cache
@@ -23,14 +38,14 @@ your credentials before cloning the repository, using: ``git config --global
 credential.helper 'cache --timeout=<time_in_seconds>'``
 
 
-## Configure your SoC
+### Configure your SoC
 
 To configure your system edit the `config.mk` file, which can be found at the
 repository root. This file has the system configuration variables;
 hopefully, each variable is explained by a comment.
 
 
-## Set environment variables for local or remote building and running
+### Set environment variables for local or remote building and running
 
 The various simulators, FPGA compilers and FPGA boards may run locally or
 remotely. For running a tool remotely, you need to set two environmental
@@ -40,17 +55,17 @@ these settings in your `.bashrc` file, so that they apply to every session.
 
 ### Set up the remote simulator server
 
-Using open-source simulator Icarus Verilog as an example, note that in
-`hardware/simulation/icarus/Makefile`, the variable for the server logical name,
-`SIM_SERVER`, is set to `IVSIM_SERVER`, and the variable for the user name,
-`SIM_USER`, is set to `IVSIM_USER`. If you do not set these variables the 
+Using open-source simulator Verilator as an example, note that in
+`hardware/simulation/verilator/Makefile`, the variable for the server logical name,
+`SIM_SERVER`, is set to `VSIM_SERVER`, and the variable for the user name,
+`SIM_USER`, is set to `VSIM_USER`. If you do not set these variables the 
 simulator will run locally. To run the simulator on server 
-*mysimserver.myorg.com* as user *ivsimuser*, set the following environmental 
+*mysimserver.myorg.com* as user *vsimuser*, set the following environmental 
 variables beforehand:
 
 ```Bash
-export IVSIM_SERVER=ivsimserver.myorg.com
-export IVSIM_USER=ivsimuser
+export VSIM_SERVER=mysimserver.myorg.com
+export VSIM_USER=vsimuser
 ```
 
 ### Set up the remote FPGA toolchain and board servers
@@ -81,11 +96,11 @@ export LM_LICENSE_FILE=port@licenseserver.myorg.com;lic_or_dat_file
 ```
 
 
-## Simulate the system
+## Simulate the system <a name="simulation"></a>
 
 To simulate IOb-SoC, the simulator must be installed, either locally or
 remotely, and must have a run directory under the `hardware/simulation`
-directory, such as the `hardware/simulation/icarus` directory. To simulate,
+directory, such as the `hardware/simulation/verilator` directory. To simulate,
 type:
 
 ```
@@ -98,7 +113,7 @@ make [sim-run] [SIMULATOR=<simulator directory name>] [<control parameters>]
 command line, overriding those in the `config.mk` file. Example control
 parameters are `INIT_MEM=0 RUN_EXTMEM=1`. For example,
 ```
-make sim-run SIMULATOR=icarus INIT_MEM=0 RUN_EXTMEM=1
+make sim-run SIMULATOR=verilator RUN_LINUX=0 RUN_EXTMEM=1
 ```
 
 To visualise simulation waveforms use the `VCD=1` control parameter. It will
@@ -108,7 +123,7 @@ To clean simulation generated files, type:
 ```
 make sim-clean [SIMULATOR=<simulator directory name>] 
 # Example
-make sim-clean SIMULATOR=icarus
+make sim-clean SIMULATOR=verilator
 ```
 
 For more details, read the Makefile in each simulator directory. The Makefile
@@ -119,7 +134,7 @@ apply to any simulator. In turn, `simulation.mk` includes the Makefile segment
 Makefile in the simulator's directory, with the segments recursively included as
 described, is construed as a single large Makefile.
 
-## Emulate the system on PC 
+## Emulate the system on PC (WIP) <a name="emulation"></a>
 
 If there are embedded software compilation or runtime issues you can
 *emulate* the system on a PC to debug the issues. To emulate IOb-SoC's embedded
@@ -145,7 +160,7 @@ explained for the simulation make file, note the Makefile segments recursively
 included.
 
 
-## Build and run on FPGA board
+## Build and run on FPGA board <a name="fpga"></a>
 
 To build and run IOb-SoC on an FPGA board, the FPGA design tools must be
 installed, either locally or remotely, the board must be attached to the local
@@ -189,7 +204,7 @@ To clean the FPGA compilation generated files, type
 make fpga-clean [BOARD=<board directory name>]
 ``` 
 
-## Compile the documentation
+## Compile the documentation <a name="doc"></a>
 
 To compile documents, the LaTeX document preparation software must be
 installed. Each document that can be compiled has a build directory under the
@@ -210,7 +225,7 @@ For more details, read the Makefile in each document's directory, and follow the
 recursively included Makefile segments as explained before.
 
 
-## Testing
+## Testing (WIP) <a name="testing"></a>
 
 ### Simulation test
 
@@ -295,56 +310,30 @@ To run all simulation, FPGA board and documentation tests, type:
 make test
 ```
 
-## Cleaning
+### Cleaning
 
 The following command will clean the selected simulation, board and document
 directories, locally and in the remote servers:
 
 ```
-make clean
+make test-clean
 ```
 
+## Required Software <a name="requirements"></a>
+- [RISC-V GNU Compiler Toolchain](https://github.com/riscv-collab/riscv-gnu-toolchain) 2022.06.10 (Newlib)- 
 
+    After the installation is done, type:
+    ```
+    export PATH=$PATH:/path/to/riscv/bin
+    ```
 
-## Instructions for Installing the RISC-V GNU Compiler Toolchain
+    The above command should be added to your `~/.bashrc` file, so that
+    you do not have to type it on every session.
+- [Icarus Verilog](https://github.com/steveicarus/iverilog) v11.0 (stable)
+- [Verilator](https://github.com/verilator/verilator) v4.226-27
+- [GTKwave](https://gtkwave.sourceforge.net/)
 
-### Get sources and checkout the supported stable version
-
-```
-git clone https://github.com/riscv/riscv-gnu-toolchain
-git checkout 2022.06.10
-```
-
-### Prerequisites
-
-For the Ubuntu OS and its variants:
-
-```
-sudo apt install autoconf automake autotools-dev curl python3 python2 libmpc-dev libmpfr-dev libgmp-dev gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev
-```
-
-For CentOS and its variants:
-```
-sudo yum install autoconf automake python3 python2 libmpc-devel mpfr-devel gmp-devel gawk  bison flex texinfo patchutils gcc gcc-c++ zlib-devel expat-devel
-```
-
-### Installation
-
-```
-cd riscv-gnu-toolchain
-./configure --prefix=/path/to/riscv --enable-multilib
-sudo make -j$(nproc)
-```
-
-This will take a while. After it is done, type:
-```
-export PATH=$PATH:/path/to/riscv/bin
-```
-
-The above command should be added to your `~/.bashrc` file, so that
-you do not have to type it on every session.
-
-# Acknowledgement
+# Acknowledgement <a name="acknowledgement"></a>
 This project is funded through the NGI Assure Fund, a fund established by NLnet
 with financial support from the European Commission's Next Generation Internet
 programme, under the aegis of DG Communications Networks, Content and Technology
