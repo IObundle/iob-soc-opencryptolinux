@@ -320,17 +320,18 @@ make test-clean
 ```
 
 ## Required Software <a name="requirements"></a>
-- RISC-V GNU Compiler Toolchain 2022.06.10 - 
+- [RISC-V GNU Compiler Toolchain](https://github.com/riscv-collab/riscv-gnu-toolchain) 2022.06.10 (Newlib)- 
 
-    This will take a while. After it is done, type:
+    After the installation is done, type:
     ```
     export PATH=$PATH:/path/to/riscv/bin
     ```
 
     The above command should be added to your `~/.bashrc` file, so that
     you do not have to type it on every session.
-- Icarus Verilog v11.0 (stable)
-- Verilator v4.226-27
+- [Icarus Verilog](https://github.com/steveicarus/iverilog) v11.0 (stable)
+- [Verilator](https://github.com/verilator/verilator) v4.226-27
+- [GTKwave](https://gtkwave.sourceforge.net/)
 
 # Acknowledgement <a name="acknowledgement"></a>
 This project is funded through the NGI Assure Fund, a fund established by NLnet
