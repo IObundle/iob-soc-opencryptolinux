@@ -12,6 +12,7 @@ OpenCryptoLinux aims to develop an open, secure, and user-friendly SoC template 
 5. [Compile the documentation](#doc)
 6. [Testing (WIP)](#testing)
 7. [Required Software](#requirements)
+8. [Acknowledgement](#acknowledgement)
 
 
 
@@ -331,7 +332,7 @@ make test-clean
 - Icarus Verilog v11.0 (stable)
 - Verilator v4.226-27
 
-# Acknowledgement
+# Acknowledgement <a name="acknowledgement"></a>
 This project is funded through the NGI Assure Fund, a fund established by NLnet
 with financial support from the European Commission's Next Generation Internet
 programme, under the aegis of DG Communications Networks, Content and Technology
