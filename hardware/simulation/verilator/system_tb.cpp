@@ -47,7 +47,6 @@ void uartwrite(unsigned int cpu_address, unsigned int cpu_data, unsigned int nby
     Timer(CLK_PERIOD);
     dut->uart_wstrb = 0;
     dut->uart_valid = 0;
-
 }
 
 // 2-cycle read
