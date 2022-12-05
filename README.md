@@ -332,6 +332,13 @@ make test-clean
 - [Icarus Verilog](https://github.com/steveicarus/iverilog) v11.0 (stable)
 - [Verilator](https://github.com/verilator/verilator) v4.226-27
 - [GTKwave](https://gtkwave.sourceforge.net/)
+- [Vivado](https://www.xilinx.com/products/design-tools/vivado.html)
+- [Quartus](https://www.intel.com/content/www/us/en/products/details/fpga/development-tools/quartus-prime.html)
+
+### If using Nix
+- [Nix package manager](https://nixos.org/download.html)
+    After installing you can do `nix-shell` to enter an environment that meets the project requirements.
+    Currently the RISC-V Toolchain, Vivado and Quartus still have to be installed separately.
 
 # Acknowledgement <a name="acknowledgement"></a>
 This project is funded through the NGI Assure Fund, a fund established by NLnet
