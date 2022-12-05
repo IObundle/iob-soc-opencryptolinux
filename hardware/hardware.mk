@@ -79,8 +79,8 @@ boot.hex: $(BOOT_DIR)/boot.bin
 
 
 #OS
-include $(LINUX_OS_DIR)/config.mk
 ifeq ($(RUN_LINUX),1)
+include $(LINUX_OS_DIR)/config.mk
 OPENSBI_DIR = $(OS_DIR)/fw_jump.bin
 DTB_DIR = $(OS_DIR)/iob_soc.dtb
 DTB_ADDR:=00F80000
