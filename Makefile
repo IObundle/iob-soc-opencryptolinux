@@ -62,6 +62,9 @@ sim-build:
 sim-run: sim-build
 	$(MAKE) -C $(SIM_DIR) run
 
+sim-waves:
+	make -C $(SIM_DIR) waves
+
 sim-clean: fw-clean
 	$(MAKE) -C $(SIM_DIR) clean
 
