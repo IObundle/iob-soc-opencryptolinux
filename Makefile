@@ -1,4 +1,4 @@
-SHELL = /bin/bash
+SHELL = bash
 export 
 
 #run on external memory implies DDR use
@@ -62,6 +62,9 @@ sim-build:
 sim-run: sim-build
 	$(MAKE) -C $(SIM_DIR) run
 
+sim-waves:
+	make -C $(SIM_DIR) waves
+
 sim-clean: fw-clean
 	$(MAKE) -C $(SIM_DIR) clean
 
@@ -124,6 +127,7 @@ asic-test:
 #
 # COMPILE DOCUMENTS
 #
+DOC?=pb
 DOC_DIR=document/$(DOC)
 doc-build:
 	$(MAKE) -C $(DOC_DIR) $(DOC).pdf
@@ -178,7 +182,7 @@ test-doc-clean:
 
 test: test-clean test-pc-emul test-sim test-fpga test-doc
 
-test-clean: test-sim-clean test-fpga-clean test-doc-clean# test-pc-emul-clean 
+test-clean: test-sim-clean test-fpga-clean test-doc-clean test-pc-emul-clean 
 
 debug:
 	@echo $(UART_DIR)

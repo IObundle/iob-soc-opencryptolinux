@@ -37,7 +37,7 @@ jobs:
       - name: test-clean
         run: make test-clean
       - name: test-verilator
-        run: make sim-run SIMULATOR=verilator
+        run: nix-shell --run "make sim-run SIMULATOR=verilator RUN_LINUX=0 FIRM_ADDR_W=15"
 
   icarus:
     runs-on: self-hosted
