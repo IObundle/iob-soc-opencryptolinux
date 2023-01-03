@@ -1,6 +1,6 @@
-with (import <nixpkgs> {});
-mkShell {
-  nativeBuildInputs = [ 
+{ pkgs ? import <nixpkgs> {} }:
+pkgs.mkShell {
+  nativeBuildInputs = with pkgs; [ 
     verilog 
     verilator 
     gtkwave
