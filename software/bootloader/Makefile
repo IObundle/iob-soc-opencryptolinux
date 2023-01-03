@@ -11,8 +11,8 @@ include $(CACHE_DIR)/software/software.mk
 endif
 endif
 
-#UART
-include $(UART_DIR)/software/embedded/embedded.mk
+#UART16550
+include $(UART16550_DIR)/software/embedded/embedded.mk
 
 #SOURCES
 SRC+=boot.S boot.c

@@ -7,44 +7,46 @@
 
 //defined here (and not in periphs.h) because it is the only peripheral used
 //by the bootloader
-#define UART_BASE (1<<P) |(UART<<(ADDR_W-2-N_SLAVES_W))
+#define UART16550_BASE (1<<P) |(UART16550<<(ADDR_W-2-N_SLAVES_W))
 
 #define PROGNAME "IOb-Bootloader"
 
+#define DC1 17 // Device Control 1 (used to indicate end of bootloader)
+
 int main() {
 
-  //init uart 
-  uart_init(UART_BASE, FREQ/BAUD);
+  //init uart
+  uart_init(UART16550_BASE, FREQ/(16*BAUD));
 
   //connect with console
-   do {
-    if(IOB_UART_GET_TXREADY())
+  do {
+    if(uart_txready())
       uart_putc((char) ENQ);
-  } while(!IOB_UART_GET_RXREADY());
+  } while(!uart_rxready());
 
   //welcome message
   uart_puts (PROGNAME);
   uart_puts (": connected!\n");
 
 #ifdef USE_DDR
-    uart_puts (PROGNAME);
-    uart_puts(": DDR in use\n");
+  uart_puts (PROGNAME);
+  uart_puts(": DDR in use\n");
 #endif
-    
+
 #ifdef RUN_EXTMEM
-    uart_puts (PROGNAME);
-    uart_puts(": program to run from DDR\n");
+  uart_puts (PROGNAME);
+  uart_puts(": program to run from DDR\n");
 #endif
 
   // address to copy firmware to
   char *prog_start_addr;
 #ifdef RUN_EXTMEM
-    prog_start_addr = (char *) EXTRA_BASE;
+  prog_start_addr = (char *) EXTRA_BASE;
 #else
-    prog_start_addr = (char *) (1<<BOOTROM_ADDR_W);
+  prog_start_addr = (char *) (1<<BOOTROM_ADDR_W);
 #endif
 
-  //receive firmware from host 
+  //receive firmware from host
   int file_size = 0;
   char r_fw[] = "firmware.bin";
   if (uart_getc() == FRX) {//file receive: load firmware
@@ -52,13 +54,12 @@ int main() {
     uart_puts (PROGNAME);
     uart_puts (": Loading firmware...\n");
   }
-
   //sending firmware back for debug
   char s_fw[] = "s_fw.bin";
+  if(file_size) uart_sendfile(s_fw, file_size, prog_start_addr);
 
-  if(file_size)
-    uart_sendfile(s_fw, file_size, prog_start_addr);
-  
+  uart_putc((char) DC1);
+
   //run firmware
   uart_puts (PROGNAME);
   uart_puts (": Restart CPU to run user program...\n");

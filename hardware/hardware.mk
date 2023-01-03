@@ -24,8 +24,8 @@ include $(VEXRISCV_DIR)/hardware/hardware.mk
 #CACHE
 include $(CACHE_DIR)/hardware/hardware.mk
 
-#UART
-include $(UART_DIR)/hardware/hardware.mk
+#UART16550
+include $(UART16550_DIR)/hardware/hardware.mk
 
 #CLINT
 include $(CLINT_DIR)/hardware/hardware.mk

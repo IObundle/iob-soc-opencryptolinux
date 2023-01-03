@@ -40,7 +40,7 @@ INIT_MEM ?=1
 #PERIPHERAL LIST
 #must match respective submodule CORE_NAME in the core.mk file of the submodule
 #PERIPHERALS:=UART
-PERIPHERALS ?=UART CLINT
+PERIPHERALS ?=UART16550 CLINT
 
 #ROOT DIRECTORY ON REMOTE MACHINES
 REMOTE_ROOT_DIR ?=sandbox/iob-soc-vexriscv

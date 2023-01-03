@@ -9,8 +9,8 @@ ifeq ($(USE_DDR),1)
 include $(CACHE_DIR)/software/software.mk
 endif
 
-#uart
-include $(UART_DIR)/software/embedded/embedded.mk
+#UART16550
+include $(UART16550_DIR)/software/embedded/embedded.mk
 
 #CLINT
 include $(CLINT_DIR)/software/embedded/embedded.mk
@@ -19,7 +19,7 @@ include $(CLINT_DIR)/software/embedded/embedded.mk
 HDR+=periphs.h
 
 #SOURCES
-SRC+= firmware.S firmware.c $(UART_DIR)/software/printf.c
+SRC+= firmware.S firmware.c $(UART16550_DIR)/software/printf.c
 
 #RULES
 
