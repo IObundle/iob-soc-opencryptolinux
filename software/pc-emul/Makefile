@@ -9,6 +9,7 @@ CFLAGS=-Os -std=gnu99 -Wl,--strip-debug
 DEFINE+=-DPC
 
 #peripherals (pc)
+PERIPHERALS := $(filter-out UART16550 PLIC,$(PERIPHERALS))
 $(foreach p, $(PERIPHERALS), $(eval include $($p_DIR)/software/pc-emul/pc-emul.mk))
 
 #HEADERS
