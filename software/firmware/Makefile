@@ -9,8 +9,10 @@ ifeq ($(USE_DDR),1)
 include $(CACHE_DIR)/software/software.mk
 endif
 
-#uart
+#UART16550
 include $(UART16550_DIR)/software/embedded/embedded.mk
+
+#CLINT
 include $(CLINT_DIR)/software/embedded/embedded.mk
 
 #HEADERS

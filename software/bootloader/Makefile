@@ -11,7 +11,7 @@ include $(CACHE_DIR)/software/software.mk
 endif
 endif
 
-#UART
+#UART16550
 include $(UART16550_DIR)/software/embedded/embedded.mk
 
 #SOURCES

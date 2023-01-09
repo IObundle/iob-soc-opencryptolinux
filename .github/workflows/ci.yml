@@ -15,6 +15,7 @@ on:
   push:
     branches:
         - master
+        - milestone_2_2
   # Don't forget to require approval for all outside collaborators
   pull_request:
     branches: '*'
@@ -36,28 +37,25 @@ jobs:
       - name: test-clean
         run: make test-clean
       - name: test-verilator
-        run: make sim-run SIMULATOR=verilator RUN_LINUX=0 FIRM_ADDR_W=15
+        run: nix-shell --run "make sim-run SIMULATOR=verilator RUN_LINUX=0 FIRM_ADDR_W=15"
 
-  # Does not work because of the PLIC submodule
-  #icarus:
-  #  runs-on: self-hosted
-  #  timeout-minutes: 90
-  #  if: ${{ !cancelled() }}
-  #
-  #  steps:
-  #    - uses: actions/checkout@v3
-  #      with:
-  #        submodules: 'recursive'
-  #    - name: test-clean
-  #      run: make test-clean
-  #    - name: test-icarus
-  #      run: make sim-run SIMULATOR=icarus RUN_LINUX=0 RUN_EXTMEM=0 FIRM_ADDR_W=15
+  icarus:
+    runs-on: self-hosted
+    timeout-minutes: 90
+    if: ${{ !cancelled() }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: test-clean
+        run: make test-clean
+      - name: test-icarus
+        run: make sim-run SIMULATOR=icarus BAUD=3000000
 
   cyclonev:
     runs-on: self-hosted
     timeout-minutes: 60
     if: ${{ !cancelled() }}
-  
     steps:
       - uses: actions/checkout@v3
         with:
@@ -65,7 +63,7 @@ jobs:
       - name: test-clean
         run: make test-clean
       - name: test-cyclonev
-        run: make fpga-run BOARD=CYCLONEV-GT-DK RUN_LINUX=0 RUN_EXTMEM=0 FIRM_ADDR_W=15
+        run: make fpga-run BOARD=CYCLONEV-GT-DK
 
   aes-ku040:
     runs-on: self-hosted
@@ -79,8 +77,8 @@ jobs:
       - name: test-clean
         run: make test-clean
       - name: test-aes-ku040
-        run: make fpga-run BOARD=AES-KU040-DB-G RUN_LINUX=0 FIRM_ADDR_W=15
-        
+        run: make fpga-run BOARD=AES-KU040-DB-G
+
   doc:
     runs-on: self-hosted
     timeout-minutes: 60
