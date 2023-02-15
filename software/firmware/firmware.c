@@ -33,7 +33,7 @@ int main() {
 
     // Setup timer for 1 second interval
     timestamp = mtimer_get_raw_time();
-    mtimer_set_raw_time_cmp(MTIMER_SECONDS_TO_CLOCKS(0.01));
+    mtimer_set_raw_time_cmp(MTIMER_SECONDS_TO_CLOCKS(0.02));
 
     // Setup the IRQ handler entry point
     csr_write_mtvec((uint_xlen_t) irq_entry);
@@ -45,7 +45,12 @@ int main() {
     // Global interrupt enable
     csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 
-    printf("Waiting...\n");
+    // Enable PLIC interrupt for UART
+    printf("Enabling external interrupt source 0 with ID = 1.\n");
+    int target;
+    target = plic_enable_interrupt(0);
+
+    printf("HART id %d, waiting for timer interrupt...\n", target);
     // Wait for interrupt
     __asm__ volatile ("wfi");
 
@@ -76,7 +81,11 @@ static void irq_entry(void)  {
             break;
         case RISCV_INT_POS_MEI :
             printf("External interrupt.\n");
-            // DO PLIC software
+            int source_id = 0;
+            source_id = plic_claim_interrupt();
+            printf("External interrupt ID received was: %d.\n", source_id);
+            plic_complete_interrupt(source_id);
+            plic_disable_interrupt(source_id);
             break;
         }
 
