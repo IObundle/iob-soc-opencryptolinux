@@ -15,7 +15,6 @@ on:
   push:
     branches:
         - master
-        - milestone_2_2
   # Don't forget to require approval for all outside collaborators
   pull_request:
     branches: '*'
