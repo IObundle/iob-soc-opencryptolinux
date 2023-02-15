@@ -127,7 +127,7 @@ asic-test:
 #
 # COMPILE DOCUMENTS
 #
-DOC?=pb
+DOC ?= pb
 DOC_DIR=document/$(DOC)
 doc-build:
 	$(MAKE) -C $(DOC_DIR) $(DOC).pdf
