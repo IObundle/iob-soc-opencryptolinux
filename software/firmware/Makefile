@@ -14,6 +14,7 @@ include $(UART16550_DIR)/software/embedded/embedded.mk
 
 #CLINT
 include $(CLINT_DIR)/software/embedded/embedded.mk
+include $(PLIC_DIR)/software/embedded/embedded.mk
 
 #HEADERS
 HDR+=periphs.h
