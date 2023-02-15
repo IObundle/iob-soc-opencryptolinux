@@ -29,6 +29,7 @@ include $(UART16550_DIR)/hardware/hardware.mk
 
 #CLINT
 include $(CLINT_DIR)/hardware/hardware.mk
+include $(PLIC_DIR)/hardware/hardware.mk
 
 
 #HARDWARE PATHS

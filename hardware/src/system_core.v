@@ -74,7 +74,7 @@ module system
         // interupts
         .timerInterrupt(timerInterrupt),
         .softwareInterrupt(softwareInterrupt),
-        .externalInterrupt(1'b0)
+        .externalInterrupt(externalInterrupt)
         );
 
 

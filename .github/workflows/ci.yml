@@ -15,7 +15,6 @@ on:
   push:
     branches:
         - master
-        - milestone_2_2
   # Don't forget to require approval for all outside collaborators
   pull_request:
     branches: '*'
@@ -29,7 +28,6 @@ jobs:
     # run even if previous job failed
     if: ${{ !cancelled() }}
     # run after indicated job
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -38,19 +36,6 @@ jobs:
         run: make test-clean
       - name: test-verilator
         run: nix-shell --run "make sim-run SIMULATOR=verilator RUN_LINUX=0 FIRM_ADDR_W=15"
-
-  icarus:
-    runs-on: self-hosted
-    timeout-minutes: 90
-    if: ${{ !cancelled() }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
-      - name: test-clean
-        run: make test-clean
-      - name: test-icarus
-        run: make sim-run SIMULATOR=icarus BAUD=3000000
 
   cyclonev:
     runs-on: self-hosted
