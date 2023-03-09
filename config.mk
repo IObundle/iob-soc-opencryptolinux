@@ -14,6 +14,9 @@ IOBSOC_NAME:=IOBSOC
 DATA_W := 32
 ADDR_W := 32
 N_CORES := 1
+#INTERRUPTS ARCHITECTURE
+N_SOURCES := 32
+N_TARGETS := 2
 
 #FIRMWARE TO RUN
 RUN_LINUX ?=0
@@ -98,6 +101,7 @@ AXI_DIR=$(ROOT_DIR)/submodules/AXI
 CLINT_DIR=$(ROOT_DIR)/submodules/CLINT
 PLIC_DIR=$(ROOT_DIR)/submodules/PLIC
 LINUX_OS_DIR=$(ROOT_DIR)/submodules/OS
+LITEETH_DIR=$(ROOT_DIR)/submodules/ETH
 
 #sw paths
 SW_DIR:=$(ROOT_DIR)/software
@@ -120,6 +124,8 @@ DOC_DIR=$(ROOT_DIR)/document/$(DOC)
 DEFINE+=$(defmacro)DATA_W=$(DATA_W)
 DEFINE+=$(defmacro)ADDR_W=$(ADDR_W)
 DEFINE+=$(defmacro)N_CORES=$(N_CORES)
+DEFINE+=$(defmacro)N_SOURCES=$(N_SOURCES)
+DEFINE+=$(defmacro)N_TARGETS=$(N_TARGETS)
 DEFINE+=$(defmacro)BOOTROM_ADDR_W=$(BOOTROM_ADDR_W)
 DEFINE+=$(defmacro)SRAM_ADDR_W=$(SRAM_ADDR_W)
 DEFINE+=$(defmacro)FIRM_ADDR_W=$(FIRM_ADDR_W)

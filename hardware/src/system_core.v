@@ -52,11 +52,13 @@ module system
 
    wire [`N_CORES-1:0]       timerInterrupt;
    wire [`N_CORES-1:0]       softwareInterrupt;
-   wire [`N_CORES-1:0]       externalInterrupt;
+   wire [`N_TARGETS-1:0]     External_Interrupts;
+   wire [`N_SOURCES-1:0]     IOb_Interrupts;
 
+   assign IOb_Interrupts = {{31{1'b0}}, uartInterrupt};
 
    //instantiate the cpu
-   iob_VexRiscv cpu
+   iob_VexRiscv cpu_0
        (
         .clk     (clk),
         .rst     (cpu_reset),
@@ -72,9 +74,9 @@ module system
         .dbus_resp(cpu_d_resp),
 
         // interupts
-        .timerInterrupt(timerInterrupt),
-        .softwareInterrupt(softwareInterrupt),
-        .externalInterrupt(externalInterrupt)
+        .timerInterrupt(timerInterrupt[0]),
+        .softwareInterrupt(softwareInterrupt[0]),
+        .externalInterrupts(External_Interrupts[1:0])
         );
 
 
