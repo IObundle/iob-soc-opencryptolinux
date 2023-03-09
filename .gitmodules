@@ -25,3 +25,6 @@
 [submodule "submodules/PLIC"]
 	path = submodules/PLIC
 	url = git@github.com:IObundle/iob-plic.git
+[submodule "submodules/OS"]
+	path = submodules/OS
+	url = git@github.com:IObundle/iob-linux.git
