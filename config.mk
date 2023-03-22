@@ -46,7 +46,7 @@ INIT_MEM ?=1
 PERIPHERALS ?=UART16550 PLIC CLINT
 
 #ROOT DIRECTORY ON REMOTE MACHINES
-REMOTE_ROOT_DIR ?=sandbox/iob-soc-vexriscv
+REMOTE_ROOT_DIR ?=sandbox/iob-soc-opencryptolinux
 
 #SIMULATION
 #default simulator running locally or remotely
