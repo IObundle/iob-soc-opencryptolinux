@@ -28,8 +28,8 @@ FIRM_ADDR_W ?=25
 SRAM_ADDR_W ?=15
 
 #DDR
-USE_DDR ?=0
-RUN_EXTMEM ?=1
+USE_DDR:=1
+RUN_EXTMEM:=1
 
 #DATA CACHE ADDRESS WIDTH (tag + index + offset)
 DCACHE_ADDR_W:=28
@@ -38,7 +38,7 @@ DCACHE_ADDR_W:=28
 BOOTROM_ADDR_W:=12
 
 #PRE-INIT MEMORY WITH PROGRAM AND DATA
-INIT_MEM ?=1
+INIT_MEM?=0
 
 #PERIPHERAL LIST
 #must match respective submodule CORE_NAME in the core.mk file of the submodule
@@ -72,9 +72,6 @@ UART_HW_DIR:=$(UART_DIR)/hardware
 ifeq ($(RUN_LINUX),1)
 DEFINE+=$(defmacro)RUN_LINUX
 BAUD=115200
-FIRM_ADDR_W=25
-RUN_EXTMEM=1
-DCACHE_ADDR_W=28
 endif
 
 ifeq ($(RUN_EXTMEM),1)

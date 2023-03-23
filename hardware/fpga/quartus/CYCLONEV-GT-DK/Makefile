@@ -15,9 +15,7 @@ DDR_DATA_W=32
 #NORUN = $(USE_DDR)
 NORUN = 0
 
-ifeq ($(USE_DDR),1)
 VSRC += qsys/alt_ddr3.qsys
-endif
 
 include ../quartus.mk
 

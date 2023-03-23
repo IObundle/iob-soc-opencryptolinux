@@ -54,9 +54,7 @@ m_axi_wire.vh:
 #SOURCES
 
 #external memory interface
-ifeq ($(USE_DDR),1)
 VSRC+=$(SRC_DIR)/ext_mem.v
-endif
 
 #system
 VSRC+=$(SRC_DIR)/boot_ctr.v $(SRC_DIR)/int_mem.v $(SRC_DIR)/sram.v
