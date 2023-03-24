@@ -35,7 +35,7 @@ jobs:
       - name: test-clean
         run: make test-clean
       - name: test-verilator
-        run: nix-shell --run "make sim-run SIMULATOR=verilator RUN_LINUX=0 FIRM_ADDR_W=15"
+        run: nix-shell --run "make sim-run RUN_LINUX=0 FIRM_ADDR_W=15 INIT_MEM=1"
 
   cyclonev:
     runs-on: self-hosted
@@ -48,7 +48,7 @@ jobs:
       - name: test-clean
         run: make test-clean
       - name: test-cyclonev
-        run: make fpga-run BOARD=CYCLONEV-GT-DK
+        run: make fpga-run BOARD=CYCLONEV-GT-DK RUN_LINUX=0 FIRM_ADDR_W=15
 
   aes-ku040:
     runs-on: self-hosted
@@ -62,7 +62,7 @@ jobs:
       - name: test-clean
         run: make test-clean
       - name: test-aes-ku040
-        run: make fpga-run BOARD=AES-KU040-DB-G
+        run: make fpga-run BOARD=AES-KU040-DB-G RUN_LINUX=0 FIRM_ADDR_W=15
 
   doc:
     runs-on: self-hosted

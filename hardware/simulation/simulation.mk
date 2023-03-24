@@ -72,7 +72,11 @@ endif
 
 sim:
 ifeq ($(SIM_SERVER),)
+ifeq ($(RUN_LINUX),1)
+	rsync -avz $(OS_DIR)/* .
+else
 	cp $(FIRM_DIR)/firmware.bin .
+endif
 	@rm -f soc2cnsl cnsl2soc
 	$(CONSOLE_CMD) $(TEST_LOG) &
 	bash -c "trap 'make kill-cnsl' INT TERM KILL EXIT; make exec"

@@ -19,26 +19,26 @@ N_SOURCES := 32
 N_TARGETS := 2
 
 #FIRMWARE TO RUN
-RUN_LINUX ?=0
+RUN_LINUX ?=1
 
 #FIRMWARE SIZE (LOG2)
-FIRM_ADDR_W ?=15
+FIRM_ADDR_W ?=25
 
 #SRAM SIZE (LOG2)
 SRAM_ADDR_W ?=15
 
 #DDR
-USE_DDR ?=0
-RUN_EXTMEM ?=0
+USE_DDR:=1
+RUN_EXTMEM:=1
 
 #DATA CACHE ADDRESS WIDTH (tag + index + offset)
-DCACHE_ADDR_W:=24
+DCACHE_ADDR_W:=28
 
 #ROM SIZE (LOG2)
 BOOTROM_ADDR_W:=12
 
 #PRE-INIT MEMORY WITH PROGRAM AND DATA
-INIT_MEM ?=1
+INIT_MEM?=0
 
 #PERIPHERAL LIST
 #must match respective submodule CORE_NAME in the core.mk file of the submodule
@@ -46,7 +46,7 @@ INIT_MEM ?=1
 PERIPHERALS ?=UART16550 PLIC CLINT
 
 #ROOT DIRECTORY ON REMOTE MACHINES
-REMOTE_ROOT_DIR ?=sandbox/iob-soc-vexriscv
+REMOTE_ROOT_DIR ?=sandbox/iob-soc-opencryptolinux
 
 #SIMULATION
 #default simulator running locally or remotely
@@ -72,9 +72,6 @@ UART_HW_DIR:=$(UART_DIR)/hardware
 ifeq ($(RUN_LINUX),1)
 DEFINE+=$(defmacro)RUN_LINUX
 BAUD=115200
-FIRM_ADDR_W=25
-RUN_EXTMEM=1
-DCACHE_ADDR_W=28
 endif
 
 ifeq ($(RUN_EXTMEM),1)
@@ -101,7 +98,6 @@ AXI_DIR=$(ROOT_DIR)/submodules/AXI
 CLINT_DIR=$(ROOT_DIR)/submodules/CLINT
 PLIC_DIR=$(ROOT_DIR)/submodules/PLIC
 LINUX_OS_DIR=$(ROOT_DIR)/submodules/OS
-LITEETH_DIR=$(ROOT_DIR)/submodules/ETH
 
 #sw paths
 SW_DIR:=$(ROOT_DIR)/software
