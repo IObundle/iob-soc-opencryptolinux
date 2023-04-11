@@ -1,15 +1,6 @@
-[submodule "submodules/UART"]
-	path = submodules/UART
-	url = git@github.com:IObundle/iob-uart.git
 [submodule "submodules/CACHE"]
 	path = submodules/CACHE
 	url = git@github.com:IObundle/iob-cache.git
-[submodule "submodules/AXI"]
-	path = submodules/AXI
-	url = git@github.com:IObundle/iob-axi.git
-[submodule "submodules/MEM"]
-	path = submodules/MEM
-	url = git@github.com:IObundle/iob-mem.git
 [submodule "submodules/LIB"]
 	path = submodules/LIB
 	url = git@github.com:IObundle/iob-lib.git
