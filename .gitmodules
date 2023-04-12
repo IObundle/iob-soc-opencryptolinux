@@ -19,3 +19,6 @@
 [submodule "submodules/OS"]
 	path = submodules/OS
 	url = git@github.com:IObundle/iob-linux.git
+[submodule "submodules/IOBSOC"]
+	path = submodules/IOBSOC
+	url = git@github.com:IObundle/iob-soc.git
