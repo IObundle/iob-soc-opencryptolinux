@@ -2,11 +2,12 @@
 
 import os, sys
 
-sys.path.insert(0, os.path.dirname(__file__)+'/scripts')
 sys.path.insert(0, os.getcwd()+'/submodules/LIB/scripts')
 
 import setup
 from mk_configuration import update_define
+
+sys.path.insert(0, os.path.dirname(__file__)+'/submodules/IOBSOC/scripts')
 import iob_soc
 
 name='iob_soc_opencryptolinux'
@@ -22,7 +23,7 @@ submodules = {
         'modules': [ 'VEXRISCV', 'CACHE', 'UART16550', 'PLIC', 'CLINT', 'iob_merge', 'iob_split', 'iob_rom_sp.v', 'iob_ram_dp_be.v', 'iob_ram_dp_be_xil.v', 'iob_pulse_gen.v', 'iob_counter.v', 'iob_ram_2p_asym.v', 'iob_reg.v', 'iob_reg_re.v', 'iob_ram_sp_be.v', 'iob_ram_dp.v', 'iob_reset_sync']
     },
     'sim_setup': {
-        'headers' : [ 'axi_s_portmap', 'iob_tasks.vh'  ],
+        'headers' : [ 'axi_s_portmap', 'iob_tasks.vh' ],
         'modules': [ 'axi_ram.v' ]
     },
     'sw_setup': {

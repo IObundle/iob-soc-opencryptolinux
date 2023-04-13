@@ -1,22 +1,22 @@
 `timescale 1 ns / 1 ps
 
 `include "bsp.vh"
-`include "iob_soc_conf.vh"
-`include "iob_soc.vh"
+`include "iob_soc_opencryptolinux_conf.vh"
+`include "iob_soc_opencryptolinux.vh"
 `include "iob_lib.vh"
 
 //do not remove line below
 //IOB_PRAGMA_PHEADERS
 
-module iob_soc #(
-    `include "iob_soc_params.vh"
+module iob_soc_opencryptolinux #(
+    `include "iob_soc_opencryptolinux_params.vh"
     ) (
-    `include "iob_soc_io.vh"
+    `include "iob_soc_opencryptolinux_io.vh"
     );
 
-   localparam E_BIT = `IOB_SOC_E;
-   localparam P_BIT = `IOB_SOC_P;
-   localparam B_BIT = `IOB_SOC_B;
+   localparam E_BIT = `IOB_SOC_OPENCRYPTOLINUX_E;
+   localparam P_BIT = `IOB_SOC_OPENCRYPTOLINUX_P;
+   localparam B_BIT = `IOB_SOC_OPENCRYPTOLINUX_B;
 
    //
    // SYSTEM RESET
@@ -78,7 +78,7 @@ module iob_soc #(
    wire [`REQ_W-1:0]  int_mem_i_req;
    wire [`RESP_W-1:0] int_mem_i_resp;
    //external memory instruction bus
-`ifdef IOB_SOC_USE_EXTMEM
+`ifdef IOB_SOC_OPENCRYPTOLINUX_USE_EXTMEM
    wire [`REQ_W-1:0]  ext_mem_i_req;
    wire [`RESP_W-1:0] ext_mem_i_resp;
 
@@ -111,7 +111,7 @@ module iob_soc #(
    //internal data bus
    wire [`REQ_W-1:0]         int_d_req;
    wire [`RESP_W-1:0]        int_d_resp;
-`ifdef IOB_SOC_USE_EXTMEM
+`ifdef IOB_SOC_OPENCRYPTOLINUX_USE_EXTMEM
    //external memory data bus
    wire [`REQ_W-1:0]         ext_mem_d_req;
    wire [`RESP_W-1:0]        ext_mem_d_resp;
@@ -175,13 +175,13 @@ module iob_soc #(
    //
 
    //slaves bus
-   wire [`IOB_SOC_N_SLAVES*`REQ_W-1:0] slaves_req;
-   wire [`IOB_SOC_N_SLAVES*`RESP_W-1:0] slaves_resp;
+   wire [`IOB_SOC_OPENCRYPTOLINUX_N_SLAVES*`REQ_W-1:0] slaves_req;
+   wire [`IOB_SOC_OPENCRYPTOLINUX_N_SLAVES*`RESP_W-1:0] slaves_resp;
 
    iob_split #(
        .ADDR_W(ADDR_W),
        .DATA_W(DATA_W),
-       .N_SLAVES(`IOB_SOC_N_SLAVES),
+       .N_SLAVES(`IOB_SOC_OPENCRYPTOLINUX_N_SLAVES),
        .P_SLAVES(`P_BIT-1)
        )
    pbus_split (
@@ -204,8 +204,8 @@ module iob_soc #(
    int_mem #(
       .ADDR_W(ADDR_W),
       .DATA_W(DATA_W),
-      .HEXFILE("iob_soc_firmware"),
-      .BOOT_HEXFILE("iob_soc_boot"),
+      .HEXFILE("iob_soc_opencryptolinux_firmware"),
+      .BOOT_HEXFILE("iob_soc_opencryptolinux_boot"),
       .SRAM_ADDR_W(SRAM_ADDR_W),
       .BOOTROM_ADDR_W(BOOTROM_ADDR_W),
       .B_BIT(`B_BIT)
@@ -226,7 +226,7 @@ module iob_soc #(
       .d_resp (int_mem_d_resp)
       );
 
-`ifdef IOB_SOC_USE_EXTMEM
+`ifdef IOB_SOC_OPENCRYPTOLINUX_USE_EXTMEM
    //
    // EXTERNAL DDR MEMORY
    //
