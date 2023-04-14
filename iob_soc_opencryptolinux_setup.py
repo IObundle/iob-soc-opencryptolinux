@@ -35,7 +35,7 @@ submodules = {
 blocks = \
 [
     {'name':'cpu', 'descr':'CPU module', 'blocks': [
-        {'name':'cpu', 'descr':'PicoRV32 CPU'},
+        {'name':'cpu', 'descr':'Vexriscv CPU'},
     ]},
     {'name':'bus_split', 'descr':'Split modules for buses', 'blocks': [
         {'name':'ibus_split', 'descr':'Split CPU instruction bus into internal and external memory buses'},

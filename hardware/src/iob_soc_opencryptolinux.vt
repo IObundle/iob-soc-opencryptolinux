@@ -40,20 +40,34 @@ module iob_soc_opencryptolinux #(
    wire [`REQ_W-1:0]  cpu_d_req;
    wire [`RESP_W-1:0] cpu_d_resp;
 
-   wire [`N_CORES-1:0]       timerInterrupt;
-   wire [`N_CORES-1:0]       softwareInterrupt;
-   wire [`N_TARGETS-1:0]     External_Interrupts;
-   wire [`N_SOURCES-1:0]     IOb_Interrupts;
+   wire [N_CORES-1:0]       CLINT0_mtip; //timerInterrupt
+   wire [N_CORES-1:0]       CLINT0_msip; //softwareInterrupt
+   wire [N_TARGETS-1:0]     PLIC0_irq; //External_Interrupts
+   wire [N_SOURCES-1:0]     PLIC0_src; //IOb_Interrupts
 
-   assign IOb_Interrupts = {{31{1'b0}}, uartInterrupt};
+   wire UART0_interrupt;
+   assign PLIC0_src = {{31{1'b0}}, UART0_interrupt};
+
+   wire CLINT0_rt_clk = 1'b0;
 
    //instantiate the cpu
-   iob_VexRiscv cpu_0
-       (
-        .clk     (clk),
+   iob_VexRiscv #(
+       .ADDR_W(ADDR_W),
+       .DATA_W(DATA_W),
+       .E_BIT(`E_BIT),
+       .P_BIT(`P_BIT),
+`ifdef IOB_SOC_OPENCRYPTOLINUX_USE_EXTMEM
+       .USE_EXTMEM(1)
+`else
+       .USE_EXTMEM(0)
+`endif
+	)
+	cpu_0
+        (
+        .clk     (clk_i),
         .rst     (cpu_reset),
         .boot    (boot),
-        .trap    (trap),
+        .trap    (trap_o),
 
         //instruction bus
         .ibus_req(cpu_i_req),
@@ -64,9 +78,9 @@ module iob_soc_opencryptolinux #(
         .dbus_resp(cpu_d_resp),
 
         // interupts
-        .timerInterrupt(timerInterrupt[0]),
-        .softwareInterrupt(softwareInterrupt[0]),
-        .externalInterrupts(External_Interrupts[1:0])
+        .timerInterrupt(CLINT0_mtip[0]),
+        .softwareInterrupt(CLINT0_msip[0]),
+        .externalInterrupts(PLIC0_irq[1:0])
         );
 
 
