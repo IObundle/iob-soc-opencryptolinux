@@ -5,14 +5,14 @@
 #include "iob_soc_opencryptolinux_periphs.h"
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob-uart.h"
-#include "iob_clint.h"
-#include "iob_plic.h"
+#include "iob-clint.h"
+#include "iob-plic.h"
 #include "printf.h"
 #include "iob_str.h"
 
 #include "riscv-csr.h"
 #include "riscv-interrupts.h"
-#include "iob_clint_timer.h"
+#include "iob-clint-timer.h"
 
 // Machine mode interrupt service routine
 static void irq_entry(void) __attribute__ ((interrupt ("machine")));
@@ -25,9 +25,9 @@ int main() {
     char fail_string[] = "Test failed!";
 
     //init uart
-    uart_init(UART16550_BASE, FREQ/(16*BAUD));
-    clint_init(CLINT_BASE);
-    plic_init(PLIC_BASE);
+    uart_init(UART0_BASE, FREQ/(16*BAUD));
+    clint_init(CLINT0_BASE);
+    plic_init(PLIC0_BASE);
 
     printf("\n\n\nHello world!\n\n\n");
 

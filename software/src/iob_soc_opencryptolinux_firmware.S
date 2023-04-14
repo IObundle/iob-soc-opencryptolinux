@@ -1,5 +1,5 @@
-#include "iob_soc_system.h"
-#include "iob_soc_conf.h"
+#include "iob_soc_opencryptolinux_system.h"
+#include "iob_soc_opencryptolinux_conf.h"
 
 .section .init
 .global main
