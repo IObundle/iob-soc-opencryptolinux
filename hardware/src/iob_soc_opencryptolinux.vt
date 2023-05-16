@@ -27,7 +27,7 @@ module iob_soc_opencryptolinux #(
 
    wire cke_i;
    assign cke_i = 1'b1;
-   
+
    //
    //  CPU
    //
@@ -61,9 +61,7 @@ module iob_soc_opencryptolinux #(
 `else
        .USE_EXTMEM(0)
 `endif
-	)
-	cpu_0
-        (
+   ) cpu_0 (
         .clk     (clk_i),
         .rst     (cpu_reset),
         .boot    (boot),
@@ -84,7 +82,7 @@ module iob_soc_opencryptolinux #(
         );
 
 
-   //   
+   //
    // SPLIT CPU BUSES TO ACCESS INTERNAL OR EXTERNAL MEMORY
    //
 
@@ -109,7 +107,6 @@ module iob_soc_opencryptolinux #(
       // master interface
       .m_req_i  (cpu_i_req),
       .m_resp_o (cpu_i_resp),
-      
       // slaves interface
       .s_req_o ( {ext_mem_i_req, int_mem_i_req} ),
       .s_resp_i ( {ext_mem_i_resp, int_mem_i_resp} )
@@ -204,7 +201,6 @@ module iob_soc_opencryptolinux #(
       // master interface
       .m_req_i  (pbus_req),
       .m_resp_o (pbus_resp),
-      
       // slaves interface
       .s_req_o  (slaves_req),
       .s_resp_i (slaves_resp)
@@ -265,7 +261,7 @@ module iob_soc_opencryptolinux #(
       .d_req ( {ext_mem_d_req[`AVALID(0)], ext_mem_d_req[`ADDRESS(0, `MEM_ADDR_W+1)-2], ext_mem_d_req[`WRITE(0)]} ),
       .d_resp (ext_mem_d_resp),
 
-      //AXI INTERFACE 
+      //AXI INTERFACE
       `include "iob_axi_m_m_portmap.vh"
       .clk_i  (clk_i),
       .cke_i  (cke_i),
