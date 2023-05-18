@@ -266,13 +266,6 @@ ios = [
     },
 ]
 
-peripheral_portmap = [
-    (
-        {"corename": "CLINT0", "if_name": "clint_io", "port": "", "bits": []},
-        {"corename": "internal", "if_name": "CLINT", "port": "", "bits": []},
-    ),
-]
-
 # Add IOb-SoC modules. These will copy and generate common files from the IOb-SoC repository.
 iob_soc.add_iob_soc_modules(sys.modules[__name__])
 
