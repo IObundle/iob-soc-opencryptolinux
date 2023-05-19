@@ -112,8 +112,8 @@ module iob_soc_opencryptolinux_sim_wrapper (
     //$finish;
       end
     */
-	//Manually added testbench uart core. RS232 pins attached to the same pins
-	//of the uut UART0 instance to communicate with it
+   //Manually added testbench uart core. RS232 pins attached to the same pins
+   //of the uut UART0 instance to communicate with it
    wire cke_i = 1'b1;
    iob_uart16550 uart_tb (
       .interrupt(),
