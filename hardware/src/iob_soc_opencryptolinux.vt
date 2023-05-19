@@ -29,6 +29,9 @@ module iob_soc_opencryptolinux #(
   wire cke_i;
   assign cke_i = 1'b1;
 
+  wire                 ext_mem0_i_req;
+  wire                 ext_mem0_i_req;
+
   //
   //  CPU
   //
@@ -210,6 +213,13 @@ module iob_soc_opencryptolinux #(
       .d_resp(int_mem_d_resp)
   );
 
+
+  assign ext_mem0_i_req = {
+    ext_mem_i_req[`AVALID(0)], ext_mem_i_req[`ADDRESS(0, SRAM_ADDR_W)-2], ext_mem_i_req[`WRITE(0)]
+  };
+  assign ext_mem0_d_req = {
+    ext_mem_d_req[`AVALID(0)], ext_mem_d_req[`ADDRESS(0, `MEM_ADDR_W+1)-2], ext_mem_d_req[`WRITE(0)]
+  };
   //
   // EXTERNAL DDR MEMORY
   //
@@ -226,21 +236,11 @@ module iob_soc_opencryptolinux #(
       .AXI_DATA_W(AXI_DATA_W)
   ) ext_mem0 (
       // instruction bus
-      .i_req ({
-         ext_mem_i_req[`AVALID(0)],
-         ext_mem_i_req[`ADDRESS(0, SRAM_ADDR_W)-2],
-         ext_mem_i_req[`WRITE(0)]
-         }),
+      .i_req (ext_mem0_i_req),
       .i_resp(ext_mem_i_resp),
-
       // data bus
-      .d_req ({
-         ext_mem_d_req[`AVALID(0)],
-         ext_mem_d_req[`ADDRESS(0, `MEM_ADDR_W+1)-2],
-         ext_mem_d_req[`WRITE(0)]
-         }),
+      .d_req (ext_mem0_d_req),
       .d_resp(ext_mem_d_resp),
-
       //AXI INTERFACE
       `include "iob_axi_m_m_portmap.vh"
       .clk_i (clk_i),
