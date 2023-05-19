@@ -17,18 +17,18 @@ module iob_soc_opencryptolinux_sim_wrapper (
    output [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0]       uart_rdata,
    output                             uart_ready,
    output                             uart_rvalid,
-   `IOB_INPUT(clk_i,          1), //V2TEX_IO System clock input.
-   `IOB_INPUT(rst_i,         1)  //V2TEX_IO System reset, asynchronous and active high.
+   input [1-1:0] clk_i, //V2TEX_IO System clock input.
+   input [1-1:0] rst_i  //V2TEX_IO System reset, asynchronous and active high.
    );
- 
+
    localparam AXI_ID_W  = 4;
    localparam AXI_LEN_W = 8;
    localparam AXI_ADDR_W=`DDR_ADDR_W;
    localparam AXI_DATA_W=`IOB_SOC_OPENCRYPTOLINUX_DATA_W;
- 
+
    //IOB_PRAGMA_PWIRES
 
-   
+
    /////////////////////////////////////////////
    // TEST PROCEDURE
    //
@@ -38,7 +38,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
       $dumpvars();
 `endif
    end
-   
+
    //
    // INSTANTIATE COMPONENTS
    //
@@ -62,7 +62,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
       //IOB_PRAGMA_PPORTMAPS
 `ifdef IOB_SOC_OPENCRYPTOLINUX_USE_EXTMEM
       `include "iob_axi_m_portmap.vh"
-`endif               
+`endif
       .clk_i (clk_i),
       .arst_i (rst_i),
       .trap_o (trap_o)
@@ -82,10 +82,10 @@ module iob_soc_opencryptolinux_sim_wrapper (
       `include "iob_axi_s_portmap.vh"
       .clk_i(clk_i),
       .rst_i(rst_i)
-      );   
+      );
 `endif
 
-   
+
    //finish simulation on trap
    /* always @(posedge trap) begin
     #10 $display("Found CPU trap condition");
@@ -105,7 +105,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
     wire [`IOB_SOC_OPENCRYPTOLINUX_SRAM_ADDR_W-1:0] sram_iaddr = uut.int_mem0.int_sram.i_addr;
     wire [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] SRam_irdata = uut.int_mem0.int_sram.i_rdata;
 
-    
+
     always @(posedge sram_dwstrb)
     if(sram_daddr == 13'h090d)  begin
     #10 $display("Found CPU memory condition at %f : %x : %x", $time, sram_daddr, sram_dwdata );
