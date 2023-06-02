@@ -29,8 +29,8 @@ module iob_soc_opencryptolinux #(
   wire cke_i;
   assign cke_i = 1'b1;
 
-  wire                 ext_mem0_i_req;
-  wire                 ext_mem0_i_req;
+  wire [1+SRAM_ADDR_W-2+DATA_W+DATA_W/8-1:0] ext_mem0_i_req;
+  wire [1+`MEM_ADDR_W+1-2+DATA_W+DATA_W/8-1:0] ext_mem0_d_req;
 
   //
   //  CPU
