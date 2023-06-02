@@ -9,9 +9,9 @@
 //IOB_PRAGMA_PHEADERS
 
 module iob_soc_opencryptolinux #(
-    `include "iob_soc_opencryptolinux_params.vh"
+    `include "iob_soc_opencryptolinux_params.vs"
 ) (
-    `include "iob_soc_opencryptolinux_io.vh"
+    `include "iob_soc_opencryptolinux_io.vs"
 );
 
   localparam integer E_BIT = `IOB_SOC_OPENCRYPTOLINUX_E;
@@ -242,7 +242,7 @@ module iob_soc_opencryptolinux #(
       .d_req (ext_mem0_d_req),
       .d_resp(ext_mem_d_resp),
       //AXI INTERFACE
-      `include "iob_axi_m_m_portmap.vh"
+      `include "iob_axi_m_m_portmap.vs"
       .clk_i (clk_i),
       .cke_i (cke_i),
       .arst_i(cpu_reset)
