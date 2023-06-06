@@ -5,28 +5,28 @@
 `include "iob_lib.vh"
 `include "iob_uart_swreg_def.vh"
 
-//IOB_PRAGMA_PHEADERS
+`include "iob_soc_opencryptolinux_periphs_swreg_def.vs"
 
 module iob_soc_opencryptolinux_sim_wrapper (
-   output                             trap_o,
+   output trap_o,
    //tester uart
-   input                              uart_avalid,
+   input uart_avalid,
    input [`IOB_UART_SWREG_ADDR_W-1:0] uart_addr,
-   input [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0]        uart_wdata,
-   input [3:0]                        uart_wstrb,
-   output [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0]       uart_rdata,
-   output                             uart_ready,
-   output                             uart_rvalid,
-   input [1-1:0] clk_i, //V2TEX_IO System clock input.
+   input [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] uart_wdata,
+   input [3:0] uart_wstrb,
+   output [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] uart_rdata,
+   output uart_ready,
+   output uart_rvalid,
+   input [1-1:0] clk_i,  //V2TEX_IO System clock input.
    input [1-1:0] rst_i  //V2TEX_IO System reset, asynchronous and active high.
-   );
+);
 
-   localparam AXI_ID_W  = 4;
+   localparam AXI_ID_W = 4;
    localparam AXI_LEN_W = 8;
-   localparam AXI_ADDR_W=`DDR_ADDR_W;
-   localparam AXI_DATA_W=`IOB_SOC_OPENCRYPTOLINUX_DATA_W;
+   localparam AXI_ADDR_W = `DDR_ADDR_W;
+   localparam AXI_DATA_W = `IOB_SOC_OPENCRYPTOLINUX_DATA_W;
 
-   //IOB_PRAGMA_PWIRES
+   `include "iob_soc_opencryptolinux_pwires.vs"
 
 
    /////////////////////////////////////////////
@@ -49,40 +49,38 @@ module iob_soc_opencryptolinux_sim_wrapper (
    `include "iob_axi_wire.vs"
 `endif
 
-    //
-    // UNIT UNDER TEST
-    //
-    iob_soc_opencryptolinux #(
-      .AXI_ID_W(AXI_ID_W),
-      .AXI_LEN_W(AXI_LEN_W),
+   //
+   // UNIT UNDER TEST
+   //
+   iob_soc_opencryptolinux #(
+      .AXI_ID_W  (AXI_ID_W),
+      .AXI_LEN_W (AXI_LEN_W),
       .AXI_ADDR_W(AXI_ADDR_W),
       .AXI_DATA_W(AXI_DATA_W)
-      )
-    uut (
-      //IOB_PRAGMA_PPORTMAPS
+   ) uut (
+      `include "iob_soc_opencryptolinux_pportmaps.vs"
 `ifdef IOB_SOC_OPENCRYPTOLINUX_USE_EXTMEM
       `include "iob_axi_m_portmap.vs"
 `endif
       .clk_i (clk_i),
-      .arst_i (rst_i),
-      .trap_o (trap_o)
-      );
+      .arst_i(rst_i),
+      .trap_o(trap_o)
+   );
 
 
    //instantiate the axi memory
 `ifdef IOB_SOC_OPENCRYPTOLINUX_USE_EXTMEM
-    axi_ram #(
-      .FILE("iob_soc_opencryptolinux_firmware.hex"),
-      .FILE_SIZE(2**(`IOB_SOC_OPENCRYPTOLINUX_SRAM_ADDR_W-2)),
-      .ID_WIDTH(AXI_ID_W),
-      .DATA_WIDTH (`IOB_SOC_OPENCRYPTOLINUX_DATA_W),
-      .ADDR_WIDTH (`DDR_ADDR_W)
-      )
-    ddr_model_mem (
+   axi_ram #(
+      .FILE      ("iob_soc_opencryptolinux_firmware.hex"),
+      .FILE_SIZE (2 ** (`IOB_SOC_OPENCRYPTOLINUX_SRAM_ADDR_W - 2)),
+      .ID_WIDTH  (AXI_ID_W),
+      .DATA_WIDTH(`IOB_SOC_OPENCRYPTOLINUX_DATA_W),
+      .ADDR_WIDTH(`DDR_ADDR_W)
+   ) ddr_model_mem (
       `include "iob_axi_s_portmap.vs"
       .clk_i(clk_i),
       .rst_i(rst_i)
-      );
+   );
 `endif
 
 
@@ -118,22 +116,22 @@ module iob_soc_opencryptolinux_sim_wrapper (
    iob_uart16550 uart_tb (
       .interrupt(),
 
-      .clk_i      (clk_i),
-      .cke_i      (cke_i),
-      .arst_i     (rst_i),
+      .clk_i (clk_i),
+      .cke_i (cke_i),
+      .arst_i(rst_i),
 
-      .iob_avalid_i (uart_avalid),
-      .iob_addr_i   (uart_addr),
-      .iob_wdata_i  (uart_wdata),
-      .iob_wstrb_i  (uart_wstrb),
-      .iob_rdata_o  (uart_rdata),
-      .iob_rvalid_o (uart_rvalid),
-      .iob_ready_o  (uart_ready),
+      .iob_avalid_i(uart_avalid),
+      .iob_addr_i  (uart_addr),
+      .iob_wdata_i (uart_wdata),
+      .iob_wstrb_i (uart_wstrb),
+      .iob_rdata_o (uart_rdata),
+      .iob_rvalid_o(uart_rvalid),
+      .iob_ready_o (uart_ready),
 
-      .txd        (UART0_rxd),
-      .rxd        (UART0_txd),
-      .rts        (UART0_cts),
-      .cts        (UART0_rts)
-      );
+      .txd(UART0_rxd),
+      .rxd(UART0_txd),
+      .rts(UART0_cts),
+      .cts(UART0_rts)
+   );
 
 endmodule
