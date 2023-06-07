@@ -8,17 +8,17 @@
 `include "iob_soc_opencryptolinux_periphs_swreg_def.vs"
 
 module iob_soc_opencryptolinux_sim_wrapper (
-   output trap_o,
+   output                                       trap_o,
    //tester uart
-   input uart_avalid,
-   input [`IOB_UART_SWREG_ADDR_W-1:0] uart_addr,
-   input [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] uart_wdata,
-   input [3:0] uart_wstrb,
+   input                                        uart_avalid,
+   input  [         `IOB_UART_SWREG_ADDR_W-1:0] uart_addr,
+   input  [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] uart_wdata,
+   input  [                                3:0] uart_wstrb,
    output [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] uart_rdata,
-   output uart_ready,
-   output uart_rvalid,
-   input [1-1:0] clk_i,  //V2TEX_IO System clock input.
-   input [1-1:0] rst_i  //V2TEX_IO System reset, asynchronous and active high.
+   output                                       uart_ready,
+   output                                       uart_rvalid,
+   input  [                              1-1:0] clk_i,        //V2TEX_IO System clock input.
+   input  [                              1-1:0] rst_i         //V2TEX_IO System reset, asynchronous and active high.
 );
 
    localparam AXI_ID_W = 4;
@@ -26,7 +26,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
    localparam AXI_ADDR_W = `DDR_ADDR_W;
    localparam AXI_DATA_W = `IOB_SOC_OPENCRYPTOLINUX_DATA_W;
 
-   `include "iob_soc_opencryptolinux_pwires.vs"
+   `include "iob_soc_opencryptolinux_sim_pwires.vs"
 
 
    /////////////////////////////////////////////

@@ -18,6 +18,8 @@ module iob_soc_opencryptolinux #(
    localparam integer B_BIT = `IOB_SOC_OPENCRYPTOLINUX_B;
    localparam integer NSlaves = `IOB_SOC_OPENCRYPTOLINUX_N_SLAVES;
 
+   `include "iob_soc_opencryptolinux_pwires.vs"
+
    //
    // SYSTEM RESET
    //
@@ -43,15 +45,8 @@ module iob_soc_opencryptolinux #(
    wire [                           `REQ_W-1:0] cpu_d_req;
    wire [                          `RESP_W-1:0] cpu_d_resp;
 
-   wire [                          N_CORES-1:0] CLINT0_mtip;  //timerInterrupt
-   wire [                          N_CORES-1:0] CLINT0_msip;  //softwareInterrupt
-   wire [                        N_TARGETS-1:0] PLIC0_irq;  //External_Interrupts
-   wire [                        N_SOURCES-1:0] PLIC0_src;  //IOb_Interrupts
-
-   wire                                         UART0_interrupt;
-   assign PLIC0_src = {{31{1'b0}}, UART0_interrupt};
-
-   wire CLINT0_rt_clk = 1'b0;
+   assign PLIC0_src     = {{31{1'b0}}, UART0_interrupt};
+   assign CLINT0_rt_clk = 1'b0;
 
    //instantiate the cpu
    iob_VexRiscv #(
@@ -61,9 +56,10 @@ module iob_soc_opencryptolinux #(
       .P_BIT     (P_BIT),
       .USE_EXTMEM(1)
    ) cpu_0 (
-      .clk               (clk_i),
-      .rst               (cpu_reset),
-      .boot              (boot),
+      .clk_i             (clk_i),
+      .cke_i             (cke_i),
+      .arst_i            (cpu_reset),
+      .boot_i            (boot),
       //instruction bus
       .ibus_req          (cpu_i_req),
       .ibus_resp         (cpu_i_resp),
@@ -213,14 +209,8 @@ module iob_soc_opencryptolinux #(
    );
 
 
-   assign ext_mem0_i_req = {
-      ext_mem_i_req[`AVALID(0)], ext_mem_i_req[`ADDRESS(0, SRAM_ADDR_W)-2], ext_mem_i_req[`WRITE(0)]
-   };
-   assign ext_mem0_d_req = {
-      ext_mem_d_req[`AVALID(0)],
-      ext_mem_d_req[`ADDRESS(0, `MEM_ADDR_W+1)-2],
-      ext_mem_d_req[`WRITE(0)]
-   };
+   assign ext_mem0_i_req = {ext_mem_i_req[`AVALID(0)], ext_mem_i_req[`ADDRESS(0, SRAM_ADDR_W)-2], ext_mem_i_req[`WRITE(0)]};
+   assign ext_mem0_d_req = {ext_mem_d_req[`AVALID(0)], ext_mem_d_req[`ADDRESS(0, `MEM_ADDR_W+1)-2], ext_mem_d_req[`WRITE(0)]};
    //
    // EXTERNAL DDR MEMORY
    //
@@ -237,16 +227,52 @@ module iob_soc_opencryptolinux #(
       .AXI_DATA_W (AXI_DATA_W)
    ) ext_mem0 (
       // instruction bus
-      .i_req (ext_mem0_i_req),
-      .i_resp(ext_mem_i_resp),
+      .i_req        (ext_mem0_i_req),
+      .i_resp       (ext_mem_i_resp),
       // data bus
-      .d_req (ext_mem0_d_req),
-      .d_resp(ext_mem_d_resp),
+      .d_req        (ext_mem0_d_req),
+      .d_resp       (ext_mem_d_resp),
       //AXI INTERFACE
-      `include "iob_axi_m_m_portmap.vs"
-      .clk_i (clk_i),
-      .cke_i (cke_i),
-      .arst_i(cpu_reset)
+      .axi_awid_o   (axi_awid_o),      //Address write channel ID.
+      .axi_awaddr_o (axi_awaddr_o),    //Address write channel address.
+      .axi_awlen_o  (axi_awlen_o),     //Address write channel burst length.
+      .axi_awsize_o (axi_awsize_o),    //Address write channel burst size. This signal indicates the size of each transfer in the burst.
+      .axi_awburst_o(axi_awburst_o),   //Address write channel burst type.
+      .axi_awlock_o (axi_awlock_o),    //Address write channel lock type.
+      .axi_awcache_o(axi_awcache_o),   //Address write channel memory type. Transactions set with Normal, Non-cacheable, Modifiable, and Bufferable (0011).
+      .axi_awprot_o (axi_awprot_o),    //Address write channel protection type. Transactions set with Normal, Secure, and Data attributes (000).
+      .axi_awqos_o  (axi_awqos_o),     //Address write channel quality of service.
+      .axi_awvalid_o(axi_awvalid_o),   //Address write channel valid.
+      .axi_awready_i(axi_awready_i),   //Address write channel ready.
+      .axi_wdata_o  (axi_wdata_o),     //Write channel data.
+      .axi_wstrb_o  (axi_wstrb_o),     //Write channel write strobe.
+      .axi_wlast_o  (axi_wlast_o),     //Write channel last word flag.
+      .axi_wvalid_o (axi_wvalid_o),    //Write channel valid.
+      .axi_wready_i (axi_wready_i),    //Write channel ready.
+      .axi_bid_i    (axi_bid_i),       //Write response channel ID.
+      .axi_bresp_i  (axi_bresp_i),     //Write response channel response.
+      .axi_bvalid_i (axi_bvalid_i),    //Write response channel valid.
+      .axi_bready_o (axi_bready_o),    //Write response channel ready.
+      .axi_arid_o   (axi_arid_o),      //Address read channel ID.
+      .axi_araddr_o (axi_araddr_o),    //Address read channel address.
+      .axi_arlen_o  (axi_arlen_o),     //Address read channel burst length.
+      .axi_arsize_o (axi_arsize_o),    //Address read channel burst size. This signal indicates the size of each transfer in the burst.
+      .axi_arburst_o(axi_arburst_o),   //Address read channel burst type.
+      .axi_arlock_o (axi_arlock_o),    //Address read channel lock type.
+      .axi_arcache_o(axi_arcache_o),   //Address read channel memory type. Transactions set with Normal, Non-cacheable, Modifiable, and Bufferable (0011).
+      .axi_arprot_o (axi_arprot_o),    //Address read channel protection type. Transactions set with Normal, Secure, and Data attributes (000).
+      .axi_arqos_o  (axi_arqos_o),     //Address read channel quality of service.
+      .axi_arvalid_o(axi_arvalid_o),   //Address read channel valid.
+      .axi_arready_i(axi_arready_i),   //Address read channel ready.
+      .axi_rid_i    (axi_rid_i),       //Read channel ID.
+      .axi_rdata_i  (axi_rdata_i),     //Read channel data.
+      .axi_rresp_i  (axi_rresp_i),     //Read channel response.
+      .axi_rlast_i  (axi_rlast_i),     //Read channel last word.
+      .axi_rvalid_i (axi_rvalid_i),    //Read channel valid.
+      .axi_rready_o (axi_rready_o),    //Read channel ready.
+      .clk_i        (clk_i),
+      .cke_i        (cke_i),
+      .arst_i       (cpu_reset)
    );
 
    `include "iob_soc_opencryptolinux_periphs_inst.vs"

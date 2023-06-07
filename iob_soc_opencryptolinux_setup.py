@@ -266,6 +266,56 @@ ios = [
     },
 ]
 
+peripheral_portmap = [
+    # Map interrupt port to internal wire
+    (
+        {"corename": "UART0", "if_name": "interrupt", "port": "interrupt", "bits": []},
+        {"corename": "internal", "if_name": "UART0", "port": "", "bits": []},
+    ),
+    # Map other rs232 ports to external interface (system IO)
+    (
+        {"corename": "UART0", "if_name": "rs232", "port": "txd", "bits": []},
+        {"corename": "external", "if_name": "UART0", "port": "", "bits": []},
+    ),
+    (
+        {"corename": "UART0", "if_name": "rs232", "port": "rxd", "bits": []},
+        {"corename": "external", "if_name": "UART0", "port": "", "bits": []},
+    ),
+    (
+        {"corename": "UART0", "if_name": "rs232", "port": "cts", "bits": []},
+        {"corename": "external", "if_name": "UART0", "port": "", "bits": []},
+    ),
+    (
+        {"corename": "UART0", "if_name": "rs232", "port": "rts", "bits": []},
+        {"corename": "external", "if_name": "UART0", "port": "", "bits": []},
+    ),
+    # Map `mtip` of CLINT0 to an internal wire named `CLINT0_mtip`
+    (
+        {"corename": "CLINT0", "if_name": "clint_io", "port": "mtip", "bits": []},
+        {"corename": "internal", "if_name": "CLINT0", "port": "", "bits": []},
+    ),
+    # Map `msip` of CLINT0 to an internal wire named `CLINT0_msip`
+    (
+        {"corename": "CLINT0", "if_name": "clint_io", "port": "msip", "bits": []},
+        {"corename": "internal", "if_name": "CLINT0", "port": "", "bits": []},
+    ),
+    # Map `msip` of CLINT0 to an internal wire named `CLINT0_msip`
+    (
+        {"corename": "CLINT0", "if_name": "clint_io", "port": "rt_clk", "bits": []},
+        {"corename": "internal", "if_name": "CLINT0", "port": "", "bits": []},
+    ),
+    # Map `mtip` of PLIC0 to an internal wire named `PLIC0_irq`
+    (
+        {"corename": "PLIC0", "if_name": "plic_io", "port": "irq", "bits": []},
+        {"corename": "internal", "if_name": "PLIC0", "port": "", "bits": []},
+    ),
+    # Map `msip` of PLIC0 to an internal wire named `PLIC0_src`
+    (
+        {"corename": "PLIC0", "if_name": "plic_io", "port": "src", "bits": []},
+        {"corename": "internal", "if_name": "PLIC0", "port": "", "bits": []},
+    ),
+]
+
 # Add IOb-SoC modules. These will copy and generate common files from the IOb-SoC repository.
 iob_soc.add_iob_soc_modules(sys.modules[__name__])
 
