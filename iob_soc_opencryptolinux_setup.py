@@ -106,7 +106,12 @@ blocks = [
                 "descr": "Default UART interface",
                 "params": {},
             },
-            {"name": "PLIC0", "type": "PLIC", "descr": "PLIC peripheral", "params": {}},
+            {
+                "name": "PLIC0",
+                "type": "PLIC",
+                "descr": "PLIC peripheral",
+                "params": {"N_SOURCES": "32", "N_TARGETS": "2"},
+            },
             {
                 "name": "CLINT0",
                 "type": "CLINT",
@@ -119,6 +124,14 @@ blocks = [
 
 confs = [
     # macros
+    {
+        "name": "USE_EXTMEM",
+        "type": "M",
+        "val": "1",
+        "min": "1",
+        "max": "32",
+        "descr": "Always use external memory in the SoC.",
+    },
     {
         "name": "E",
         "type": "M",
@@ -166,7 +179,7 @@ confs = [
         "val": "1",
         "min": "1",
         "max": "32",
-        "descr": "TODO",
+        "descr": "Number of CPU cores used in the SoC.",
     },
     # INTERRUPTS ARCHITECTURE
     {
@@ -175,7 +188,7 @@ confs = [
         "val": "32",
         "min": "1",
         "max": "32",
-        "descr": "TODO",
+        "descr": "Number of peripherals that can generate an external interrupt to be interpreted by the PLIC.",
     },
     {
         "name": "N_TARGETS",
@@ -183,7 +196,7 @@ confs = [
         "val": "2",
         "min": "1",
         "max": "32",
-        "descr": "TODO",
+        "descr": "Number of HARTs in the SoC.",
     },
     # mandatory parameters (do not change them!)
     {
