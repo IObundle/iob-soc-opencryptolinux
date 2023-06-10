@@ -30,20 +30,20 @@ module iob_soc_opencryptolinux #(
    wire cke_i;
    assign cke_i = 1'b1;
 
-   wire [  1+SRAM_ADDR_W-2+DATA_W+DATA_W/8-1:0] ext_mem0_i_req;
-   wire [1+`MEM_ADDR_W+1-2+DATA_W+DATA_W/8-1:0] ext_mem0_d_req;
+   wire [ 1+SRAM_ADDR_W-2+DATA_W+DATA_W/8-1:0] ext_mem0_i_req;
+   wire [1+MEM_ADDR_W+1-2+DATA_W+DATA_W/8-1:0] ext_mem0_d_req;
 
    //
    //  CPU
    //
 
    // instruction bus
-   wire [                           `REQ_W-1:0] cpu_i_req;
-   wire [                          `RESP_W-1:0] cpu_i_resp;
+   wire [                          `REQ_W-1:0] cpu_i_req;
+   wire [                         `RESP_W-1:0] cpu_i_resp;
 
    // data cat bus
-   wire [                           `REQ_W-1:0] cpu_d_req;
-   wire [                          `RESP_W-1:0] cpu_d_resp;
+   wire [                          `REQ_W-1:0] cpu_d_req;
+   wire [                         `RESP_W-1:0] cpu_d_resp;
 
    assign PLIC0_src     = {{31{1'b0}}, UART0_interrupt};
    assign CLINT0_rt_clk = 1'b0;
@@ -209,8 +209,14 @@ module iob_soc_opencryptolinux #(
    );
 
 
-   assign ext_mem0_i_req = {ext_mem_i_req[`AVALID(0)], ext_mem_i_req[`ADDRESS(0, SRAM_ADDR_W)-2], ext_mem_i_req[`WRITE(0)]};
-   assign ext_mem0_d_req = {ext_mem_d_req[`AVALID(0)], ext_mem_d_req[`ADDRESS(0, `MEM_ADDR_W+1)-2], ext_mem_d_req[`WRITE(0)]};
+   assign ext_mem0_i_req = {
+      ext_mem_i_req[`AVALID(0)], ext_mem_i_req[`ADDRESS(0, SRAM_ADDR_W)-2], ext_mem_i_req[`WRITE(0)]
+   };
+   assign ext_mem0_d_req = {
+      ext_mem_d_req[`AVALID(0)],
+      ext_mem_d_req[`ADDRESS(0, MEM_ADDR_W+1)-2],
+      ext_mem_d_req[`WRITE(0)]
+   };
    //
    // EXTERNAL DDR MEMORY
    //
@@ -218,7 +224,7 @@ module iob_soc_opencryptolinux #(
       .ADDR_W     (ADDR_W),
       .DATA_W     (DATA_W),
       .FIRM_ADDR_W(SRAM_ADDR_W),
-      .MEM_ADDR_W (`MEM_ADDR_W),
+      .MEM_ADDR_W (MEM_ADDR_W),
       .DDR_ADDR_W (`DDR_ADDR_W),
       .DDR_DATA_W (`DDR_DATA_W),
       .AXI_ID_W   (AXI_ID_W),
