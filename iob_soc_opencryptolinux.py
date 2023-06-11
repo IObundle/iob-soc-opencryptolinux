@@ -127,19 +127,19 @@ class iob_soc_opencryptolinux(iob_soc):
             # Map other rs232 ports to external interface (system IO)
             (
                 {"corename": "UART0", "if_name": "rs232", "port": "txd", "bits": []},
-                {"corename": "external", "if_name": "UART0", "port": "", "bits": []},
+                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
             ),
             (
                 {"corename": "UART0", "if_name": "rs232", "port": "rxd", "bits": []},
-                {"corename": "external", "if_name": "UART0", "port": "", "bits": []},
+                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
             ),
             (
                 {"corename": "UART0", "if_name": "rs232", "port": "cts", "bits": []},
-                {"corename": "external", "if_name": "UART0", "port": "", "bits": []},
+                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
             ),
             (
                 {"corename": "UART0", "if_name": "rs232", "port": "rts", "bits": []},
-                {"corename": "external", "if_name": "UART0", "port": "", "bits": []},
+                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
             ),
             # Map `mtip` of CLINT0 to an internal wire named `CLINT0_mtip`
             (
