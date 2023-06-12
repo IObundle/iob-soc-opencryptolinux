@@ -14,7 +14,8 @@ concurrency:
 on:
   push:
     branches:
-        - master
+      - master
+      - python-setup
   # Don't forget to require approval for all outside collaborators
   pull_request:
     branches: '*'
@@ -22,59 +23,183 @@ on:
   workflow_dispatch:
 
 jobs:
+  pc-emul:
+    runs-on: self-hosted
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: clean
+        run: make clean
+      - name: setup
+        run: make setup
+      - name: pc-emul test
+        run: make -C ../iob_soc_opencryptolinux_V* pc-emul-test
+
   verilator:
     runs-on: self-hosted
     timeout-minutes: 30
     # run even if previous job failed
     if: ${{ !cancelled() }}
     # run after indicated job
+    needs: [ pc-emul ]
+  
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
-      - name: test-clean
-        run: make test-clean
-      - name: test-verilator
-        run: nix-shell --run "make sim-run RUN_LINUX=0 FIRM_ADDR_W=15 INIT_MEM=1"
-
+      # Init mem
+      - name: clean
+        run: make clean
+      - name: setup init_mem
+        run: make setup
+      - name: verilator test
+        run: make -C ../iob_soc_opencryptolinux_V* sim-test RUN_LINUX=0 SIMULATOR=verilator
+      # No init mem
+      - name: clean
+        run: make clean
+      - name: setup
+        run: make setup INIT_MEM=0
+      - name: verilator test
+        run: make -C ../iob_soc_opencryptolinux_V* sim-test RUN_LINUX=0 SIMULATOR=verilator
+      # This system always runs with USE_EXTMEM=1
+      # Init mem and Ext mem
+      #- name: clean
+      #  run: make clean
+      #- name: setup init_mem ext_mem
+      #  run: make setup INIT_MEM=1 USE_EXTMEM=1
+      #- name: verilator test
+      #  run: make -C ../iob_soc_opencryptolinux_V* sim-test RUN_LINUX=0 SIMULATOR=verilator
+      ## No init mem and Ext mem
+      #- name: clean
+      #  run: make clean
+      #- name: setup ext_mem
+      #  run: make setup INIT_MEM=0 USE_EXTMEM=1
+      #- name: verilator test
+      #  run: make -C ../iob_soc_opencryptolinux_V* sim-test RUN_LINUX=0 SIMULATOR=verilator
+  
+  #icarus:
+  #  runs-on: self-hosted
+  #  timeout-minutes: 90
+  #  if: ${{ !cancelled() }}
+  #  needs: [ pc-emul ]
+  #
+  #  steps:
+  #    - uses: actions/checkout@v3
+  #      with:
+  #        submodules: 'recursive'
+  #    # Init mem
+  #    - name: clean
+  #      run: make clean
+  #    - name: setup init_mem
+  #      run: make setup
+  #    - name: icarus test
+  #      run: make -C ../iob_soc_opencryptolinux_V* sim-test SIMULATOR=icarus
+  #    # No init mem - Disabled because it takes too long and is already checked by verilator
+  #    #- name: clean
+  #    #  run: make clean
+  #    #- name: setup
+  #    #  run: make setup INIT_MEM=0
+  #    #- name: icarus test
+  #    #  run: make -C ../iob_soc_opencryptolinux_V* sim-test SIMULATOR=icarus
+  #    # Init mem and Ext mem
+  #    - name: clean
+  #      run: make clean
+  #    - name: setup init_mem ext_mem
+  #      run: make setup INIT_MEM=1 USE_EXTMEM=1
+  #    - name: icarus test
+  #      run: make -C ../iob_soc_opencryptolinux_V* sim-test SIMULATOR=icarus
+  #    # No init mem and Ext mem - Disabled because it takes too long and is already checked by verilator
+  #    #- name: clean
+  #    #  run: make clean
+  #    #- name: setup ext_mem
+  #    #  run: make setup INIT_MEM=0 USE_EXTMEM=1
+  #    #- name: icarus test
+  #    #  run: make -C ../iob_soc_opencryptolinux_V* sim-test SIMULATOR=icarus
+  
   cyclonev:
     runs-on: self-hosted
     timeout-minutes: 60
     if: ${{ !cancelled() }}
+    #needs: [ icarus, verilator ]
+  
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
-      - name: test-clean
-        run: make test-clean
-      - name: test-cyclonev
-        run: make fpga-run BOARD=CYCLONEV-GT-DK RUN_LINUX=0 FIRM_ADDR_W=15
-
+      # This system always runs with USE_EXTMEM=1, therefore, cannot have INIT_MEM=1 on FPGA
+      ## Init mem
+      #- name: clean
+      #  run: make clean
+      #- name: setup init_mem
+      #  run: make setup
+      #- name: cyclonev test
+      #  run: make -C ../iob_soc_opencryptolinux_V* fpga-test RUN_LINUX=0 BOARD=CYCLONEV-GT-DK
+      # No init mem
+      - name: clean
+        run: make clean
+      - name: setup
+        run: make setup INIT_MEM=0
+      - name: cyclonev test
+        run: make -C ../iob_soc_opencryptolinux_V* fpga-test RUN_LINUX=0 BOARD=CYCLONEV-GT-DK
+      # This system always runs with USE_EXTMEM=1
+      ## No init mem and Ext mem
+      #- name: clean
+      #  run: make clean
+      #- name: setup ext_mem
+      #  run: make setup INIT_MEM=0 USE_EXTMEM=1
+      #- name: cyclonev test
+      #  run: make -C ../iob_soc_opencryptolinux_V* fpga-test RUN_LINUX=0 BOARD=CYCLONEV-GT-DK
+  
   aes-ku040:
     runs-on: self-hosted
     timeout-minutes: 90
     if: ${{ !cancelled() }}
-
+    needs: [ icarus, verilator ]
+  
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
-      - name: test-clean
-        run: make test-clean
-      - name: test-aes-ku040
-        run: make fpga-run BOARD=AES-KU040-DB-G RUN_LINUX=0 FIRM_ADDR_W=15
-
+      # This system always runs with USE_EXTMEM=1, therefore, cannot have INIT_MEM=1 on FPGA
+      ## Init mem
+      #- name: clean
+      #  run: make clean
+      #- name: setup init_mem
+      #  run: make setup
+      #- name: ku040 test
+      #  run: make -C ../iob_soc_opencryptolinux_V* fpga-test RUN_LINUX=0 BOARD=AES-KU040-DB-G
+      # No init mem
+      - name: clean
+        run: make clean
+      - name: setup
+        run: make setup INIT_MEM=0
+      - name: ku040 test
+        run: make -C ../iob_soc_opencryptolinux_V* fpga-test RUN_LINUX=0 BOARD=AES-KU040-DB-G
+      # This system always runs with USE_EXTMEM=1
+      ## No init mem and Ext mem
+      #- name: clean
+      #  run: make clean
+      #- name: setup ext_mem
+      #  run: make setup INIT_MEM=0 USE_EXTMEM=1
+      #- name: ku040 test
+      #  run: make -C ../iob_soc_opencryptolinux_V* fpga-test RUN_LINUX=0 BOARD=AES-KU040-DB-G
+  
   doc:
     runs-on: self-hosted
     timeout-minutes: 60
     if: ${{ !cancelled() }}
     needs: [ cyclonev, aes-ku040 ]
-
+  
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
-      - name: test-clean
-        run: make test-clean
-      - name: test-doc
-        run: make test-doc
+      - name: clean
+        run: make clean
+      - name: setup
+        run: make setup
+      - name: doc test
+        run: make -C ../iob_soc_opencryptolinux_V* doc-test
