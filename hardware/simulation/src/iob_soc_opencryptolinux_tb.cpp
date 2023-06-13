@@ -48,10 +48,12 @@ void uartwrite(unsigned int cpu_address, unsigned int cpu_data,
   }
   dut->uart_addr = cpu_address;
   dut->uart_avalid = 1;
-  dut->uart_wstrb = wstrb_int << (cpu_address & 0b011);
-  dut->uart_wdata = cpu_data
-                    << ((cpu_address & 0b011) * 8); // align data to 32 bits
+  dut->uart_wstrb = wstrb_int;
+  dut->uart_wdata = cpu_data;
   Timer(CLK_PERIOD);
+  while(!(dut->uart_ready)){
+    Timer(CLK_PERIOD);
+  }
   dut->uart_wstrb = 0;
   dut->uart_avalid = 0;
 }
@@ -61,8 +63,10 @@ void uartread(unsigned int cpu_address, unsigned char *read_reg) {
   dut->uart_addr = cpu_address;
   dut->uart_avalid = 1;
   Timer(CLK_PERIOD);
-  *read_reg =
-      (dut->uart_rdata) >> ((cpu_address & 0b011) * 8); // align to 32 bits
+  while(!(dut->uart_rvalid)){
+    Timer(CLK_PERIOD);
+  }
+  *read_reg = (dut->uart_rdata);
   dut->uart_avalid = 0;
 }
 
@@ -72,23 +76,23 @@ void inituart() {
   uint8_t lcr = 0;
   uartread(3, &lcr);
   lcr = (lcr|128);
-  uartwrite(3, lcr, 1);
+  uartwrite(3, lcr, 0x1);
   // Set the Divisor Latches, MSB first, LSB next.
   uint16_t div = FREQ/BAUD;
   uint8_t *dl = (uint8_t *)&div;
-  uartwrite(1, *(dl+1), 1);
-  uartwrite(0, *(dl), 1);
+  uartwrite(1, *(dl+1), 0x1);
+  uartwrite(0, *(dl), 0x1);
   // Set bit 7 of LCR to ‘0’ to disable access to Divisor Latches.
   // At this time the transmission engine starts working and data can be sent and received.
   lcr = (lcr&127);
-  uartwrite(3, lcr, 1);
+  uartwrite(3, lcr, 0x1);
   // Set the FIFO trigger level. Generally, higher trigger level values produce less
   // interrupt to the system, so setting it to 14 bytes is recommended if the system
   // responds fast enough.
-  uartwrite(2, 192, 1);
+  uartwrite(2, 192, 0x1);
   // Enable desired interrupts by setting appropriate bits in the Interrupt Enable
   // register.
-  uartwrite(1, 3, 1);
+  uartwrite(1, 3, 0x1);
 }
 
 void write_success(){
@@ -126,8 +130,8 @@ int main(int argc, char **argv, char **env) {
   FILE *soc2cnsl_fd;
   FILE *cnsl2soc_fd;
   unsigned char cpu_char = 0;
-  unsigned char rxread_reg = 0, txread_reg = 0;
-  unsigned char rxread_aux = 0, txread_aux = 0;
+  unsigned char rx_ready = 0, tx_ready = 0;
+  unsigned char read_aux = 0;
   int able2write = 0, able2read = 0;
 
   while ((cnsl2soc_fd = fopen("./cnsl2soc", "rb")) == NULL)
@@ -143,13 +147,12 @@ int main(int argc, char **argv, char **env) {
       fclose(soc2cnsl_fd);
       break;
     }
-    while (!rxread_aux && !txread_aux) {
-      uartread(5, &rxread_aux);
-      uartread(5, &txread_aux);
-      rxread_reg = rxread_aux & (1<<6);
-      txread_reg = txread_aux & 1;
+    while (!rx_ready && !tx_ready) {
+      uartread(5, &read_aux);
+      tx_ready = read_aux & (0x1<<6);
+      rx_ready = read_aux & 0x1;
     }
-    if (rxread_reg) {
+    if (rx_ready) {
       if ((soc2cnsl_fd = fopen("./soc2cnsl", "rb")) != NULL) {
         able2read = fread(&cpu_char, sizeof(char), 1, soc2cnsl_fd);
         if (able2read == 0) {
@@ -157,23 +160,23 @@ int main(int argc, char **argv, char **env) {
           uartread(0, &cpu_char);
           soc2cnsl_fd = fopen("./soc2cnsl", "wb");
           fwrite(&cpu_char, sizeof(char), 1, soc2cnsl_fd);
-          rxread_reg = 0;
+          rx_ready = 0;
         }
         fclose(soc2cnsl_fd);
       }
     }
-    if (txread_reg) {
+    if (tx_ready) {
       if ((cnsl2soc_fd = fopen("./cnsl2soc", "rb")) == NULL) {
         break;
       }
       able2write = fread(&cpu_char, sizeof(char), 1, cnsl2soc_fd);
       if (able2write > 0) {
-        uartwrite(0, cpu_char, 1);
+        uartwrite(0, cpu_char, 0x1);
         fclose(cnsl2soc_fd);
         cnsl2soc_fd = fopen("./cnsl2soc", "w");
       }
       fclose(cnsl2soc_fd);
-      txread_reg = 0;
+      tx_ready = 0;
     }
   }
 
