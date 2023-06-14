@@ -1,6 +1,3 @@
-[submodule "submodules/CACHE"]
-	path = submodules/CACHE
-	url = git@github.com:IObundle/iob-cache.git
 [submodule "submodules/LIB"]
 	path = submodules/LIB
 	url = git@github.com:IObundle/iob-lib.git
