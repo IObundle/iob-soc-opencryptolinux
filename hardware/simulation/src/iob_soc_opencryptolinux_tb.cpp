@@ -78,7 +78,7 @@ void inituart() {
   lcr = (lcr|128);
   uartwrite(3, lcr, 0x1);
   // Set the Divisor Latches, MSB first, LSB next.
-  uint16_t div = FREQ/BAUD;
+  uint16_t div = FREQ/(16*BAUD);
   uint8_t *dl = (uint8_t *)&div;
   uartwrite(1, *(dl+1), 0x1);
   uartwrite(0, *(dl), 0x1);
