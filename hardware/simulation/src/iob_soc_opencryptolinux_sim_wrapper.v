@@ -20,7 +20,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
    output                                       trap_o,
    //tester uart
    input                                        uart_avalid,
-   input  [    `IOB_UART_SWREG_ADDR_W-1:0] uart_addr,
+   input  [         `IOB_UART_SWREG_ADDR_W-1:0] uart_addr,
    input  [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] uart_wdata,
    input  [                                3:0] uart_wstrb,
    output [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] uart_rdata,
