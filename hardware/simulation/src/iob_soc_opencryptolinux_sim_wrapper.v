@@ -3,6 +3,8 @@
 `include "bsp.vh"
 `include "iob_soc_opencryptolinux_conf.vh"
 `include "iob_lib.vh"
+`include "iob_uart_conf.vh"
+`include "iob_uart_swreg_def.vh"
 
 //Peripherals _swreg_def.vh file includes.
 `include "iob_soc_opencryptolinux_periphs_swreg_def.vs"
@@ -18,7 +20,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
    output                                       trap_o,
    //tester uart
    input                                        uart_avalid,
-   input  [    `IOB_UART16550_SWREG_ADDR_W-1:0] uart_addr,
+   input  [    `IOB_UART_SWREG_ADDR_W-1:0] uart_addr,
    input  [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] uart_wdata,
    input  [                                3:0] uart_wstrb,
    output [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] uart_rdata,
@@ -234,9 +236,7 @@ always @(posedge trap[1]) begin
    //of the iob_soc_opencryptolinux UART0 instance to communicate with it
    // The interface of iob_soc UART0 is assumed to be the first portmapped interface (UART_*)
    wire cke_i = 1'b1;
-   iob_uart16550 uart_tb (
-      .interrupt(),
-
+   iob_uart uart_tb (
       .clk_i (clk_i),
       .cke_i (cke_i),
       .arst_i(rst_i),
