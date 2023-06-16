@@ -7,6 +7,7 @@ from iob_vexriscv import iob_vexriscv
 from iob_uart16550 import iob_uart16550
 from iob_plic import iob_plic
 from iob_clint import iob_clint
+from iob_uart import iob_uart
 
 
 class iob_soc_opencryptolinux(iob_soc):
@@ -60,6 +61,14 @@ class iob_soc_opencryptolinux(iob_soc):
             iob_clint,
             iob_uart16550,
         ]
+
+    # Method that runs the setup process of this class
+    @classmethod
+    def _run_setup(cls):
+        # Setup uart for usage in testbench
+        iob_uart.setup()
+        # Call iob-soc setup
+        super()._run_setup()
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
