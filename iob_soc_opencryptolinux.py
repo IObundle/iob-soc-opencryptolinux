@@ -57,7 +57,6 @@ class iob_soc_opencryptolinux(iob_soc):
         # Submodules
         cls.submodule_setup_list += [
             iob_vexriscv,
-            iob_plic,
             iob_clint,
             iob_uart16550,
         ]
@@ -179,15 +178,5 @@ class iob_soc_opencryptolinux(iob_soc):
                     "bits": [],
                 },
                 {"corename": "internal", "if_name": "CLINT0", "port": "", "bits": []},
-            ),
-            # Map `mtip` of PLIC0 to an internal wire named `PLIC0_irq`
-            (
-                {"corename": "PLIC0", "if_name": "plic_io", "port": "irq", "bits": []},
-                {"corename": "internal", "if_name": "PLIC0", "port": "", "bits": []},
-            ),
-            # Map `msip` of PLIC0 to an internal wire named `PLIC0_src`
-            (
-                {"corename": "PLIC0", "if_name": "plic_io", "port": "src", "bits": []},
-                {"corename": "internal", "if_name": "PLIC0", "port": "", "bits": []},
             ),
         ]
