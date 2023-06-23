@@ -57,17 +57,18 @@ class iob_soc_opencryptolinux(iob_soc):
         # Submodules
         cls.submodule_setup_list += [
             iob_vexriscv,
-            iob_clint,
-            iob_uart16550,
+            iob_uart,
         ]
 
     # Method that runs the setup process of this class
     @classmethod
-    def _run_setup(cls):
-        # Setup uart for usage in testbench
-        iob_uart.setup()
-        # Call iob-soc setup
-        super()._run_setup()
+    def _setup_portmap(cls):
+        cls.peripheral_portmap += [
+            (
+                {"corename": "UART0", "if_name": "rs232", "port": "", "bits": []},
+                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+            ),  # Map UART0 of iob-soc to external interface
+        ]
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
@@ -75,11 +76,27 @@ class iob_soc_opencryptolinux(iob_soc):
         super()._setup_confs(
             [
                 {
+                    "name": "RUN_LINUX",
+                    "type": "M",
+                    "val": False,
+                    "min": "0",
+                    "max": "1",
+                    "descr": "Used to select running linux.",
+                },
+                {
+                    "name": "INIT_MEM",
+                    "type": "M",
+                    "val": True,
+                    "min": "0",
+                    "max": "1",
+                    "descr": "Used to select running linux.",
+                },
+                {
                     "name": "USE_EXTMEM",
                     "type": "M",
-                    "val": "1",
-                    "min": "1",
-                    "max": "32",
+                    "val": True,
+                    "min": "0",
+                    "max": "1",
                     "descr": "Always use external memory in the SoC.",
                 },
                 {
@@ -118,65 +135,3 @@ class iob_soc_opencryptolinux(iob_soc):
                 cls.confs.pop(i)
                 continue
             i += 1
-
-    @classmethod
-    def _setup_portmap(cls):
-        cls.peripheral_portmap += [
-            # Map interrupt port to internal wire
-            (
-                {
-                    "corename": "UART0",
-                    "if_name": "interrupt",
-                    "port": "interrupt",
-                    "bits": [],
-                },
-                {"corename": "internal", "if_name": "UART0", "port": "", "bits": []},
-            ),
-            # Map other rs232 ports to external interface (system IO)
-            (
-                {"corename": "UART0", "if_name": "rs232", "port": "txd", "bits": []},
-                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
-            ),
-            (
-                {"corename": "UART0", "if_name": "rs232", "port": "rxd", "bits": []},
-                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
-            ),
-            (
-                {"corename": "UART0", "if_name": "rs232", "port": "cts", "bits": []},
-                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
-            ),
-            (
-                {"corename": "UART0", "if_name": "rs232", "port": "rts", "bits": []},
-                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
-            ),
-            # Map `mtip` of CLINT0 to an internal wire named `CLINT0_mtip`
-            (
-                {
-                    "corename": "CLINT0",
-                    "if_name": "clint_io",
-                    "port": "mtip",
-                    "bits": [],
-                },
-                {"corename": "internal", "if_name": "CLINT0", "port": "", "bits": []},
-            ),
-            # Map `msip` of CLINT0 to an internal wire named `CLINT0_msip`
-            (
-                {
-                    "corename": "CLINT0",
-                    "if_name": "clint_io",
-                    "port": "msip",
-                    "bits": [],
-                },
-                {"corename": "internal", "if_name": "CLINT0", "port": "", "bits": []},
-            ),
-            # Map `msip` of CLINT0 to an internal wire named `CLINT0_msip`
-            (
-                {
-                    "corename": "CLINT0",
-                    "if_name": "clint_io",
-                    "port": "rt_clk",
-                    "bits": [],
-                },
-                {"corename": "internal", "if_name": "CLINT0", "port": "", "bits": []},
-            ),
-        ]

@@ -18,30 +18,25 @@
 int main() {
 
   //init uart
-  uart_init(UART16550_BASE, FREQ/(16*BAUD));
+  uart_init(UART16550_BASE, FREQ/(BAUD));
 
   //connect with console
   do {
-    if(uart_txready())
-      uart_putc((char) ENQ);
-  } while(!uart_rxready());
+    if (IOB_UART_GET_TXREADY())
+      uart_putc((char)ENQ);
+  } while (!IOB_UART_GET_RXREADY());
+
 
   //welcome message
   uart_puts (PROGNAME);
   uart_puts (": connected!\n");
     
-#ifdef USE_EXTMEM
   uart_puts (PROGNAME);
   uart_puts(": DDR in use and program runs from DDR\n");
-#endif
 
   // address to copy firmware to
   char *prog_start_addr;
-#ifdef USE_EXTMEM
-    prog_start_addr = (char *) EXTRA_BASE;
-#else
-  prog_start_addr = (char *) (1<<BOOTROM_ADDR_W);
-#endif
+  prog_start_addr = (char *)(0x80000000);
 
 while(uart_getc() != ACK){
   uart_puts (PROGNAME);
@@ -79,7 +74,7 @@ while(uart_getc() != ACK){
   uart_puts (": Loading firmware...\n");
   
   //sending firmware back for debug
-  if(file_size) uart_sendfile(s_fw, file_size, prog_start_addr);
+  if(file_size) uart_sendfile(r_fw, file_size, prog_start_addr);
   else{
     uart_puts (PROGNAME);
     uart_puts (": ERROR loading firmware\n");
