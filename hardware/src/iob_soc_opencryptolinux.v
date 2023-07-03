@@ -28,9 +28,6 @@ module iob_soc_opencryptolinux #(
    wire cke_i;
    assign cke_i = 1'b1;
 
-   wire [ 1+SRAM_ADDR_W-2+DATA_W+DATA_W/8-1:0] ext_mem0_i_req;
-   wire [1+MEM_ADDR_W+1-2+DATA_W+DATA_W/8-1:0] ext_mem0_d_req;
-
    //
    //  CPU
    //
@@ -63,7 +60,8 @@ module iob_soc_opencryptolinux #(
    ) cpu_0 (
       .clk_i             (clk_i),
       .cke_i             (cke_i),
-      .arst_i            (cpu_reset),
+      .arst_i            (arst_i),
+      .cpu_reset_i       (cpu_reset),
       .boot_i            (boot),
       //instruction bus
       .ibus_req          (cpu_i_req),
@@ -97,7 +95,7 @@ module iob_soc_opencryptolinux #(
       .P_SLAVES(AddrMsb)
    ) ibus_split (
       .clk_i   (clk_i),
-      .arst_i  (cpu_reset),
+      .arst_i  (arst_i),
       // master interface
       .m_req_i (cpu_i_req),
       .m_resp_o(cpu_i_resp),
@@ -123,7 +121,7 @@ module iob_soc_opencryptolinux #(
       .P_SLAVES(AddrMsb)
    ) dbus_split (
       .clk_i   (clk_i),
-      .arst_i  (cpu_reset),
+      .arst_i  (arst_i),
       // master interface
       .m_req_i (cpu_d_req),
       .m_resp_o(cpu_d_resp),
@@ -147,7 +145,7 @@ module iob_soc_opencryptolinux #(
       .P_SLAVES(AddrMsb - 1)
    ) pbus_split (
       .clk_i   (clk_i),
-      .arst_i  (cpu_reset),
+      .arst_i  (arst_i),
       // master interface
       .m_req_i (int_d_req),
       .m_resp_o(int_d_resp),
@@ -188,6 +186,9 @@ module iob_soc_opencryptolinux #(
    //
    // EXTERNAL DDR MEMORY
    //
+
+   wire [ 1+SRAM_ADDR_W-2+DATA_W+DATA_W/8-1:0] ext_mem0_i_req;
+   wire [1+MEM_ADDR_W+1-2+DATA_W+DATA_W/8-1:0] ext_mem0_d_req;
 
    assign ext_mem0_i_req = {
       ext_mem_i_req[`AVALID(0)],
@@ -266,7 +267,7 @@ module iob_soc_opencryptolinux #(
 
       .clk_i (clk_i),
       .cke_i (cke_i),
-      .arst_i(cpu_reset)
+      .arst_i(arst_i)
    );
 
    `include "iob_soc_opencryptolinux_periphs_inst.vs"

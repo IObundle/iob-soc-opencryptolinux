@@ -1,4 +1,7 @@
 CORE := iob_soc_opencryptolinux
+
+DISABLE_LINT:=1
+
 include submodules/LIB/setup.mk
 
 sim-test:

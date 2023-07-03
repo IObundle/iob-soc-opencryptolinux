@@ -63,11 +63,10 @@ module iob_soc_opencryptolinux_sim_wrapper (
 
    `include "iob_soc_opencryptolinux_interconnect.vs"
 
-`ifdef IOB_SOC_USE_EXTMEM
    //instantiate the axi memory
    //IOb-SoC-OpenCryptoLinux and SUT access the same memory.
    axi_ram #(
-`ifdef IOB_SOC_INIT_MEM
+`ifdef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
       .FILE      ("init_ddr_contents.hex"),  //This file contains firmware for both systems
       .FILE_SIZE (2 ** (AXI_ADDR_W - 2)),
 `endif
@@ -80,7 +79,6 @@ module iob_soc_opencryptolinux_sim_wrapper (
       .clk_i(clk),
       .rst_i(rst)
    );
-`endif
 
    //finish simulation on trap
    /* //Sut
