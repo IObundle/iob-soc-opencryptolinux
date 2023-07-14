@@ -9,7 +9,7 @@
 
 //defined here (and not in periphs.h) because it is the only peripheral used
 //by the bootloader
-#define UART16550_BASE (UART0 << (31 - N_SLAVES_W))
+#define UART0_BASE (UART0 << (31 - N_SLAVES_W))
 
 #define PROGNAME "IOb-Bootloader"
 
@@ -18,13 +18,13 @@
 int main() {
 
   //init uart
-  uart_init(UART16550_BASE, FREQ/(BAUD));
+  uart_init(UART0_BASE, FREQ/(16*BAUD));
 
   //connect with console
   do {
-    if (IOB_UART_GET_TXREADY())
-      uart_putc((char)ENQ);
-  } while (!IOB_UART_GET_RXREADY());
+    if(uart_txready())
+      uart_putc((char) ENQ);
+  } while(!uart_rxready());
 
 
   //welcome message

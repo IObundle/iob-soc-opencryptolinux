@@ -3,6 +3,8 @@
 `include "bsp.vh"
 `include "iob_soc_opencryptolinux_conf.vh"
 `include "iob_lib.vh"
+`include "iob_uart_conf.vh"
+`include "iob_uart_swreg_def.vh"
 
 //Peripherals _swreg_def.vh file includes.
 `include "iob_soc_opencryptolinux_periphs_swreg_def.vs"
