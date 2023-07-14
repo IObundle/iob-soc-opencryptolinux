@@ -47,7 +47,7 @@ int main() {
   char fail_string[] = "Test failed!";
 
   // init uart
-  uart_init(UART0_BASE, FREQ / BAUD);
+  uart_init(UART0_BASE, FREQ/(16*BAUD));
 
   // test puts
   uart_puts("\n\n\nHello world!\n\n\n");

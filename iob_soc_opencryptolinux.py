@@ -18,12 +18,9 @@ class iob_soc_opencryptolinux(iob_soc):
 
     @classmethod
     def _create_instances(cls):
-        super()._create_instances()
-
         # Verilog modules instances if we have them in the setup list (they may not be in the list if a subclass decided to remove them).
         if iob_vexriscv in cls.submodule_setup_list:
             cls.cpu = iob_vexriscv.instance("cpu_0")
-
         # Instantiate OpenCryptoLinux peripherals
         if iob_uart16550 in cls.submodule_setup_list:
             cls.peripherals.append(
@@ -41,34 +38,24 @@ class iob_soc_opencryptolinux(iob_soc):
             cls.peripherals.append(iob_clint.instance("CLINT0", "CLINT peripheral"))
 
     @classmethod
-    def _create_submodules_list(cls):
-        super()._create_submodules_list()
-
+    def _create_submodules_list(cls, extra_submodules=[]):
+        """Create submodules list with dependencies of this module"""
         # Remove picorv32 and uart from iob-soc
         i = 0
-        while i < len(cls.submodule_setup_list):
-            if type(cls.submodule_setup_list[i]) == type and cls.submodule_setup_list[
+        while i < len(cls.submodule_list):
+            if type(cls.submodule_list[i]) == type and cls.submodule_list[
                 i
             ].name in ["iob_picorv32", "iob_uart"]:
-                cls.submodule_setup_list.pop(i)
+                cls.submodule_list.pop(i)
                 continue
             i += 1
-
-        # Submodules
-        cls.submodule_setup_list += [
-            iob_vexriscv,
-            iob_uart,
-        ]
-
-    # Method that runs the setup process of this class
-    @classmethod
-    def _setup_portmap(cls):
-        cls.peripheral_portmap += [
-            (
-                {"corename": "UART0", "if_name": "rs232", "port": "", "bits": []},
-                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
-            ),  # Map UART0 of iob-soc to external interface
-        ]
+        super()._create_submodules_list(
+            [
+                iob_vexriscv,
+                iob_uart16550,
+                (iob_uart, {"purpose": "simulation"}),
+            ]
+        )
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
@@ -135,3 +122,36 @@ class iob_soc_opencryptolinux(iob_soc):
                 cls.confs.pop(i)
                 continue
             i += 1
+
+    # Method that runs the setup process of this class
+    @classmethod
+    def _setup_portmap(cls):
+        cls.peripheral_portmap += [
+            # Map interrupt port to internal wire
+            (
+                {
+                    "corename": "UART0",
+                    "if_name": "interrupt",
+                    "port": "interrupt",
+                    "bits": [],
+                },
+                {"corename": "internal", "if_name": "UART", "port": "", "bits": []},
+            ),
+            # Map other rs232 ports to external interface (system IO)
+            (
+                {"corename": "UART0", "if_name": "rs232", "port": "txd", "bits": []},
+                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+            ),
+            (
+                {"corename": "UART0", "if_name": "rs232", "port": "rxd", "bits": []},
+                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+            ),
+            (
+                {"corename": "UART0", "if_name": "rs232", "port": "cts", "bits": []},
+                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+            ),
+            (
+                {"corename": "UART0", "if_name": "rs232", "port": "rts", "bits": []},
+                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+            ),
+        ]
