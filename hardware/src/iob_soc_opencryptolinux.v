@@ -3,7 +3,7 @@
 `include "bsp.vh"
 `include "iob_soc_opencryptolinux_conf.vh"
 `include "iob_soc_opencryptolinux.vh"
-`include "iob_lib.vh"
+`include "iob_utils.vh"
 
 `include "iob_soc_opencryptolinux_periphs_swreg_def.vs"
 
@@ -46,11 +46,12 @@ module iob_soc_opencryptolinux #(
    wire [                          `REQ_W-1:0] cpu_d_req;
    wire [                         `RESP_W-1:0] cpu_d_resp;
 
-   assign PLIC0_src     = {{31{1'b0}}, UART0_interrupt};
+   assign PLIC0_src     = {{31{1'b0}}, UART_interrupt};
    assign PLIC0_irq     = 2'b00;
    assign CLINT0_rt_clk = 1'b0;
    assign CLINT0_mtip   = 2'b00;
    assign CLINT0_msip   = 2'b00;
+   assign cpu_trap_o    = 1'b0;
 
    //instantiate the cpu
    iob_VexRiscv #(

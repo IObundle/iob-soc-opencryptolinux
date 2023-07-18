@@ -1,5 +1,5 @@
 #include "bsp.h"
-#include "iob-uart.h"
+#include "iob-uart16550.h"
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_periphs.h"
 #include "iob_soc_opencryptolinux_system.h"
@@ -47,10 +47,10 @@ int main() {
   char fail_string[] = "Test failed!";
 
   // init uart
-  uart_init(UART0_BASE, FREQ/(16*BAUD));
+  uart16550_init(UART0_BASE, FREQ/(16*BAUD));
 
   // test puts
-  uart_puts("\n\n\nHello world!\n\n\n");
+  uart16550_puts("\n\n\nHello world!\n\n\n");
 
   // test printf with floats
   printf("Value of Pi = %f\n\n", 3.1415);
@@ -59,12 +59,12 @@ int main() {
   char *sendfile = malloc(1000);
   int send_file_size = 0;
   send_file_size = string_copy(sendfile, send_string);
-  uart_sendfile("Sendfile.txt", send_file_size, sendfile);
+  uart16550_sendfile("Sendfile.txt", send_file_size, sendfile);
 
   // test file receive
   char *recvfile = malloc(10000);
   int file_size = 0;
-  file_size = uart_recvfile("Sendfile.txt", recvfile);
+  file_size = uart16550_recvfile("Sendfile.txt", recvfile);
 
   // compare files
   if (compare_str(sendfile, recvfile, send_file_size)) {
@@ -78,10 +78,10 @@ int main() {
 
   // #ifdef USE_EXTMEM
   //   if(memory_access_failed)
-  //       uart_sendfile("test.log", iob_strlen(fail_string), fail_string);
-  //       uart_finish();
+  //       uart16550_sendfile("test.log", iob_strlen(fail_string), fail_string);
+  //       uart16550_finish();
   // #endif
-  uart_sendfile("test.log", iob_strlen(pass_string), pass_string);
+  uart16550_sendfile("test.log", iob_strlen(pass_string), pass_string);
 
-  uart_finish();
+  uart16550_finish();
 }

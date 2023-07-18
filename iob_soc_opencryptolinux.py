@@ -113,6 +113,14 @@ class iob_soc_opencryptolinux(iob_soc):
                     "max": "32",
                     "descr": "Number of HARTs in the SoC.",
                 },
+                {
+                    "name": "BOOTROM_ADDR_W",
+                    "type": "P",
+                    "val": "13",
+                    "min": "1",
+                    "max": "32",
+                    "descr": "Boot ROM address width",
+                },
             ]
             + extra_confs
         )
