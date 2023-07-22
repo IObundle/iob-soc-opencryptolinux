@@ -18,44 +18,46 @@ class iob_soc_opencryptolinux(iob_soc):
 
     @classmethod
     def _create_instances(cls):
+        super()._create_instances()
         # Verilog modules instances if we have them in the setup list (they may not be in the list if a subclass decided to remove them).
-        if iob_vexriscv in cls.submodule_setup_list:
-            cls.cpu = iob_vexriscv.instance("cpu_0")
+        if iob_vexriscv in cls.submodule_list:
+            cls.cpu = iob_vexriscv("cpu_0")
         # Instantiate OpenCryptoLinux peripherals
-        if iob_uart16550 in cls.submodule_setup_list:
+        if iob_uart16550 in cls.submodule_list:
+            cls.peripherals.append(iob_uart16550("UART0", "Default UART interface"))
+        if iob_plic in cls.submodule_list:
             cls.peripherals.append(
-                iob_uart16550.instance("UART0", "Default UART interface")
-            )
-        if iob_plic in cls.submodule_setup_list:
-            cls.peripherals.append(
-                iob_plic.instance(
+                iob_plic(
                     "PLIC0",
                     "PLIC peripheral",
                     parameters={"N_SOURCES": "32", "N_TARGETS": "2"},
                 )
             )
-        if iob_clint in cls.submodule_setup_list:
-            cls.peripherals.append(iob_clint.instance("CLINT0", "CLINT peripheral"))
+        if iob_clint in cls.submodule_list:
+            cls.peripherals.append(iob_clint("CLINT0", "CLINT peripheral"))
 
     @classmethod
     def _create_submodules_list(cls, extra_submodules=[]):
         """Create submodules list with dependencies of this module"""
-        # Remove picorv32 and uart from iob-soc
-        i = 0
-        while i < len(cls.submodule_list):
-            if type(cls.submodule_list[i]) == type and cls.submodule_list[
-                i
-            ].name in ["iob_picorv32", "iob_uart"]:
-                cls.submodule_list.pop(i)
-                continue
-            i += 1
         super()._create_submodules_list(
             [
                 iob_vexriscv,
                 iob_uart16550,
+                iob_clint,
+                iob_plic,
                 (iob_uart, {"purpose": "simulation"}),
             ]
         )
+        # Remove picorv32 and uart from iob-soc
+        i = 0
+        while i < len(cls.submodule_list):
+            if type(cls.submodule_list[i]) == type and cls.submodule_list[i].name in [
+                "iob_picorv32",
+                "iob_uart",
+            ]:
+                cls.submodule_list.pop(i)
+                continue
+            i += 1
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
@@ -111,6 +113,14 @@ class iob_soc_opencryptolinux(iob_soc):
                     "max": "32",
                     "descr": "Number of HARTs in the SoC.",
                 },
+                {
+                    "name": "BOOTROM_ADDR_W",
+                    "type": "P",
+                    "val": "13",
+                    "min": "1",
+                    "max": "32",
+                    "descr": "Boot ROM address width",
+                },
             ]
             + extra_confs
         )
@@ -139,19 +149,79 @@ class iob_soc_opencryptolinux(iob_soc):
             ),
             # Map other rs232 ports to external interface (system IO)
             (
-                {"corename": "UART0", "if_name": "rs232", "port": "txd", "bits": []},
+                {
+                    "corename": "UART0",
+                    "if_name": "rs232",
+                    "port": "txd",
+                    "bits": [],
+                },
                 {"corename": "external", "if_name": "UART", "port": "", "bits": []},
             ),
             (
-                {"corename": "UART0", "if_name": "rs232", "port": "rxd", "bits": []},
+                {
+                    "corename": "UART0",
+                    "if_name": "rs232",
+                    "port": "rxd",
+                    "bits": [],
+                },
                 {"corename": "external", "if_name": "UART", "port": "", "bits": []},
             ),
             (
-                {"corename": "UART0", "if_name": "rs232", "port": "cts", "bits": []},
+                {
+                    "corename": "UART0",
+                    "if_name": "rs232",
+                    "port": "cts",
+                    "bits": [],
+                },
                 {"corename": "external", "if_name": "UART", "port": "", "bits": []},
             ),
             (
-                {"corename": "UART0", "if_name": "rs232", "port": "rts", "bits": []},
+                {
+                    "corename": "UART0",
+                    "if_name": "rs232",
+                    "port": "rts",
+                    "bits": [],
+                },
                 {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+            ),
+            # Map `mtip` of CLINT0 to an internal wire named `CLINT0_mtip`
+            (
+                {
+                    "corename": "CLINT0",
+                    "if_name": "clint_io",
+                    "port": "mtip",
+                    "bits": [],
+                },
+                {"corename": "internal", "if_name": "CLINT0", "port": "", "bits": []},
+            ),
+            # Map `msip` of CLINT0 to an internal wire named `CLINT0_msip`
+            (
+                {
+                    "corename": "CLINT0",
+                    "if_name": "clint_io",
+                    "port": "msip",
+                    "bits": [],
+                },
+                {"corename": "internal", "if_name": "CLINT0", "port": "", "bits": []},
+            ),
+            # Map `msip` of CLINT0 to an internal wire named `CLINT0_msip`
+            (
+                {
+                    "corename": "CLINT0",
+                    "if_name": "clint_io",
+                    "port": "rt_clk",
+                    "bits": [],
+                },
+                {"corename": "internal", "if_name": "CLINT0", "port": "", "bits": []},
+            ),
+            # Map `mtip` of PLIC0 to an internal wire named `PLIC0_irq`
+            (
+                {"corename": "PLIC0", "if_name": "plic_io", "port": "irq", "bits": []},
+                {"corename": "internal", "if_name": "PLIC0", "port": "", "bits": []},
+            ),
+            # Map `msip` of PLIC0 to an internal wire named `PLIC0_src`
+            (
+                {"corename": "PLIC0", "if_name": "plic_io", "port": "src", "bits": []},
+                {"corename": "internal", "if_name": "PLIC0", "port": "", "bits": []},
             ),
         ]
