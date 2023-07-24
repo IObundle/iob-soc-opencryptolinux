@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os
-import copy
+import shutil
 
 from iob_soc import iob_soc
 from iob_vexriscv import iob_vexriscv
@@ -58,6 +58,14 @@ class iob_soc_opencryptolinux(iob_soc):
                 cls.submodule_list.pop(i)
                 continue
             i += 1
+
+    @classmethod
+    def _post_setup(cls):
+        super()._post_setup()
+        shutil.copy(
+            f"{cls.setup_dir}/submodules/UART16550/software/src/printf.c",
+            f"{cls.build_dir}/software/src",
+        )
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
