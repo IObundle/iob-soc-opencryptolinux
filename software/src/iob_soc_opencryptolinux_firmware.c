@@ -3,14 +3,12 @@
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_periphs.h"
 #include "iob_soc_opencryptolinux_system.h"
-#include "iob_str.h"
 #include "printf.h"
 #include "iob-plic.h"
 #include "iob-clint.h"
 
 #include "riscv-csr.h"
 #include "riscv-interrupts.h"
-#include "iob-clint-timer.h"
 
 // Machine mode interrupt service routine
 static void irq_entry(void) __attribute__ ((interrupt ("machine")));
@@ -88,7 +86,6 @@ static void irq_entry(void)  {
             plic_disable_interrupt(source_id);
             break;
         }
-
     }
 }
 #pragma GCC pop_options
