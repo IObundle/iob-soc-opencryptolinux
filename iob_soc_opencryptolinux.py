@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os
-import copy
+import shutil
 
 from iob_soc import iob_soc
 from iob_vexriscv import iob_vexriscv
@@ -58,6 +58,14 @@ class iob_soc_opencryptolinux(iob_soc):
                 cls.submodule_list.pop(i)
                 continue
             i += 1
+
+    @classmethod
+    def _post_setup(cls):
+        super()._post_setup()
+        shutil.copy(
+            f"{cls.setup_dir}/submodules/UART16550/software/src/printf.c",
+            f"{cls.build_dir}/software/src",
+        )
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
@@ -136,92 +144,134 @@ class iob_soc_opencryptolinux(iob_soc):
     # Method that runs the setup process of this class
     @classmethod
     def _setup_portmap(cls):
-        cls.peripheral_portmap += [
-            # Map interrupt port to internal wire
-            (
-                {
-                    "corename": "UART0",
-                    "if_name": "interrupt",
-                    "port": "interrupt",
-                    "bits": [],
-                },
-                {"corename": "internal", "if_name": "UART", "port": "", "bits": []},
-            ),
-            # Map other rs232 ports to external interface (system IO)
-            (
-                {
-                    "corename": "UART0",
-                    "if_name": "rs232",
-                    "port": "txd",
-                    "bits": [],
-                },
-                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
-            ),
-            (
-                {
-                    "corename": "UART0",
-                    "if_name": "rs232",
-                    "port": "rxd",
-                    "bits": [],
-                },
-                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
-            ),
-            (
-                {
-                    "corename": "UART0",
-                    "if_name": "rs232",
-                    "port": "cts",
-                    "bits": [],
-                },
-                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
-            ),
-            (
-                {
-                    "corename": "UART0",
-                    "if_name": "rs232",
-                    "port": "rts",
-                    "bits": [],
-                },
-                {"corename": "external", "if_name": "UART", "port": "", "bits": []},
-            ),
-            # Map `mtip` of CLINT0 to an internal wire named `CLINT0_mtip`
-            (
-                {
-                    "corename": "CLINT0",
-                    "if_name": "clint_io",
-                    "port": "mtip",
-                    "bits": [],
-                },
-                {"corename": "internal", "if_name": "CLINT0", "port": "", "bits": []},
-            ),
-            # Map `msip` of CLINT0 to an internal wire named `CLINT0_msip`
-            (
-                {
-                    "corename": "CLINT0",
-                    "if_name": "clint_io",
-                    "port": "msip",
-                    "bits": [],
-                },
-                {"corename": "internal", "if_name": "CLINT0", "port": "", "bits": []},
-            ),
-            # Map `msip` of CLINT0 to an internal wire named `CLINT0_msip`
-            (
-                {
-                    "corename": "CLINT0",
-                    "if_name": "clint_io",
-                    "port": "rt_clk",
-                    "bits": [],
-                },
-                {"corename": "internal", "if_name": "CLINT0", "port": "", "bits": []},
-            ),
-            # Map `mtip` of PLIC0 to an internal wire named `PLIC0_irq`
-            (
-                {"corename": "PLIC0", "if_name": "plic_io", "port": "irq", "bits": []},
-                {"corename": "internal", "if_name": "PLIC0", "port": "", "bits": []},
-            ),
-            # Map `msip` of PLIC0 to an internal wire named `PLIC0_src`
-            (
-                {"corename": "PLIC0", "if_name": "plic_io", "port": "src", "bits": []},
-                {"corename": "internal", "if_name": "PLIC0", "port": "", "bits": []},
-            ),
-        ]
+        if iob_uart16550 in cls.submodule_list:
+            cls.peripheral_portmap += [
+                # Map interrupt port to internal wire
+                (
+                    {
+                        "corename": "UART0",
+                        "if_name": "interrupt",
+                        "port": "interrupt",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "UART", "port": "", "bits": []},
+                ),
+                # Map other rs232 ports to external interface (system IO)
+                (
+                    {
+                        "corename": "UART0",
+                        "if_name": "rs232",
+                        "port": "txd",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "UART0",
+                        "if_name": "rs232",
+                        "port": "rxd",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "UART0",
+                        "if_name": "rs232",
+                        "port": "cts",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "UART0",
+                        "if_name": "rs232",
+                        "port": "rts",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+                ),
+            ]
+        if iob_clint in cls.submodule_list:
+            cls.peripheral_portmap += [
+                # Map `mtip` of CLINT0 to an internal wire named `CLINT0_mtip`
+                (
+                    {
+                        "corename": "CLINT0",
+                        "if_name": "clint_io",
+                        "port": "mtip",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "CLINT0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                # Map `msip` of CLINT0 to an internal wire named `CLINT0_msip`
+                (
+                    {
+                        "corename": "CLINT0",
+                        "if_name": "clint_io",
+                        "port": "msip",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "CLINT0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                # Map `msip` of CLINT0 to an internal wire named `CLINT0_msip`
+                (
+                    {
+                        "corename": "CLINT0",
+                        "if_name": "clint_io",
+                        "port": "rt_clk",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "CLINT0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+            ]
+        if iob_plic in cls.submodule_list:
+            cls.peripheral_portmap += [
+                # Map `mtip` of PLIC0 to an internal wire named `PLIC0_irq`
+                (
+                    {
+                        "corename": "PLIC0",
+                        "if_name": "plic_io",
+                        "port": "irq",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "PLIC0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                # Map `msip` of PLIC0 to an internal wire named `PLIC0_src`
+                (
+                    {
+                        "corename": "PLIC0",
+                        "if_name": "plic_io",
+                        "port": "src",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "PLIC0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+            ]
