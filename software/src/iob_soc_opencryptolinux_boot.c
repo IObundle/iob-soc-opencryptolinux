@@ -49,7 +49,7 @@ while(uart16550_getc() != ACK){
   int  file_size = 0;
   char opensbi[] = "fw_jump.bin";
   char kernel[]  = "Image";
-  char dtb[]     = "iob_soc_opencryptolinux.dtb";
+  char dtb[]     = "iob_soc.dtb";
   char rootfs[]  = "rootfs.cpio.gz";
   if (uart16550_getc() == FRX) {//file receive: load firmware
     file_size = uart16550_recvfile(opensbi, prog_start_addr);
