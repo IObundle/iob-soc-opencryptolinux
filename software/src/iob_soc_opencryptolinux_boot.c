@@ -14,6 +14,7 @@
 #define PROGNAME "IOb-Bootloader"
 
 #define DC1 17 // Device Control 1 (used to indicate end of bootloader)
+#define EXT_MEM 0x80000000
 
 int main() {
 
@@ -36,7 +37,7 @@ int main() {
 
   // address to copy firmware to
   char *prog_start_addr;
-  prog_start_addr = (char *)(0x80000000);
+  prog_start_addr = (char *)(EXT_MEM);
 
 while(uart16550_getc() != ACK){
   uart16550_puts (PROGNAME);
@@ -49,15 +50,15 @@ while(uart16550_getc() != ACK){
   int  file_size = 0;
   char opensbi[] = "fw_jump.bin";
   char kernel[]  = "Image";
-  char dtb[]     = "iob_soc_opencryptolinux.dtb";
+  char dtb[]     = "iob_soc.dtb";
   char rootfs[]  = "rootfs.cpio.gz";
   if (uart16550_getc() == FRX) {//file receive: load firmware
     file_size = uart16550_recvfile(opensbi, prog_start_addr);
-    prog_start_addr = (char *)(EXTRA_BASE + 0x00400000);
+    prog_start_addr = (char *)(EXT_MEM + 0x00400000);
     file_size = uart16550_recvfile(kernel, prog_start_addr);
-    prog_start_addr = (char *)(EXTRA_BASE + 0x00F80000);
+    prog_start_addr = (char *)(EXT_MEM + 0x00F80000);
     file_size = uart16550_recvfile(dtb, prog_start_addr);
-    prog_start_addr = (char *)(EXTRA_BASE + 0x01000000);
+    prog_start_addr = (char *)(EXT_MEM + 0x01000000);
     file_size = uart16550_recvfile(rootfs, prog_start_addr);
     uart16550_puts (PROGNAME);
     uart16550_puts (": Loading firmware...\n");

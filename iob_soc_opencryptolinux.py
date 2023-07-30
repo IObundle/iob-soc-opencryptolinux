@@ -62,10 +62,15 @@ class iob_soc_opencryptolinux(iob_soc):
     @classmethod
     def _post_setup(cls):
         super()._post_setup()
-        shutil.copy(
-            f"{cls.setup_dir}/submodules/UART16550/software/src/printf.c",
-            f"{cls.build_dir}/software/src",
-        )
+        dst = f"{cls.build_dir}/software/src"
+        src = f"{cls.setup_dir}/submodules/UART16550/software/src/printf.c"
+        shutil.copy(src, dst)
+        src = f"{cls.setup_dir}/submodules/OS/software/OS_build"
+        files = os.listdir(src)
+        for fname in files:
+            src_file = os.path.join(src, fname)
+            if os.path.isfile(src_file):
+                shutil.copy2(src_file, dst)
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
@@ -75,7 +80,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 {
                     "name": "RUN_LINUX",
                     "type": "M",
-                    "val": False,
+                    "val": True,
                     "min": "0",
                     "max": "1",
                     "descr": "Used to select running linux.",
@@ -104,6 +109,30 @@ class iob_soc_opencryptolinux(iob_soc):
                     "max": "32",
                     "descr": "Number of CPU cores used in the SoC.",
                 },
+                {
+                    "name": "BOOTROM_ADDR_W",
+                    "type": "P",
+                    "val": "13",
+                    "min": "1",
+                    "max": "32",
+                    "descr": "Boot ROM address width",
+                },
+                {
+                    "name": "MEM_ADDR_W",
+                    "type": "P",
+                    "val": "26",
+                    "min": "1",
+                    "max": "32",
+                    "descr": "Memory bus address width",
+                },
+                {
+                    "name": "OS_ADDR_W",
+                    "type": "M",
+                    "val": "25",
+                    "min": "1",
+                    "max": "32",
+                    "descr": "Memory bus address width",
+                },
                 # INTERRUPTS ARCHITECTURE
                 {
                     "name": "N_SOURCES",
@@ -120,14 +149,6 @@ class iob_soc_opencryptolinux(iob_soc):
                     "min": "1",
                     "max": "32",
                     "descr": "Number of HARTs in the SoC.",
-                },
-                {
-                    "name": "BOOTROM_ADDR_W",
-                    "type": "P",
-                    "val": "13",
-                    "min": "1",
-                    "max": "32",
-                    "descr": "Boot ROM address width",
                 },
             ]
             + extra_confs
