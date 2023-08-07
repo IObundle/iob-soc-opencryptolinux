@@ -4,6 +4,12 @@ DISABLE_LINT:=1
 
 include submodules/LIB/setup.mk
 
+RUN_LINUX ?= 1
+
+ifeq ($(RUN_LINUX),1)
+SETUP_ARGS += RUN_LINUX
+endif
+
 sim-test:
 	make clean && make setup && make -C ../iob_soc_opencryptolinux_V*/ sim-test
 	make clean && make setup INIT_MEM=0 && make -C ../iob_soc_opencryptolinux_V*/ sim-test

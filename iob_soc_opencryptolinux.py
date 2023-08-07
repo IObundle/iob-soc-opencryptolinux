@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import os
+import sys
 import shutil
+
+from mk_configuration import update_define
 
 from iob_soc import iob_soc
 from iob_vexriscv import iob_vexriscv
@@ -46,7 +49,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_clint,
                 iob_plic,
                 (iob_uart, {"purpose": "simulation"}),
-            ]
+            ] + extra_submodules
         )
         # Remove picorv32 and uart from iob-soc
         i = 0
@@ -63,9 +66,7 @@ class iob_soc_opencryptolinux(iob_soc):
     def _post_setup(cls):
         super()._post_setup()
         dst = f"{cls.build_dir}/software/src"
-        src = f"{cls.setup_dir}/submodules/UART16550/software/src/printf.c"
-        shutil.copy(src, dst)
-        src = f"{cls.setup_dir}/submodules/OS/software/OS_build"
+        src = f"{__class__.setup_dir}/submodules/OS/software/OS_build"
         files = os.listdir(src)
         for fname in files:
             src_file = os.path.join(src, fname)
@@ -80,7 +81,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 {
                     "name": "RUN_LINUX",
                     "type": "M",
-                    "val": True,
+                    "val": False,
                     "min": "0",
                     "max": "1",
                     "descr": "Used to select running linux.",
@@ -296,3 +297,12 @@ class iob_soc_opencryptolinux(iob_soc):
                     },
                 ),
             ]
+
+    @classmethod
+    def _custom_setup(cls):
+        super()._custom_setup()
+        # Add the following arguments:
+        # "RUN_LINUX": if should setup with init_mem or not
+        for arg in sys.argv[1:]:
+            if arg == "RUN_LINUX":
+                update_define(cls.confs, "RUN_LINUX", True)
