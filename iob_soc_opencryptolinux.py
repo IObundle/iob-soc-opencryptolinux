@@ -49,7 +49,8 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_clint,
                 iob_plic,
                 (iob_uart, {"purpose": "simulation"}),
-            ] + extra_submodules
+            ]
+            + extra_submodules
         )
         # Remove picorv32 and uart from iob-soc
         i = 0
