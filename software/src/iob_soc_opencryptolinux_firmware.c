@@ -21,6 +21,7 @@ int main() {
     uart16550_init(UART0_BASE, FREQ/(16*BAUD));
     clint_init(CLINT0_BASE);
     plic_init(PLIC0_BASE);
+    printf_init(&uart16550_putc);
 
     printf("\n\n\nHello world!\n\n\n");
 

@@ -9,7 +9,7 @@ ROOT_DIR ?=..
 GET_MACRO = $(shell grep "define $(1)" $(2) | rev | cut -d" " -f1 | rev)
 
 #Function to obtain parameter named $(1) from iob_soc_opencryptolinux_conf.vh
-GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO = $(call GET_MACRO,IOB_SOC_OPENCRYPTOLINUX_$(1),../src/iob_soc_opencryptolinux_conf.vh)
+GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO = $(call GET_MACRO,IOB_SOC_OPENCRYPTOLINUX_$(1),$(ROOT_DIR)/hardware/src/iob_soc_opencryptolinux_conf.vh)
 
 iob_soc_opencryptolinux_boot.hex: ../../software/iob_soc_opencryptolinux_boot.bin
 	../../scripts/makehex.py $< $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,BOOTROM_ADDR_W) > $@
@@ -78,8 +78,8 @@ iob_soc_opencryptolinux_boot:
 .PHONE: build_iob_soc_opencryptolinux_software
 
 # Include the UUT configuration if iob-soc is used as a Tester
-ifneq ($(wildcard $(ROOT_DIR)/software/uut_build_for_iob_soc.mk),)
-include $(ROOT_DIR)/software/uut_build_for_iob_soc.mk
+ifneq ($(wildcard $(ROOT_DIR)/software/uut_build_for_iob_soc_opencryptolinux.mk),)
+include $(ROOT_DIR)/software/uut_build_for_iob_soc_opencryptolinux.mk
 endif
 
 #########################################
