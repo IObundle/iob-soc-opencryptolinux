@@ -90,7 +90,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 {
                     "name": "INIT_MEM",
                     "type": "M",
-                    "val": True,
+                    "val": False,
                     "min": "0",
                     "max": "1",
                     "descr": "Used to select running linux.",
