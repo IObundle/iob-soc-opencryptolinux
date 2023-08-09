@@ -33,7 +33,7 @@ int main() {
 
     // Setup timer for 1 second interval
     timestamp = mtimer_get_raw_time();
-    mtimer_set_raw_time_cmp(MTIMER_SECONDS_TO_CLOCKS(0.002));
+    mtimer_set_raw_time_cmp(MTIMER_SECONDS_TO_CLOCKS(0.03));
 
     // Setup the IRQ handler entry point
     csr_write_mtvec((uint_xlen_t) irq_entry);
