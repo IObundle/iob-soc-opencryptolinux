@@ -63,8 +63,6 @@ while(uart16550_getc() != ACK){
     uart16550_puts (PROGNAME);
     uart16550_puts (": Loading firmware...\n");
   }
-  
-  uart16550_putc((char) DC1);
 #else
    
   //receive firmware from host 
@@ -81,7 +79,9 @@ while(uart16550_getc() != ACK){
     uart16550_puts (": ERROR loading firmware\n");
   }
 #endif
-
+#endif
+  
+  uart16550_putc((char) DC1);
   // Clear CPU registers, to not pass arguments to the next
   asm volatile("and     a0,a0,zero");
   asm volatile("and     a1,a1,zero");
@@ -92,8 +92,6 @@ while(uart16550_getc() != ACK){
   asm volatile("and     a6,a6,zero");
   asm volatile("and     a7,a7,zero");
 
-#endif
-  
   //run firmware
   uart16550_puts (PROGNAME);
   uart16550_puts (": Restart CPU to run user program...\n");
