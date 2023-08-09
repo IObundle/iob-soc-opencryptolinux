@@ -24,7 +24,7 @@ module ext_mem #(
 
    // AXI interface
    `include "axi_m_port.vs"
-   `include "clk_en_rst_port.vs"
+   `include "clk_en_rst_s_port.vs"
 );
 
    //
@@ -99,18 +99,18 @@ module ext_mem #(
       .USE_CTRL_CNT (0)            //Remove counters
    ) l2cache (
       // Native interface
-      .avalid        (l2cache_valid),
-      .addr          (l2cache_addr),
-      .wdata         (l2cache_wdata),
-      .wstrb         (l2cache_wstrb),
-      .rdata         (l2cache_rdata),
-      .rvalid        (l2cache_rvalid),
-      .ready         (l2cache_ready),
+      .avalid_i        (l2cache_valid),
+      .addr_i          (l2cache_addr),
+      .wdata_i         (l2cache_wdata),
+      .wstrb_i         (l2cache_wstrb),
+      .rdata_o         (l2cache_rdata),
+      .rvalid_o        (l2cache_rvalid),
+      .ready_o         (l2cache_ready),
       //Control IO
-      .invalidate_in (invalidate_reg & ~l2_avalid),
-      .invalidate_out(),
-      .wtb_empty_in  (1'b1),
-      .wtb_empty_out (l2_wtb_empty),
+      .invalidate_i (invalidate_reg & ~l2_avalid),
+      .invalidate_o(),
+      .wtb_empty_i  (1'b1),
+      .wtb_empty_o (l2_wtb_empty),
       // AXI interface
       `include "axi_m_m_portmap.vs"
       .clk_i         (clk_i),
