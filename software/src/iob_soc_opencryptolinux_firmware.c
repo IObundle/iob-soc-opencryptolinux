@@ -3,6 +3,7 @@
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_periphs.h"
 #include "iob_soc_opencryptolinux_system.h"
+#include "iob_str.h"
 #include "printf.h"
 #include "iob-plic.h"
 #include "iob-clint.h"
@@ -17,6 +18,8 @@ static void irq_entry(void) __attribute__ ((interrupt ("machine")));
 static volatile uint64_t timestamp = 0;
 
 int main() {
+    char pass_string[] = "Test passed!";
+
     //init uart
     uart16550_init(UART0_BASE, FREQ/(16*BAUD));
     clint_init(CLINT0_BASE);
@@ -53,6 +56,8 @@ int main() {
     printf("HART id %d, waiting for timer interrupt...\n", target);
     // Wait for interrupt
     __asm__ volatile ("wfi");
+
+    uart16550_sendfile("test.log", iob_strlen(pass_string), pass_string);
 
     printf("Exit...\n");
     uart16550_finish();

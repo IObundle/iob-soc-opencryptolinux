@@ -72,13 +72,14 @@ jobs:
         run: nix-shell --run "make setup RUN_LINUX=0 INIT_MEM=1 USE_EXTMEM=1"
       - name: verilator test
         run: nix-shell --run "make -C ../iob_soc_o* sim-test SIMULATOR=verilator"
+      # Test without init mem takes too long
       # No init mem and Ext mem
-      - name: clean
-        run: nix-shell --run "make clean"
-      - name: setup ext_mem
-        run: nix-shell --run "make setup RUN_LINUX=0 INIT_MEM=0 USE_EXTMEM=1"
-      - name: verilator test
-        run: nix-shell --run "make -C ../iob_soc_o* sim-test SIMULATOR=verilator"
+      #- name: clean
+      #  run: nix-shell --run "make clean"
+      #- name: setup ext_mem
+      #  run: nix-shell --run "make setup RUN_LINUX=0 INIT_MEM=0 USE_EXTMEM=1"
+      #- name: verilator test
+      #  run: nix-shell --run "make -C ../iob_soc_o* sim-test SIMULATOR=verilator"
 
   verilator-linux:
     runs-on: self-hosted
@@ -114,7 +115,7 @@ jobs:
         run: nix-shell --run "make setup INIT_MEM=1 USE_EXTMEM=1"
       - name: verilator test
         run: nix-shell --run "make -C ../iob_soc_o* sim-test SIMULATOR=verilator"
-      # No need to test without init mem, since we already tested in baremetal
+      # Test without init mem takes too long
       # No init mem and Ext mem
       #- name: clean
       #  run: nix-shell --run "make clean"

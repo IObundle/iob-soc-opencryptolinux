@@ -40,7 +40,7 @@ module iob_soc_opencryptolinux #(
    wire [                          `REQ_W-1:0] cpu_d_req;
    wire [                         `RESP_W-1:0] cpu_d_resp;
 
-   assign PLIC0_src     = {{31{1'b0}}, UART_interrupt};
+   assign PLIC0_src     = {{31{1'b0}}, uart_interrupt_o};
    assign CLINT0_rt_clk = 1'b0;
    assign cpu_trap_o    = 1'b0;
 
