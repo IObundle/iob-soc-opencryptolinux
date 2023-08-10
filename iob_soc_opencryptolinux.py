@@ -11,6 +11,7 @@ from iob_uart16550 import iob_uart16550
 from iob_plic import iob_plic
 from iob_clint import iob_clint
 from iob_uart import iob_uart
+from iob_spi import iob_spi
 
 
 class iob_soc_opencryptolinux(iob_soc):
@@ -38,6 +39,8 @@ class iob_soc_opencryptolinux(iob_soc):
             )
         if iob_clint in cls.submodule_list:
             cls.peripherals.append(iob_clint("CLINT0", "CLINT peripheral"))
+        if iob_spi in cls.submodule_list:
+            cls.peripherals.append(iob_spi("SPI0", "SPI master peripheral"))
 
     @classmethod
     def _create_submodules_list(cls, extra_submodules=[]):
@@ -48,6 +51,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_uart16550,
                 iob_clint,
                 iob_plic,
+                iob_spi,
                 (iob_uart, {"purpose": "simulation"}),
             ]
             + extra_submodules
