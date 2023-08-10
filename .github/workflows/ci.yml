@@ -23,20 +23,21 @@ on:
   workflow_dispatch:
 
 jobs:
-  pc-emul:
-    runs-on: self-hosted
-    timeout-minutes: 5
+  # Disable pc-emul because PLIC and CLINT do not have pc-emul drivers (yet)
+  #pc-emul:
+  #  runs-on: self-hosted
+  #  timeout-minutes: 5
 
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
-      - name: clean
-        run: make clean
-      - name: setup
-        run: nix-shell --run "make setup"
-      - name: pc-emul test
-        run: make -C ../iob_soc_o* pc-emul-test
+  #  steps:
+  #    - uses: actions/checkout@v3
+  #      with:
+  #        submodules: 'recursive'
+  #    - name: clean
+  #      run: make clean
+  #    - name: setup
+  #      run: nix-shell --run "make setup"
+  #    - name: pc-emul test
+  #      run: make -C ../iob_soc_o* pc-emul-test
 
   verilator-baremetal:
     runs-on: self-hosted
@@ -44,7 +45,7 @@ jobs:
     # run even if previous job failed
     if: ${{ !cancelled() }}
     # run after indicated job
-    needs: [ pc-emul ]
+    #needs: [ pc-emul ]
   
     steps:
       - uses: actions/checkout@v3
@@ -87,7 +88,7 @@ jobs:
     # run even if previous job failed
     if: ${{ !cancelled() }}
     # run after indicated job
-    needs: [ pc-emul ]
+    #needs: [ pc-emul ]
   
     steps:
       - uses: actions/checkout@v3
