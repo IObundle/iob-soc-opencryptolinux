@@ -25,9 +25,6 @@ module iob_soc_opencryptolinux #(
    wire boot;
    wire cpu_reset;
 
-   wire cke_i;
-   assign cke_i = 1'b1;
-
    //
    //  CPU
    //

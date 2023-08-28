@@ -28,6 +28,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
    localparam AXI_DATA_W = `DDR_DATA_W;
 
    wire clk = clk_i;
+   wire cke = 1'b1;
    wire rst = rst_i;
 
    `include "iob_soc_opencryptolinux_wrapper_pwires.vs"
@@ -58,6 +59,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
    ) soc0 (
       `include "iob_soc_opencryptolinux_pportmaps.vs"
       .clk_i (clk),
+      .cke_i (cke),
       .arst_i(rst),
       .trap_o(trap_o)
    );
@@ -116,7 +118,6 @@ always @(posedge trap[1]) begin
    //Manually added testbench uart core. RS232 pins attached to the same pins
    //of the iob_soc UART0 instance to communicate with it
    // The interface of iob_soc UART0 is assumed to be the first portmapped interface (UART_*)
-   wire cke = 1'b1;
    iob_uart uart_tb (
       .clk_i (clk),
       .cke_i (cke),
