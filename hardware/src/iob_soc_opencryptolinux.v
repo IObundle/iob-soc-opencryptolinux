@@ -25,9 +25,6 @@ module iob_soc_opencryptolinux #(
    wire boot;
    wire cpu_reset;
 
-   wire cke_i;
-   assign cke_i = 1'b1;
-
    //
    //  CPU
    //
@@ -192,6 +189,9 @@ module iob_soc_opencryptolinux #(
       ext_mem_d_req[`WRITE(0)]
    };
 
+   wire [AXI_ADDR_W-1:0] internal_axi_awaddr_o;
+   wire [AXI_ADDR_W-1:0] internal_axi_araddr_o;
+
    ext_mem #(
       .ADDR_W     (ADDR_W),
       .DATA_W     (DATA_W),
@@ -260,6 +260,9 @@ module iob_soc_opencryptolinux #(
       .cke_i (cke_i),
       .arst_i(arst_i)
    );
+
+   assign axi_awaddr_o[AXI_ADDR_W-1:0] = internal_axi_awaddr_o + MEM_ADDR_OFFSET;
+   assign axi_araddr_o[AXI_ADDR_W-1:0] = internal_axi_araddr_o + MEM_ADDR_OFFSET;
 
    `include "iob_soc_opencryptolinux_periphs_inst.vs"
 

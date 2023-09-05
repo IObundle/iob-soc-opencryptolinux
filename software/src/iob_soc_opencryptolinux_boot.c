@@ -21,6 +21,10 @@ int main() {
   //init uart
   uart16550_init(UART0_BASE, FREQ/(16*BAUD));
 
+#ifdef USE_EXTMEM
+  cache_init(1<<E, MEM_ADDR_W);
+#endif
+
   //connect with console
   do {
     if(uart16550_txready())
@@ -31,7 +35,7 @@ int main() {
   //welcome message
   uart16550_puts (PROGNAME);
   uart16550_puts (": connected!\n");
-    
+
   uart16550_puts (PROGNAME);
   uart16550_puts(": DDR in use and program runs from DDR\n");
 

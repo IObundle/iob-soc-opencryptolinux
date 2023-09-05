@@ -176,47 +176,47 @@ class iob_soc_opencryptolinux(iob_soc):
                     {
                         "corename": "UART0",
                         "if_name": "interrupt",
-                        "port": "interrupt",
+                        "port": "interrupt_o",
                         "bits": [],
                     },
-                    {"corename": "internal", "if_name": "UART", "port": "", "bits": []},
+                    {"corename": "internal", "if_name": "uart", "port": "", "bits": []},
                 ),
                 # Map other rs232 ports to external interface (system IO)
                 (
                     {
                         "corename": "UART0",
                         "if_name": "rs232",
-                        "port": "txd",
+                        "port": "txd_o",
                         "bits": [],
                     },
-                    {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+                    {"corename": "external", "if_name": "uart", "port": "", "bits": []},
                 ),
                 (
                     {
                         "corename": "UART0",
                         "if_name": "rs232",
-                        "port": "rxd",
+                        "port": "rxd_i",
                         "bits": [],
                     },
-                    {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+                    {"corename": "external", "if_name": "uart", "port": "", "bits": []},
                 ),
                 (
                     {
                         "corename": "UART0",
                         "if_name": "rs232",
-                        "port": "cts",
+                        "port": "cts_i",
                         "bits": [],
                     },
-                    {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+                    {"corename": "external", "if_name": "uart", "port": "", "bits": []},
                 ),
                 (
                     {
                         "corename": "UART0",
                         "if_name": "rs232",
-                        "port": "rts",
+                        "port": "rts_o",
                         "bits": [],
                     },
-                    {"corename": "external", "if_name": "UART", "port": "", "bits": []},
+                    {"corename": "external", "if_name": "uart", "port": "", "bits": []},
                 ),
             ]
         if iob_clint in cls.submodule_list:

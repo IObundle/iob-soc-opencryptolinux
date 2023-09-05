@@ -3,12 +3,15 @@
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_periphs.h"
 #include "iob_soc_opencryptolinux_system.h"
+#include "iob_str.h"
 #include "printf.h"
 
 // Global to hold current timestamp
 static volatile uint64_t timestamp = 0;
 
 int main() {
+    char pass_string[] = "Test passed!";
+
     //init uart
     uart16550_init(UART0_BASE, FREQ/(16*BAUD));
     printf_init(&uart16550_putc);
