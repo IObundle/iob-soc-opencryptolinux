@@ -40,8 +40,6 @@ module iob_soc_opencryptolinux #(
    wire [                          `REQ_W-1:0] cpu_d_req;
    wire [                         `RESP_W-1:0] cpu_d_resp;
 
-   assign PLIC0_src     = {{31{1'b0}}, UART_interrupt};
-   assign CLINT0_rt_clk = 1'b0;
    assign cpu_trap_o    = 1'b0;
 
    //instantiate the cpu
@@ -55,16 +53,17 @@ module iob_soc_opencryptolinux #(
       .arst_i            (arst_i),
       .cpu_reset_i       (cpu_reset),
       .boot_i            (boot),
+      .clint_req({`REQ_W{1'b0}}),
+      .clint_resp(),
+      .plic_req({`REQ_W{1'b0}}),
+      .plic_resp(),
+      .plicInterrupts(32'd0),
       //instruction bus
       .ibus_req          (cpu_i_req),
       .ibus_resp         (cpu_i_resp),
       //data bus
       .dbus_req          (cpu_d_req),
-      .dbus_resp         (cpu_d_resp),
-      // interupts
-      .timerInterrupt    (CLINT0_mtip[0]),
-      .softwareInterrupt (CLINT0_msip[0]),
-      .externalInterrupts(PLIC0_irq[1:0])
+      .dbus_resp         (cpu_d_resp)
    );
 
 

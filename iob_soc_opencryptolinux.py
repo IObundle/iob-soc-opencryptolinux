@@ -49,9 +49,7 @@ class iob_soc_opencryptolinux(iob_soc):
             [
                 iob_vexriscv,
                 iob_uart16550,
-                iob_clint,
-                iob_plic,
-                iob_spi,
+                # iob_spi,
                 (iob_uart, {"purpose": "simulation"}),
             ]
             + extra_submodules

@@ -83,22 +83,19 @@ while(uart16550_getc() != ACK){
   
   uart16550_putc((char) DC1);
   // Clear CPU registers, to not pass arguments to the next
-  asm volatile("and     a0,a0,zero");
-  asm volatile("and     a1,a1,zero");
-  asm volatile("and     a2,a2,zero");
-  asm volatile("and     a3,a3,zero");
-  asm volatile("and     a4,a4,zero");
-  asm volatile("and     a5,a5,zero");
-  asm volatile("and     a6,a6,zero");
-  asm volatile("and     a7,a7,zero");
+  asm volatile("li a0,0");
+  asm volatile("li a1,0");
+  asm volatile("li a2,0");
+  asm volatile("li a3,0");
+  asm volatile("li a4,0");
+  asm volatile("li a5,0");
+  asm volatile("li a6,0");
+  asm volatile("li a7,0");
 
   //run firmware
   uart16550_puts (PROGNAME);
   uart16550_puts (": Restart CPU to run user program...\n");
   uart16550_txwait();
 
-#ifdef USE_EXTMEM
-  while( !cache_wtb_empty() );
-#endif
-  
+  while( !cache_wtb_empty() );  
 }
