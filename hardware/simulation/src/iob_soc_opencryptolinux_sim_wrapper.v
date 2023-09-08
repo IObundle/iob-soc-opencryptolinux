@@ -40,7 +40,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
    initial begin
 `ifdef VCD
       $dumpfile("uut.vcd");
-      $dumpvars();
+      $dumpvars(0, iob_soc_opencryptolinux_sim_wrapper.soc0.cpu_0.CPU);
 `endif
    end
 
@@ -59,7 +59,6 @@ module iob_soc_opencryptolinux_sim_wrapper (
    ) soc0 (
       `include "iob_soc_opencryptolinux_pportmaps.vs"
       .clk_i (clk),
-      .cke_i (cke),
       .arst_i(rst),
       .trap_o(trap_o)
    );

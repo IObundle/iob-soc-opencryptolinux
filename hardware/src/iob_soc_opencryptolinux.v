@@ -15,6 +15,7 @@ module iob_soc_opencryptolinux #(
 
    localparam integer Bbit = `IOB_SOC_OPENCRYPTOLINUX_B;
    localparam integer AddrMsb = `REQ_W - 2;
+   localparam integer MEM_ADDR_OFFSET = 0;
 
    `include "iob_soc_opencryptolinux_pwires.vs"
 
@@ -24,6 +25,7 @@ module iob_soc_opencryptolinux #(
 
    wire boot;
    wire cpu_reset;
+   wire cke_i = 1'b1;
 
    //
    //  CPU
@@ -188,9 +190,6 @@ module iob_soc_opencryptolinux #(
       ext_mem_d_req[`ADDRESS(0, MEM_ADDR_W+1)-2],
       ext_mem_d_req[`WRITE(0)]
    };
-
-   wire [AXI_ADDR_W-1:0] internal_axi_awaddr_o;
-   wire [AXI_ADDR_W-1:0] internal_axi_araddr_o;
 
    ext_mem #(
       .ADDR_W     (ADDR_W),
