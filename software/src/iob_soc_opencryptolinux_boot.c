@@ -1,15 +1,12 @@
 #include "bsp.h"
-#include "iob_soc_opencryptolinux_system.h"
-#include "iob_soc_opencryptolinux_conf.h"
 #include "iob-uart16550.h"
-
-#ifdef USE_EXTMEM
+#include "iob_soc_opencryptolinux_conf.h"
+#include "iob_soc_opencryptolinux_system.h"
 #include "iob-cache.h"
-#endif
 
-//defined here (and not in periphs.h) because it is the only peripheral used
-//by the bootloader
-#define UART0_BASE (UART0 << (31 - N_SLAVES_W))
+// defined here (and not in periphs.h) because it is the only peripheral used
+// by the bootloader
+#define UART0_BASE (UART0 << (31 - N_SLAVES_W - 4))|0xf0000000
 
 #define PROGNAME "IOb-Bootloader"
 
@@ -18,45 +15,41 @@
 
 int main() {
 
-  //init uart
-  uart16550_init(UART0_BASE, FREQ/(16*BAUD));
+  // init uart
+  uart16550_init(UART0_BASE, FREQ / (16 * BAUD));
+  cache_init(1 << E, MEM_ADDR_W);
 
-#ifdef USE_EXTMEM
-  cache_init(1<<E, MEM_ADDR_W);
-#endif
-
-  //connect with console
+  // connect with console
   do {
-    if(uart16550_txready())
-      uart16550_putc((char) ENQ);
-  } while(!uart16550_rxready());
+    if (uart16550_txready())
+      uart16550_putc((char)ENQ);
+  } while (!uart16550_rxready());
 
+  // welcome message
+  uart16550_puts(PROGNAME);
+  uart16550_puts(": connected!\n");
 
-  //welcome message
-  uart16550_puts (PROGNAME);
-  uart16550_puts (": connected!\n");
-
-  uart16550_puts (PROGNAME);
+  uart16550_puts(PROGNAME);
   uart16550_puts(": DDR in use and program runs from DDR\n");
 
   // address to copy firmware to
   char *prog_start_addr;
   prog_start_addr = (char *)(EXT_MEM);
 
-while(uart16550_getc() != ACK){
-  uart16550_puts (PROGNAME);
-  uart16550_puts(": Waiting for Console ACK.\n");
-}
+  while (uart16550_getc() != ACK) {
+    uart16550_puts(PROGNAME);
+    uart16550_puts(": Waiting for Console ACK.\n");
+  }
 
 #ifndef INIT_MEM
 #ifdef RUN_LINUX
-  //receive firmware from host
-  int  file_size = 0;
+  // receive firmware from host
+  int file_size = 0;
   char opensbi[] = "fw_jump.bin";
-  char kernel[]  = "Image";
-  char dtb[]     = "iob_soc.dtb";
-  char rootfs[]  = "rootfs.cpio.gz";
-  if (uart16550_getc() == FRX) {//file receive: load firmware
+  char kernel[] = "Image";
+  char dtb[] = "iob_soc.dtb";
+  char rootfs[] = "rootfs.cpio.gz";
+  if (uart16550_getc() == FRX) { // file receive: load firmware
     file_size = uart16550_recvfile(opensbi, prog_start_addr);
     prog_start_addr = (char *)(EXT_MEM + 0x00400000);
     file_size = uart16550_recvfile(kernel, prog_start_addr);
@@ -64,28 +57,29 @@ while(uart16550_getc() != ACK){
     file_size = uart16550_recvfile(dtb, prog_start_addr);
     prog_start_addr = (char *)(EXT_MEM + 0x01000000);
     file_size = uart16550_recvfile(rootfs, prog_start_addr);
-    uart16550_puts (PROGNAME);
-    uart16550_puts (": Loading firmware...\n");
+    uart16550_puts(PROGNAME);
+    uart16550_puts(": Loading firmware...\n");
   }
 #else
-   
-  //receive firmware from host 
+
+  // receive firmware from host
   int file_size = 0;
   char r_fw[] = "iob_soc_opencryptolinux_firmware.bin";
   file_size = uart16550_recvfile(r_fw, prog_start_addr);
-  uart16550_puts (PROGNAME);
-  uart16550_puts (": Loading firmware...\n");
-  
-  //sending firmware back for debug
-  if(file_size) uart16550_sendfile(r_fw, file_size, prog_start_addr);
-  else{
-    uart16550_puts (PROGNAME);
-    uart16550_puts (": ERROR loading firmware\n");
+  uart16550_puts(PROGNAME);
+  uart16550_puts(": Loading firmware...\n");
+
+  // sending firmware back for debug
+  if (file_size)
+    uart16550_sendfile(r_fw, file_size, prog_start_addr);
+  else {
+    uart16550_puts(PROGNAME);
+    uart16550_puts(": ERROR loading firmware\n");
   }
 #endif
 #endif
-  
-  uart16550_putc((char) DC1);
+
+  uart16550_putc((char)DC1);
   // Clear CPU registers, to not pass arguments to the next
   asm volatile("li a0,0");
   asm volatile("li a1,0");
@@ -96,10 +90,11 @@ while(uart16550_getc() != ACK){
   asm volatile("li a6,0");
   asm volatile("li a7,0");
 
-  //run firmware
-  uart16550_puts (PROGNAME);
-  uart16550_puts (": Restart CPU to run user program...\n");
+  // run firmware
+  uart16550_puts(PROGNAME);
+  uart16550_puts(": Restart CPU to run user program...\n");
   uart16550_txwait();
 
-  while( !cache_wtb_empty() );  
+  while (!cache_wtb_empty())
+    ;
 }
