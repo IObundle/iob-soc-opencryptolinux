@@ -1,12 +1,12 @@
 #include "bsp.h"
+#include "iob-cache.h"
 #include "iob-uart16550.h"
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_system.h"
-#include "iob-cache.h"
 
 // defined here (and not in periphs.h) because it is the only peripheral used
 // by the bootloader
-#define UART0_BASE (UART0 << (31 - N_SLAVES_W - 4))|0xf0000000
+#define UART0_BASE (UART0 << (31 - N_SLAVES_W - 4)) | 0xf0000000
 
 #define PROGNAME "IOb-Bootloader"
 
