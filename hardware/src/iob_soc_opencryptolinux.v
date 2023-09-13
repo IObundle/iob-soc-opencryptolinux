@@ -176,21 +176,6 @@ module iob_soc_opencryptolinux #(
    //
    // EXTERNAL DDR MEMORY
    //
-
-   wire [ 1+SRAM_ADDR_W-2+DATA_W+DATA_W/8-1:0] ext_mem0_i_req;
-   wire [1+MEM_ADDR_W+1-2+DATA_W+DATA_W/8-1:0] ext_mem0_d_req;
-
-   assign ext_mem0_i_req = {
-      ext_mem_i_req[`AVALID(0)],
-      ext_mem_i_req[`ADDRESS(0, `IOB_SOC_OPENCRYPTOLINUX_SRAM_ADDR_W)-2],
-      ext_mem_i_req[`WRITE(0)]
-   };
-   assign ext_mem0_d_req = {
-      ext_mem_d_req[`AVALID(0)],
-      ext_mem_d_req[`ADDRESS(0, MEM_ADDR_W+1)-2],
-      ext_mem_d_req[`WRITE(0)]
-   };
-
    ext_mem #(
       .ADDR_W     (ADDR_W),
       .DATA_W     (DATA_W),
@@ -204,11 +189,11 @@ module iob_soc_opencryptolinux #(
       .AXI_DATA_W (AXI_DATA_W)
    ) ext_mem0 (
       // instruction bus
-      .i_req (ext_mem0_i_req),
+      .i_req (ext_mem_i_req),
       .i_resp(ext_mem_i_resp),
 
       //data bus
-      .d_req (ext_mem0_d_req),
+      .d_req (ext_mem_d_req),
       .d_resp(ext_mem_d_resp),
 
       //AXI INTERFACE
