@@ -5,14 +5,8 @@
 module ext_mem #(
     parameter ADDR_W      = 0,
     parameter DATA_W      = 0,
-    parameter FIRM_ADDR_W = 0,
     parameter MEM_ADDR_W  = 0,
-    parameter DDR_ADDR_W  = 0,
-    parameter DDR_DATA_W  = 0,
-    parameter AXI_ID_W    = 0,
-    parameter AXI_LEN_W   = 0,
-    parameter AXI_ADDR_W  = 0,
-    parameter AXI_DATA_W  = 0
+    parameter AXI_ID_W    = 0
 ) (
     // Instruction bus
     input  [ `REQ_W-1:0] i_req,
@@ -48,8 +42,11 @@ module ext_mem #(
 
   // AXI interface
   iob2axi #(
-      .ADDR_W(MEM_ADDR_W),
-      .DATA_W(DATA_W)
+      .ADDR_WIDTH(MEM_ADDR_W),
+      .DATA_WIDTH(DATA_W),
+      .AXI_ID_WIDTH(AXI_ID_W),
+      .AXI_RLEN(8'h0f),
+      .AXI_WLEN(8'h00)
   ) ext_mem_iob2axi (
       .iob_avalid_i(ext_mem_req[`AVALID(0)]),
       .iob_addr_i  (ext_mem_req[`ADDRESS(0, MEM_ADDR_W)]),
