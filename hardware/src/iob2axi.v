@@ -25,7 +25,7 @@ module iob2axi #(
     input  wire [  DATA_WIDTH-1:0] iob_wdata_i,
     input  wire [  STRB_WIDTH-1:0] iob_wstrb_i,
     output reg  [  DATA_WIDTH-1:0] iob_rdata_o,
-    output reg                     iob_rvalid_o,
+    output wire                    iob_rvalid_o,
     output wire                    iob_ready_o,
     /*
      * AXI master interface
@@ -35,9 +35,10 @@ module iob2axi #(
     output wire [             7:0] axi_awlen_o,
     output wire [             2:0] axi_awsize_o,
     output wire [             1:0] axi_awburst_o,
-    output wire                    axi_awlock_o,
+    output wire [             1:0] axi_awlock_o,
     output wire [             3:0] axi_awcache_o,
     output wire [             2:0] axi_awprot_o,
+    output wire [             3:0] axi_awqos_o,
     output reg                     axi_awvalid_o,
     input  wire                    axi_awready_i,
     output reg  [  DATA_WIDTH-1:0] axi_wdata_o,
@@ -54,9 +55,10 @@ module iob2axi #(
     output wire [             7:0] axi_arlen_o,
     output wire [             2:0] axi_arsize_o,
     output wire [             1:0] axi_arburst_o,
-    output wire                    axi_arlock_o,
+    output wire [             1:0] axi_arlock_o,
     output wire [             3:0] axi_arcache_o,
     output wire [             2:0] axi_arprot_o,
+    output wire [             3:0] axi_arqos_o,
     output reg                     axi_arvalid_o,
     input  wire                    axi_arready_i,
     input  wire [AXI_ID_WIDTH-1:0] axi_rid_i,
@@ -79,16 +81,16 @@ module iob2axi #(
   wire                             w_fifo_empty;
   reg                              w_fifo_rd;
   wire [DATA_WIDTH+STRB_WIDTH-1:0] w_fifo_rdata;
-  wire [               AXI_WLEN:0] w_fifo_level;
+  wire [              BurstWLEN:0] w_fifo_level;
   wire                             w_ext_mem_clk;
   wire                             w_ext_mem_w_en;
-  wire [             AXI_WLEN-1:0] w_ext_mem_w_addr;
+  wire [            BurstWLEN-1:0] w_ext_mem_w_addr;
   wire [DATA_WIDTH+STRB_WIDTH-1:0] w_ext_mem_w_data;
   wire                             w_ext_mem_r_en;
-  wire [             AXI_WLEN-1:0] w_ext_mem_r_addr;
+  wire [            BurstWLEN-1:0] w_ext_mem_r_addr;
   wire [DATA_WIDTH+STRB_WIDTH-1:0] w_ext_mem_r_data;
   wire                             iob_wvalid;
-  wire                             iob_waddr_q;
+  wire [           ADDR_WIDTH-1:0] iob_waddr_q;
   reg                              iob_wready;
   wire                             w_state_q;
   reg                              w_state_next;
@@ -99,23 +101,23 @@ module iob2axi #(
   wire                             r_fifo_empty;
   reg                              r_fifo_rd;
   wire [           DATA_WIDTH-1:0] r_fifo_rdata;
-  wire [               AXI_RLEN:0] r_fifo_level;
+  wire [              BurstRLEN:0] r_fifo_level;
   wire                             r_ext_mem_clk;
   wire                             r_ext_mem_w_en;
-  wire [             AXI_RLEN-1:0] r_ext_mem_w_addr;
+  wire [            BurstRLEN-1:0] r_ext_mem_w_addr;
   wire [           DATA_WIDTH-1:0] r_ext_mem_w_data;
   wire                             r_ext_mem_r_en;
-  wire [             AXI_RLEN-1:0] r_ext_mem_r_addr;
+  wire [            BurstRLEN-1:0] r_ext_mem_r_addr;
   wire [           DATA_WIDTH-1:0] r_ext_mem_r_data;
   wire                             iob_arvalid;
   reg                              iob_arready;
-  wire                             iob_raddr_q;
+  wire [           ADDR_WIDTH-1:0] iob_araddr_q;
   reg                              iob_rvalid_next;
   wire                             r_state_q;
   reg                              r_state_next;
 
   assign iob_we        = |iob_wstrb_i;
-  assign iob_rready_o  = iob_we ? iob_wready : iob_arready;
+  assign iob_ready_o   = iob_we ? iob_wready : iob_arready;
   // Write bus
   // // IOb-bus
   assign iob_wvalid    = iob_we & iob_avalid_i;
@@ -125,22 +127,24 @@ module iob2axi #(
   assign axi_awlen_o   = AXI_WLEN;
   assign axi_awsize_o  = 3'b010;
   assign axi_awburst_o = 2'b01;
-  assign axi_awlock_o  = 1'b0;
+  assign axi_awlock_o  = 2'b00;
   assign axi_awcache_o = 4'hf;
   assign axi_awprot_o  = 3'b010;
+  assign axi_awqos_o   = 4'h0;
   assign axi_bready_o  = 1'b1;
   // Read bus
   // // IOb-bus
   assign iob_arvalid   = ~iob_we & iob_avalid_i;
   // // AXI
   assign axi_arid_o    = {AXI_ID_WIDTH{1'b0}};
-  assign axi_araddr_o  = iob_arvalid ? iob_addr_i : iob_raddr_q;
+  assign axi_araddr_o  = iob_arvalid ? iob_addr_i : iob_araddr_q;
   assign axi_arlen_o   = AXI_RLEN;
   assign axi_arsize_o  = 3'b010;
   assign axi_arburst_o = 2'b01;
-  assign axi_arlock_o  = 1'b0;
+  assign axi_arlock_o  = 2'b00;
   assign axi_arcache_o = 4'hf;
   assign axi_arprot_o  = 3'b010;
+  assign axi_arqos_o   = 4'h0;
   assign axi_rready_o  = 1'b1;
 
 
@@ -148,8 +152,14 @@ module iob2axi #(
   always @(*) begin
     axi_awvalid_o = 1'b0;
     axi_wvalid_o = 1'b0;
+    axi_wdata_o = {DATA_WIDTH{1'b0}};
+    axi_wstrb_o = {STRB_WIDTH{1'b0}};
+    axi_wlast_o = 1'b0;
     iob_wready = 1'b0;
+    w_fifo_wr = 1'b0;
     w_fifo_rd = 1'b0;
+    w_fifo_wdata = {DATA_WIDTH{1'b0}};
+    w_state_next = w_state_q;
     case (w_state_q)
       default: begin
         iob_wready = 1'b1;
@@ -157,25 +167,18 @@ module iob2axi #(
           w_state_next = WriteFIFO;
           w_fifo_wr = 1'b1;
           w_fifo_wdata = {iob_wdata_i, iob_wstrb_i};
-        end else begin
-          w_state_next = IDLE;
         end
       end
       WriteFIFO: begin
-        w_fifo_wr = 1'b0;
         if (w_fifo_full) begin
           w_state_next = ReadFIFO;
           w_fifo_rd = 1'b1;
-        end else begin
-          w_state_next = WriteFIFO;
-          if (iob_wvalid) begin
-            w_fifo_wr = 1'b1;
-            w_fifo_wdata = {iob_wdata_i, iob_wstrb_i};
-          end
+        end else if (iob_wvalid) begin
+          w_fifo_wr = 1'b1;
+          w_fifo_wdata = {iob_wdata_i, iob_wstrb_i};
         end
       end
       ReadFIFO: begin
-        w_state_next = ReadFIFO;
         if (axi_awready_i & axi_wready_i) begin
           w_fifo_rd = 1'b1;
           axi_awvalid_o = 1'b1;
@@ -183,7 +186,6 @@ module iob2axi #(
           {axi_wdata_o, axi_wstrb_o} = w_fifo_rdata;
           if (w_fifo_empty) begin
             w_state_next = IDLE;
-            iob_wready   = 1'b1;
             axi_wlast_o  = 1'b1;
           end
         end
@@ -193,17 +195,20 @@ module iob2axi #(
 
   // Read bus FSM
   always @(*) begin
-    iob_rvalid_next = 1'b0;
     iob_arready = 1'b0;
+    axi_arvalid_o = 1'b0;
+    iob_rvalid_next = 1'b0;
+    iob_rdata_o = {DATA_WIDTH{1'b0}};
     r_fifo_wr = 1'b0;
+    r_fifo_rd = 1'b0;
+    r_fifo_wdata = {DATA_WIDTH{1'b0}};
+    r_state_next = r_state_q;
     case (r_state_q)
       default: begin
         iob_arready = axi_arready_i;
         if (iob_arvalid & axi_arready_i) begin
           r_state_next  = WriteFIFO;
           axi_arvalid_o = 1'b1;
-        end else begin
-          r_state_next = IDLE;
         end
       end
       WriteFIFO: begin
@@ -211,24 +216,17 @@ module iob2axi #(
           r_state_next = ReadFIFO;
           r_fifo_rd = 1'b1;
           iob_rvalid_next = 1'b1;
-        end else begin
-          r_state_next = WriteFIFO;
-          if (axi_rvalid_i) begin
-            r_fifo_wr = 1'b1;
-            r_fifo_wdata = axi_rdata_i;
-          end
+        end else if (axi_rvalid_i) begin
+          r_fifo_wr = 1'b1;
+          r_fifo_wdata = axi_rdata_i;
         end
       end
       ReadFIFO: begin
-        iob_arready = 1'b1;
+        iob_arready = axi_arready_i;
         if (r_fifo_empty) begin
           r_state_next = IDLE;
-          r_fifo_rd = 1'b0;
-          iob_rvalid_o = 1'b0;
-          iob_rdata_o = {DATA_WIDTH{1'b0}};
         end else begin
-          r_state_next = ReadFIFO;
-          iob_rdata_o  = r_fifo_rdata;
+          iob_rdata_o = r_fifo_rdata;
           if (iob_arvalid) begin
             r_fifo_rd = 1'b1;
             iob_rvalid_next = 1'b1;
@@ -247,8 +245,11 @@ module iob2axi #(
       .R_DATA_W(DATA_WIDTH + STRB_WIDTH),
       .ADDR_W  (BurstWLEN)
   ) write_bus_iob_fifo_sync (
-      .clk_i(clk_i),
-      .rst_i(rst_i),
+      .clk_i (clk_i),
+      .cke_i (cke_i),
+      .arst_i(arst_i),
+
+      .rst_i(1'b0),
 
       .w_en_i  (w_fifo_wr),
       .w_data_i(w_fifo_wdata),
@@ -319,8 +320,11 @@ module iob2axi #(
       .R_DATA_W(DATA_WIDTH),
       .ADDR_W  (BurstRLEN)
   ) read_bus_iob_fifo_sync (
-      .clk_i(clk_i),
-      .rst_i(rst_i),
+      .clk_i (clk_i),
+      .cke_i (cke_i),
+      .arst_i(arst_i),
+
+      .rst_i(1'b0),
 
       .w_en_i  (r_fifo_wr),
       .w_data_i(r_fifo_wdata),
@@ -367,7 +371,7 @@ module iob2axi #(
       .rst_i (1'b0),
       .en_i  (iob_arvalid),
       .data_i(iob_addr_i),
-      .data_o(iob_raddr_q)
+      .data_o(iob_araddr_q)
   );
 
   iob_reg_re #(

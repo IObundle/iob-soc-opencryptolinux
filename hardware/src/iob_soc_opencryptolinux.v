@@ -179,14 +179,8 @@ module iob_soc_opencryptolinux #(
    ext_mem #(
       .ADDR_W     (ADDR_W),
       .DATA_W     (DATA_W),
-      .FIRM_ADDR_W(SRAM_ADDR_W),
-      .MEM_ADDR_W (MEM_ADDR_W),
-      .DDR_ADDR_W (`DDR_ADDR_W),
-      .DDR_DATA_W (`DDR_DATA_W),
       .AXI_ID_W   (AXI_ID_W),
-      .AXI_LEN_W  (AXI_LEN_W),
-      .AXI_ADDR_W (AXI_ADDR_W),
-      .AXI_DATA_W (AXI_DATA_W)
+      .AXI_ADDR_W (MEM_ADDR_W)
    ) ext_mem0 (
       // instruction bus
       .i_req (ext_mem_i_req),
