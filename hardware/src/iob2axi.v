@@ -92,8 +92,8 @@ module iob2axi #(
   wire                             iob_wvalid;
   wire [           ADDR_WIDTH-1:0] iob_waddr_q;
   reg                              iob_wready;
-  wire                             w_state_q;
-  reg                              w_state_next;
+  wire [                      1:0] w_state_q;
+  reg  [                      1:0] w_state_next;
   // Read bus
   wire                             r_fifo_full;
   reg                              r_fifo_wr;
@@ -113,8 +113,8 @@ module iob2axi #(
   reg                              iob_arready;
   wire [           ADDR_WIDTH-1:0] iob_araddr_q;
   reg                              iob_rvalid_next;
-  wire                             r_state_q;
-  reg                              r_state_next;
+  wire [                      1:0] r_state_q;
+  reg  [                      1:0] r_state_next;
 
   assign iob_we        = |iob_wstrb_i;
   assign iob_ready_o   = iob_we ? iob_wready : iob_arready;
@@ -158,7 +158,7 @@ module iob2axi #(
     iob_wready = 1'b0;
     w_fifo_wr = 1'b0;
     w_fifo_rd = 1'b0;
-    w_fifo_wdata = {DATA_WIDTH{1'b0}};
+    w_fifo_wdata = {DATA_WIDTH + STRB_WIDTH{1'b0}};
     w_state_next = w_state_q;
     case (w_state_q)
       default: begin
@@ -170,6 +170,7 @@ module iob2axi #(
         end
       end
       WriteFIFO: begin
+        iob_wready = ~w_fifo_full;
         if (w_fifo_full) begin
           w_state_next = ReadFIFO;
           w_fifo_rd = 1'b1;
@@ -206,9 +207,11 @@ module iob2axi #(
     case (r_state_q)
       default: begin
         iob_arready = axi_arready_i;
-        if (iob_arvalid & axi_arready_i) begin
-          r_state_next  = WriteFIFO;
+        if (iob_arvalid) begin
           axi_arvalid_o = 1'b1;
+          if (axi_arready_i) begin
+            r_state_next = WriteFIFO;
+          end
         end
       end
       WriteFIFO: begin
@@ -300,7 +303,7 @@ module iob2axi #(
   );
 
   iob_reg_re #(
-      .DATA_W (1),
+      .DATA_W (2),
       .RST_VAL(0)
   ) iob_reg_w_state (
       .clk_i (clk_i),
@@ -375,7 +378,7 @@ module iob2axi #(
   );
 
   iob_reg_re #(
-      .DATA_W (1),
+      .DATA_W (2),
       .RST_VAL(0)
   ) iob_reg_r_state (
       .clk_i (clk_i),

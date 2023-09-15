@@ -40,7 +40,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
    initial begin
 `ifdef VCD
       $dumpfile("uut.vcd");
-      $dumpvars(0, iob_soc_opencryptolinux_sim_wrapper.soc0);
+      $dumpvars();
 `endif
    end
 

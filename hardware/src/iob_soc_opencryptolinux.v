@@ -8,82 +8,82 @@
 `include "iob_soc_opencryptolinux_periphs_swreg_def.vs"
 
 module iob_soc_opencryptolinux #(
-   `include "iob_soc_opencryptolinux_params.vs"
+    `include "iob_soc_opencryptolinux_params.vs"
 ) (
-   `include "iob_soc_opencryptolinux_io.vs"
+    `include "iob_soc_opencryptolinux_io.vs"
 );
 
-   localparam integer Bbit = `IOB_SOC_OPENCRYPTOLINUX_B;
-   localparam integer AddrMsb = `REQ_W - 2;
-   localparam integer MEM_ADDR_OFFSET = 0;
+  localparam integer Bbit = `IOB_SOC_OPENCRYPTOLINUX_B;
+  localparam integer AddrMsb = `REQ_W - 2;
+  localparam integer MEM_ADDR_OFFSET = 0;
 
-   `include "iob_soc_opencryptolinux_pwires.vs"
+  `include "iob_soc_opencryptolinux_pwires.vs"
 
-   //
-   // SYSTEM RESET
-   //
+  //
+  // SYSTEM RESET
+  //
 
-   wire boot;
-   wire cpu_reset;
-   wire cke_i = 1'b1;
+  wire               boot;
+  wire               cpu_reset;
+  wire               cke_i = 1'b1;
 
-   //
-   //  CPU
-   //
+  //
+  //  CPU
+  //
 
-   // instruction bus
-   wire [                          `REQ_W-1:0] cpu_i_req;
-   wire [                         `RESP_W-1:0] cpu_i_resp;
+  // instruction bus
+  wire [ `REQ_W-1:0] cpu_i_req;
+  wire [`RESP_W-1:0] cpu_i_resp;
 
-   // data cat bus
-   wire [                          `REQ_W-1:0] cpu_d_req;
-   wire [                         `RESP_W-1:0] cpu_d_resp;
+  // data cat bus
+  wire [ `REQ_W-1:0] cpu_d_req;
+  wire [`RESP_W-1:0] cpu_d_resp;
 
-   assign cpu_trap_o    = 1'b0;
+  assign cpu_trap_o = 1'b0;
 
-   //instantiate the cpu
-   iob_VexRiscv #(
+  //instantiate the cpu
+  iob_VexRiscv #(
       .ADDR_W    (ADDR_W),
       .DATA_W    (DATA_W),
       .USE_EXTMEM(1)
-   ) cpu_0 (
-      .clk_i             (clk_i),
-      .cke_i             (cke_i),
-      .arst_i            (arst_i),
-      .cpu_reset_i       (cpu_reset),
-      .boot_i            (boot),
-      .clint_req({`REQ_W{1'b0}}),
-      .clint_resp(),
-      .plic_req({`REQ_W{1'b0}}),
-      .plic_resp(),
+  ) cpu_0 (
+      .clk_i         (clk_i),
+      .cke_i         (cke_i),
+      .arst_i        (arst_i),
+      .cpu_reset_i   (cpu_reset),
+      .boot_i        (boot),
+      .clint_req     ({`REQ_W{1'b0}}),
+      .clint_resp    (),
+      .plic_req      ({`REQ_W{1'b0}}),
+      .plic_resp     (),
       .plicInterrupts(32'd0),
       //instruction bus
-      .ibus_req          (cpu_i_req),
-      .ibus_resp         (cpu_i_resp),
+      .ibus_req      (cpu_i_req),
+      .ibus_resp     (cpu_i_resp),
       //data bus
-      .dbus_req          (cpu_d_req),
-      .dbus_resp         (cpu_d_resp)
-   );
+      .dbus_req      (cpu_d_req),
+      .dbus_resp     (cpu_d_resp)
+  );
 
 
-   //
-   // SPLIT CPU BUSES TO ACCESS INTERNAL OR EXTERNAL MEMORY
-   //
+  //
+  // SPLIT CPU BUSES TO ACCESS INTERNAL OR EXTERNAL MEMORY
+  //
 
-   //internal memory instruction bus
-   wire [ `REQ_W-1:0] int_mem_i_req;
-   wire [`RESP_W-1:0] int_mem_i_resp;
-   //external memory instruction bus
-   wire [ `REQ_W-1:0] ext_mem_i_req;
-   wire [`RESP_W-1:0] ext_mem_i_resp;
+  //internal memory instruction bus
+  wire [ `REQ_W-1:0] int_mem_i_req;
+  wire [`RESP_W-1:0] int_mem_i_resp;
+  //external memory instruction bus
+  wire [ `REQ_W-1:0] ext_mem_i_req;
+  wire [`RESP_W-1:0] ext_mem_i_resp;
 
-   // INSTRUCTION BUS
-   iob_split #(
+  // INSTRUCTION BUS
+  iob_split #(
       .ADDR_W  (ADDR_W),
       .DATA_W  (DATA_W),
       .N_SLAVES(2),
       .P_SLAVES(AddrMsb)
-   ) ibus_split (
+  ) ibus_split (
       .clk_i   (clk_i),
       .arst_i  (arst_i),
       // master interface
@@ -92,24 +92,24 @@ module iob_soc_opencryptolinux #(
       // slaves interface
       .s_req_o ({ext_mem_i_req, int_mem_i_req}),
       .s_resp_i({ext_mem_i_resp, int_mem_i_resp})
-   );
+  );
 
 
-   // DATA BUS
+  // DATA BUS
 
-   //internal data bus
-   wire [ `REQ_W-1:0] int_d_req;
-   wire [`RESP_W-1:0] int_d_resp;
-   //external memory data bus
-   wire [ `REQ_W-1:0] ext_mem_d_req;
-   wire [`RESP_W-1:0] ext_mem_d_resp;
+  //internal data bus
+  wire [ `REQ_W-1:0] int_d_req;
+  wire [`RESP_W-1:0] int_d_resp;
+  //external memory data bus
+  wire [ `REQ_W-1:0] ext_mem_d_req;
+  wire [`RESP_W-1:0] ext_mem_d_resp;
 
-   iob_split #(
+  iob_split #(
       .ADDR_W  (ADDR_W),
       .DATA_W  (DATA_W),
       .N_SLAVES(2),       //E,{P,I}
       .P_SLAVES(AddrMsb)
-   ) dbus_split (
+  ) dbus_split (
       .clk_i   (clk_i),
       .arst_i  (arst_i),
       // master interface
@@ -118,22 +118,22 @@ module iob_soc_opencryptolinux #(
       // slaves interface
       .s_req_o ({ext_mem_d_req, int_d_req}),
       .s_resp_i({ext_mem_d_resp, int_d_resp})
-   );
+  );
 
-   //
-   // SPLIT INTERNAL MEMORY AND PERIPHERALS BUS
-   //
+  //
+  // SPLIT INTERNAL MEMORY AND PERIPHERALS BUS
+  //
 
-   //slaves bus (includes internal memory + periphrals)
-   wire [ (`IOB_SOC_OPENCRYPTOLINUX_N_SLAVES)*`REQ_W-1:0] slaves_req;
-   wire [(`IOB_SOC_OPENCRYPTOLINUX_N_SLAVES)*`RESP_W-1:0] slaves_resp;
+  //slaves bus (includes internal memory + periphrals)
+  wire [ (`IOB_SOC_OPENCRYPTOLINUX_N_SLAVES)*`REQ_W-1:0] slaves_req;
+  wire [(`IOB_SOC_OPENCRYPTOLINUX_N_SLAVES)*`RESP_W-1:0] slaves_resp;
 
-   iob_split #(
+  iob_split #(
       .ADDR_W  (ADDR_W),
       .DATA_W  (DATA_W),
       .N_SLAVES(`IOB_SOC_OPENCRYPTOLINUX_N_SLAVES),
       .P_SLAVES(AddrMsb - 1)
-   ) pbus_split (
+  ) pbus_split (
       .clk_i   (clk_i),
       .arst_i  (arst_i),
       // master interface
@@ -142,14 +142,14 @@ module iob_soc_opencryptolinux #(
       // slaves interface
       .s_req_o (slaves_req),
       .s_resp_i(slaves_resp)
-   );
+  );
 
 
-   //
-   // INTERNAL SRAM MEMORY
-   //
+  //
+  // INTERNAL SRAM MEMORY
+  //
 
-   int_mem #(
+  int_mem #(
       .ADDR_W        (ADDR_W),
       .DATA_W        (DATA_W),
       .HEXFILE       ("iob_soc_opencryptolinux_firmware"),
@@ -157,7 +157,7 @@ module iob_soc_opencryptolinux #(
       .SRAM_ADDR_W   (SRAM_ADDR_W),
       .BOOTROM_ADDR_W(BOOTROM_ADDR_W),
       .B_BIT         (`B_BIT)
-   ) int_mem0 (
+  ) int_mem0 (
       .clk_i    (clk_i),
       .arst_i   (arst_i),
       .cke_i    (cke_i),
@@ -171,17 +171,19 @@ module iob_soc_opencryptolinux #(
       //data bus
       .d_req (slaves_req[0+:`REQ_W]),
       .d_resp(slaves_resp[0+:`RESP_W])
-   );
+  );
 
-   //
-   // EXTERNAL DDR MEMORY
-   //
-   ext_mem #(
-      .ADDR_W     (ADDR_W),
-      .DATA_W     (DATA_W),
-      .AXI_ID_W   (AXI_ID_W),
-      .AXI_ADDR_W (MEM_ADDR_W)
-   ) ext_mem0 (
+  //
+  // EXTERNAL DDR MEMORY
+  //
+  ext_mem #(
+      .ADDR_W    (ADDR_W),
+      .DATA_W    (DATA_W),
+      .AXI_ID_W  (AXI_ID_W),
+      .AXI_LEN_W (AXI_LEN_W),
+      .AXI_ADDR_W(MEM_ADDR_W),
+      .AXI_DATA_W(DATA_W)
+  ) ext_mem0 (
       // instruction bus
       .i_req (ext_mem_i_req),
       .i_resp(ext_mem_i_resp),
@@ -237,11 +239,11 @@ module iob_soc_opencryptolinux #(
       .clk_i (clk_i),
       .cke_i (cke_i),
       .arst_i(arst_i)
-   );
+  );
 
-   assign axi_awaddr_o[AXI_ADDR_W-1:0] = internal_axi_awaddr_o + MEM_ADDR_OFFSET;
-   assign axi_araddr_o[AXI_ADDR_W-1:0] = internal_axi_araddr_o + MEM_ADDR_OFFSET;
+  assign axi_awaddr_o[AXI_ADDR_W-1:0] = internal_axi_awaddr_o + MEM_ADDR_OFFSET;
+  assign axi_araddr_o[AXI_ADDR_W-1:0] = internal_axi_araddr_o + MEM_ADDR_OFFSET;
 
-   `include "iob_soc_opencryptolinux_periphs_inst.vs"
+  `include "iob_soc_opencryptolinux_periphs_inst.vs"
 
 endmodule

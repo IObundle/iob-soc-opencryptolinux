@@ -1,5 +1,4 @@
 #include "bsp.h"
-#include "iob-cache.h"
 #include "iob-uart16550.h"
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_system.h"
@@ -17,7 +16,6 @@ int main() {
 
   // init uart
   uart16550_init(UART0_BASE, FREQ / (16 * BAUD));
-  cache_init(1 << E, MEM_ADDR_W);
 
   // connect with console
   do {
@@ -94,7 +92,4 @@ int main() {
   uart16550_puts(PROGNAME);
   uart16550_puts(": Restart CPU to run user program...\n");
   uart16550_txwait();
-
-  while (!cache_wtb_empty())
-    ;
 }

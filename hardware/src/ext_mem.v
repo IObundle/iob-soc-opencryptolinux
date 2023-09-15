@@ -31,7 +31,7 @@ module ext_mem #(
   iob_merge #(
       .ADDR_W   (ADDR_W),
       .N_MASTERS(2)
-  ) merge_i_d_buses_into_l2 (
+  ) merge_i_d_buses (
       .clk_i   (clk_i),
       .arst_i  (arst_i),
       // masters
