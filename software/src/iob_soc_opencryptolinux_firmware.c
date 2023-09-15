@@ -5,7 +5,7 @@
 #include "iob_str.h"
 #include "printf.h"
 
-#define UART0_BASE 0xf2000000
+#define UART0_BASE 0xf4000000
 #define PLIC0_BASE 0xf4000000
 #define CLINT0_BASE 0xf6000000
 

@@ -47,7 +47,7 @@ module ext_mem #(
       .ADDR_WIDTH(AXI_ADDR_W),
       .DATA_WIDTH(AXI_DATA_W),
       .AXI_ID_WIDTH(AXI_ID_W),
-      .AXI_RLEN(8'h00),
+      .AXI_RLEN(8'h0f),
       .AXI_WLEN(8'h00)
   ) ext_mem_iob2axi (
       .iob_avalid_i(ext_mem_req[`AVALID(0)]),
