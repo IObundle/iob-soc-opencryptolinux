@@ -47,6 +47,16 @@ class iob_soc_opencryptolinux(iob_soc):
         """Create submodules list with dependencies of this module"""
         super()._create_submodules_list(
             [
+                {"interface": "peripheral_axi_wire"},
+                {"interface": "iBus_intmem_axi_wire"},
+                {"interface": "dBus_extmem_axi_wire"},
+                {"interface": "iBus_extmem_axi_wire"},
+                {"interface": "dBus_axi_wire"},
+                {"interface": "iBus_axi_wire"},
+                {"interface": "dBus_axi_m_port"},
+                {"interface": "iBus_axi_m_port"},
+                {"interface": "dBus_axi_m_portmap"},
+                {"interface": "iBus_axi_m_portmap"},
                 iob_vexriscv,
                 iob_uart16550,
                 # iob_spi,
