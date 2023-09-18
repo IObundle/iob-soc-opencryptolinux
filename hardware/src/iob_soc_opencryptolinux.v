@@ -16,6 +16,7 @@ module iob_soc_opencryptolinux #(
   localparam integer Bbit = `IOB_SOC_OPENCRYPTOLINUX_B;
   localparam integer AddrMsb = `REQ_W - 2;
   localparam integer MEM_ADDR_OFFSET = 0;
+
   localparam IBUS_AXI_ID_W = 1;
   localparam IBUS_AXI_LEN_W = 8;
   localparam IBUS_AXI_ADDR_W = 32;
@@ -41,6 +42,8 @@ module iob_soc_opencryptolinux #(
   localparam DBUS_EXTMEM_AXI_ADDR_W = 32;
   localparam DBUS_EXTMEM_AXI_DATA_W = 32;
 
+  localparam N_SLAVES = `IOB_SOC_OPENCRYPTOLINUX_N_SLAVES;
+
 
   `include "iob_soc_opencryptolinux_pwires.vs"
 
@@ -60,6 +63,10 @@ module iob_soc_opencryptolinux #(
   wire peripheral_iob_rvalid;
   wire [DATA_W-1:0] peripheral_iob_rdata;
   wire peripheral_iob_ready;
+
+  //slaves bus (includes internal memory + periphrals)
+  wire [(N_SLAVES+2)*`REQ_W-1:0] slaves_req;
+  wire [(N_SLAVES+2)*`RESP_W-1:0] slaves_resp;
 
   //
   // SYSTEM RESET
@@ -89,10 +96,10 @@ module iob_soc_opencryptolinux #(
       .cke_i         (cke_i),
       .arst_i        (arst_i),
       .cpu_reset_i   (cpu_reset),
-      .clint_req     ({`REQ_W{1'b0}}),
-      .clint_resp    (),
-      .plic_req      ({`REQ_W{1'b0}}),
-      .plic_resp     (),
+      .clint_req     (slaves_req[(N_SLAVES)*69+:`REQ_W]),
+      .clint_resp    (slaves_resp[(N_SLAVES)*34+:`RESP_W]),
+      .plic_req      (slaves_req[(N_SLAVES+1)*69+:`REQ_W]),
+      .plic_resp     (slaves_resp[(N_SLAVES+1)*34+:`RESP_W]),
       .plicInterrupts(32'd0),
       // Axi instruction bus
       `include "iBus_axi_m_portmap.vs"
@@ -419,14 +426,10 @@ module iob_soc_opencryptolinux #(
       .iob_ready_i(peripheral_iob_ready)
   );
 
-  //slaves bus (includes internal memory + periphrals)
-  wire [ (`IOB_SOC_OPENCRYPTOLINUX_N_SLAVES)*`REQ_W-1:0] slaves_req;
-  wire [(`IOB_SOC_OPENCRYPTOLINUX_N_SLAVES)*`RESP_W-1:0] slaves_resp;
-
   iob_split #(
       .ADDR_W  (ADDR_W),
       .DATA_W  (DATA_W),
-      .N_SLAVES(`IOB_SOC_OPENCRYPTOLINUX_N_SLAVES),
+      .N_SLAVES(N_SLAVES + 2),
       .P_SLAVES(AddrMsb - 1)
   ) pbus_split (
       .clk_i(clk_i),
