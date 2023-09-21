@@ -4,7 +4,7 @@
 #include "riscv-csr.h"
 
 void plic_init(int base_address){
-    base = base_address;
+    plic_base = base_address;
 
     int i = 0;
     //clear all EL
@@ -22,10 +22,10 @@ void plic_init(int base_address){
         plic_write((TH_BASE_ADDRESS+i)*DATA_W/8, 0);
 }
 void plic_write(int address, int data){
-    (*(volatile uint32_t *) (base+address))     = (uint32_t)(data);
+    (*(volatile uint32_t *) (plic_base+address))     = (uint32_t)(data);
 }
 int plic_read(int address){
-    return (uint64_t)(*(volatile uint32_t *) (base+address));
+    return (uint64_t)(*(volatile uint32_t *) (plic_base+address));
 }
 
 int plic_enable_interrupt(int source){

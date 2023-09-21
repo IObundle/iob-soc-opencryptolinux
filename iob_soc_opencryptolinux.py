@@ -29,6 +29,8 @@ class iob_soc_opencryptolinux(iob_soc):
         # Instantiate OpenCryptoLinux peripherals
         if iob_uart16550 in cls.submodule_list:
             cls.peripherals.append(iob_uart16550("UART0", "Default UART interface"))
+        if iob_clint in cls.submodule_list:
+            cls.peripherals.append(iob_clint("CLINT0", "CLINT peripheral"))
         if iob_plic in cls.submodule_list:
             cls.peripherals.append(
                 iob_plic(
@@ -37,8 +39,6 @@ class iob_soc_opencryptolinux(iob_soc):
                     parameters={"N_SOURCES": "32", "N_TARGETS": "2"},
                 )
             )
-        if iob_clint in cls.submodule_list:
-            cls.peripherals.append(iob_clint("CLINT0", "CLINT peripheral"))
         if iob_spi in cls.submodule_list:
             cls.peripherals.append(iob_spi("SPI0", "SPI master peripheral"))
 
@@ -59,6 +59,8 @@ class iob_soc_opencryptolinux(iob_soc):
                 {"interface": "iBus_axi_m_portmap"},
                 iob_vexriscv,
                 iob_uart16550,
+                iob_clint,
+                iob_plic,
                 # iob_spi,
                 (iob_uart, {"purpose": "simulation"}),
             ]

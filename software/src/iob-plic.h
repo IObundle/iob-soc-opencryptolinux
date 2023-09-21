@@ -47,7 +47,7 @@
 #define ID_BASE_ADDRESS (TH_BASE_ADDRESS+PTHRESHOLD_REGS)
 
 //Functions
-static int base;
+static int plic_base;
 void plic_init(int);
 void plic_write(int, int);
 int  plic_read(int);
