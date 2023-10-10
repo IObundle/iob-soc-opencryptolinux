@@ -1,8 +1,8 @@
 #include "bsp.h"
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_system.h"
-#include "iob-clint.h"
-#include "iob-plic.h"
+#include "clint.h"
+#include "plic.h"
 #include "iob-uart16550.h"
 #include "iob_str.h"
 #include "printf.h"
@@ -22,11 +22,10 @@ static volatile uint64_t timestamp = 0;
 
 int main() {
     char pass_string[] = "Test passed!";
+    uint_xlen_t irq_entry_copy;
 
     //init uart
     uart16550_init(UART0_BASE, FREQ/(16*BAUD));
-    clint_init(CLINT0_BASE);
-    //plic_init(PLIC0_BASE);
     printf_init(&uart16550_putc);
 
     printf("\n\n\nHello world!\n\n\n");
@@ -38,19 +37,20 @@ int main() {
     csr_write_mcause(0);
 
     // Setup timer for 1 second interval
-    timestamp = mtimer_get_raw_time();
-    mtimer_set_raw_time_cmp(MTIMER_SECONDS_TO_CLOCKS(0.001));
+    timestamp = clint_getTime(CLINT0_BASE);
+    clint_setCmp(CLINT0_BASE, timestamp*2, 0);
 
+    printf("%x\n", (uint_xlen_t) irq_entry);
     // Setup the IRQ handler entry point
     csr_write_mtvec((uint_xlen_t) irq_entry);
+    irq_entry_copy = csr_read_mtvec();
 
+    printf("%x\n", (uint_xlen_t) irq_entry_copy);
     // Enable MIE.MTI
     csr_set_bits_mie(MIE_MTI_BIT_MASK);
 
-    printf("\nBUGED\n");
     // Global interrupt enable
     csr_set_bits_mstatus(MSTATUS_MIE_BIT_MASK);
-    printf("\nBUGED\n");
 
     printf("Waiting...\n");
     // Wait for interrupt
@@ -67,7 +67,8 @@ int main() {
 #pragma GCC optimize ("align-functions=4")
 static void irq_entry(void)  {
     printf("Entered IRQ.\n");
-    uint_xlen_t this_cause = csr_read_mcause();
+    uint32_t this_cause = csr_read_mcause();
+    timestamp = clint_getTime(CLINT0_BASE);
     if (this_cause &  MCAUSE_INTERRUPT_BIT_MASK) {
         this_cause &= 0xFF;
         // Known exceptions
@@ -75,8 +76,8 @@ static void irq_entry(void)  {
         case RISCV_INT_POS_MTI :
             printf("Time interrupt.\n");
             // Timer exception, keep up the one second tick.
-            mtimer_set_raw_time_cmp(MTIMER_SECONDS_TO_CLOCKS(1));
-            timestamp = mtimer_get_raw_time();
+            clint_setCmp(CLINT0_BASE, timestamp*2, 0);
+            timestamp = clint_getTime(CLINT0_BASE);
             break;
         }
     }

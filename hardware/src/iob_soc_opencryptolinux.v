@@ -42,7 +42,7 @@ module iob_soc_opencryptolinux #(
   localparam DBUS_EXTMEM_AXI_ADDR_W = 32;
   localparam DBUS_EXTMEM_AXI_DATA_W = 32;
 
-  localparam N_SLAVES = `IOB_SOC_OPENCRYPTOLINUX_N_SLAVES;  // add 2 if using CPU PLIC and CLINT
+  localparam N_SLAVES = `IOB_SOC_OPENCRYPTOLINUX_N_SLAVES+2;  // add 2 if using CPU PLIC and CLINT
 
 
   `include "iob_soc_opencryptolinux_pwires.vs"
@@ -84,31 +84,26 @@ module iob_soc_opencryptolinux #(
   // Axi data bus
   `include "dBus_axi_wire.vs"
 
-  assign cpu_trap_o    = 1'b0;
-
-  assign PLIC0_src     = {{31{1'b0}}, uart_interrupt_o};
-  assign CLINT0_rt_clk = 1'b0;
-
   //instantiate the cpu
   iob_VexRiscv #(
       .ADDR_W    (ADDR_W),
       .DATA_W    (DATA_W),
       .USE_EXTMEM(1)
   ) cpu_0 (
-      .clk_i             (clk_i),
-      .cke_i             (cke_i),
-      .arst_i            (arst_i),
-      .cpu_reset_i       (cpu_reset),
-      // interupts
-      .timerInterrupt    (CLINT0_mtip[0]),
-      .softwareInterrupt (CLINT0_msip[0]),
-      .externalInterrupt (PLIC0_irq[0]),
-      .externalInterruptS(PLIC0_irq[1]),
+      .clk_i         (clk_i),
+      .cke_i         (cke_i),
+      .arst_i        (arst_i),
+      .cpu_reset_i   (cpu_reset),
+      .clint_req     (slaves_req[(N_SLAVES-2)*69+:`REQ_W]),
+      .clint_resp    (slaves_resp[(N_SLAVES-2)*34+:`RESP_W]),
+      .plic_req      (slaves_req[(N_SLAVES-1)*69+:`REQ_W]),
+      .plic_resp     (slaves_resp[(N_SLAVES-1)*34+:`RESP_W]),
+      .plicInterrupts(32'd0),
       // Axi instruction bus
       `include "iBus_axi_m_portmap.vs"
       // Axi data bus
       `include "dBus_axi_m_portmap.vs"
-      .boot_i            (boot)
+      .boot_i        (boot)
   );
 
 

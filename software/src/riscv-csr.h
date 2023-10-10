@@ -11,17 +11,9 @@
 
 #include <stdint.h>
 
-#if __riscv_xlen==32 
 typedef uint32_t uint_xlen_t;
 typedef uint32_t uint_csr32_t;
 typedef uint32_t uint_csr64_t;
-#elif __riscv_xlen==64
-typedef uint64_t uint_xlen_t;
-typedef uint32_t uint_csr32_t;
-typedef uint64_t uint_csr64_t;
-#else
-#error "Unknown XLEN"
-#endif
 
 /*******************************************
  * misa - MRW - Machine ISA 
