@@ -12,6 +12,7 @@ from iob_plic import iob_plic
 from iob_clint import iob_clint
 from iob_uart import iob_uart
 from iob_spi import iob_spi
+from axi_ram import axi_ram
 
 
 class iob_soc_opencryptolinux(iob_soc):
@@ -59,6 +60,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 {"interface": "iBus_axi_m_portmap"},
                 iob_vexriscv,
                 iob_uart16550,
+                axi_ram,
                 # iob_spi,
                 (iob_uart, {"purpose": "simulation"}),
             ]
