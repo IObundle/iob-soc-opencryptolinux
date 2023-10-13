@@ -2,25 +2,25 @@
 #include "iob_soc_opencryptolinux_conf.h"
 
 .section .init
-.global main
-// The 'norelax' option is critical here.
-// Without 'norelax' the global pointer will
-// be loaded relative to the global pointer!
+.globl _start
+.type _start,@function
+
+_start:
 .option push
 .option norelax
-la gp, 0x800
+    la gp, __global_pointer$
 .option pop
 
-//set stack pointer
-lui sp, %hi(1<<SRAM_ADDR_W)
-addi sp, sp, %lo(1<<SRAM_ADDR_W)
+    //set stack pointer
+    lui sp, %hi(1<<SRAM_ADDR_W)
+    addi sp, sp, %lo(1<<SRAM_ADDR_W)
 
-//call main
-jal ra, main
+    //call main
+    call main
 
-//reboot to run bootloader
-li s5, 3 //cpu_rst_req=1, boot=1
-li s6, BOOTCTR_BASE
-sw s5, 0(s6)//cpu_rst_req=1, boot=1
+    //reboot to run bootloader
+    li s5, 3 //cpu_rst_req=1, boot=1
+    li s6, BOOTCTR_BASE
+    sw s5, 0(s6)//cpu_rst_req=1, boot=1
 
-ebreak
+    ebreak

@@ -2,10 +2,12 @@
 #include "iob-uart16550.h"
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_system.h"
+#include "clint.h"
 
 // defined here (and not in periphs.h) because it is the only peripheral used
 // by the bootloader
 #define UART0_BASE 0xfa000000
+#define CLINT0_BASE 0xfc000000
 
 #define PROGNAME "IOb-Bootloader"
 

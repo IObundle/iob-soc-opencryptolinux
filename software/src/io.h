@@ -31,4 +31,4 @@ static inline void write_u32_ad(u32 address, u32 data) {
   }
 
 #define readReg_u32(name, offset)                                              \
-  static inline u32 name(u32 reg) { return read_u32(reg + offset); }\
+  static inline u32 name(u32 reg) { return read_u32(reg + offset); }

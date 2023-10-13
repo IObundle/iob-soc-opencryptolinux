@@ -132,6 +132,14 @@ class iob_soc_opencryptolinux(iob_soc):
                     "descr": "Boot ROM address width",
                 },
                 {
+                    "name": "SRAM_ADDR_W",
+                    "type": "P",
+                    "val": "20",
+                    "min": "1",
+                    "max": "32",
+                    "descr": "SRAM address width",
+                },
+                {
                     "name": "MEM_ADDR_W",
                     "type": "P",
                     "val": "26",
