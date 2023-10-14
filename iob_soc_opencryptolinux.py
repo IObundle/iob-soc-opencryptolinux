@@ -13,6 +13,7 @@ from iob_clint import iob_clint
 from iob_uart import iob_uart
 from iob_spi import iob_spi
 from axi_ram import axi_ram
+from axil2iob import axil2iob
 
 
 class iob_soc_opencryptolinux(iob_soc):
@@ -49,11 +50,13 @@ class iob_soc_opencryptolinux(iob_soc):
         super()._create_submodules_list(
             [
                 {"interface": "peripheral_axi_wire"},
+                {"interface": "dBus_intmem_axi_wire"},
                 {"interface": "iBus_intmem_axi_wire"},
                 {"interface": "dBus_extmem_axi_wire"},
                 {"interface": "iBus_extmem_axi_wire"},
                 {"interface": "dBus_axi_wire"},
                 {"interface": "iBus_axi_wire"},
+                {"interface": "ram_axi_wire"},
                 {"interface": "dBus_axi_m_port"},
                 {"interface": "iBus_axi_m_port"},
                 {"interface": "dBus_axi_m_portmap"},
@@ -61,6 +64,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_vexriscv,
                 iob_uart16550,
                 axi_ram,
+                axil2iob,
                 # iob_spi,
                 (iob_uart, {"purpose": "simulation"}),
             ]
@@ -128,7 +132,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 {
                     "name": "BOOTROM_ADDR_W",
                     "type": "P",
-                    "val": "13",
+                    "val": "12",
                     "min": "1",
                     "max": "32",
                     "descr": "Boot ROM address width",

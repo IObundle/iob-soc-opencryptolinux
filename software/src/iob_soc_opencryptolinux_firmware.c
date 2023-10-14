@@ -10,9 +10,9 @@
 #include "riscv-csr.h"
 #include "riscv-interrupts.h"
 
-#define UART0_BASE 0xfa000000
-#define CLINT0_BASE 0xfc000000
-#define PLIC0_BASE 0xfe000000
+#define UART0_BASE 0xf4000000
+#define CLINT0_BASE 0xf8000000
+#define PLIC0_BASE 0xf0000000
 
 #define MTIMER_SECONDS_TO_CLOCKS(SEC)           \
     ((uint64_t)(((SEC)*(FREQ))))

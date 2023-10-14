@@ -29,7 +29,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
 
    wire clk = clk_i;
    wire cke = 1'b1;
-   wire rst = rst_i;
+   wire arst = rst_i;
 
    `include "iob_soc_opencryptolinux_wrapper_pwires.vs"
 
@@ -59,7 +59,8 @@ module iob_soc_opencryptolinux_sim_wrapper (
    ) soc0 (
       `include "iob_soc_opencryptolinux_pportmaps.vs"
       .clk_i (clk),
-      .arst_i(rst),
+      .cke_i (cke),
+      .arst_i(arst),
       .trap_o(trap_o)
    );
 
@@ -79,7 +80,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
       `include "iob_memory_axi_s_portmap.vs"
 
       .clk_i(clk),
-      .rst_i(rst)
+      .rst_i(arst)
    );
 
    //finish simulation on trap
@@ -120,7 +121,7 @@ always @(posedge trap[1]) begin
    iob_uart uart_tb (
       .clk_i (clk),
       .cke_i (cke),
-      .arst_i(rst),
+      .arst_i(arst),
 
       .iob_avalid_i(uart_avalid),
       .iob_addr_i  (uart_addr),
@@ -155,7 +156,7 @@ always @(posedge trap[1]) begin
    //add core test module in testbench
    iob_eth_tb_gen eth_tb (
       .clk  (clk),
-      .reset(rst),
+      .reset(arst),
 
       // This module acts like a loopback
       .RX_CLK (ETHERNET0_TX_CLK),
