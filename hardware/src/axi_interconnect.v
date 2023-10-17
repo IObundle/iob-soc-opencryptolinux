@@ -302,7 +302,7 @@ module axi_interconnect #(
   reg                    s_axi_rlast_int;
   reg  [RUSER_WIDTH-1:0] s_axi_ruser_int;
   reg                    s_axi_rvalid_int;
-  reg                    s_axi_rready_int_reg = 1'b0;
+  reg                    s_axi_rready_int_reg;
   wire                   s_axi_rready_int_early;
 
   reg  [ DATA_WIDTH-1:0] m_axi_wdata_int;
@@ -310,7 +310,7 @@ module axi_interconnect #(
   reg                    m_axi_wlast_int;
   reg  [WUSER_WIDTH-1:0] m_axi_wuser_int;
   reg                    m_axi_wvalid_int;
-  reg                    m_axi_wready_int_reg = 1'b0;
+  reg                    m_axi_wready_int_reg;
   wire                   m_axi_wready_int_early;
 
   assign s_axi_awready = s_axi_awready_reg;
@@ -785,18 +785,18 @@ module axi_interconnect #(
   end
 
   // output datapath logic (R channel)
-  reg [   ID_WIDTH-1:0] s_axi_rid_reg = {ID_WIDTH{1'b0}};
-  reg [ DATA_WIDTH-1:0] s_axi_rdata_reg = {DATA_WIDTH{1'b0}};
-  reg [            1:0] s_axi_rresp_reg = 2'd0;
-  reg                   s_axi_rlast_reg = 1'b0;
-  reg [RUSER_WIDTH-1:0] s_axi_ruser_reg = 1'b0;
+  reg [   ID_WIDTH-1:0] s_axi_rid_reg;
+  reg [ DATA_WIDTH-1:0] s_axi_rdata_reg;
+  reg [            1:0] s_axi_rresp_reg;
+  reg                   s_axi_rlast_reg;
+  reg [RUSER_WIDTH-1:0] s_axi_ruser_reg;
   reg [S_COUNT-1:0] s_axi_rvalid_reg, s_axi_rvalid_next;
 
-  reg [   ID_WIDTH-1:0] temp_s_axi_rid_reg = {ID_WIDTH{1'b0}};
-  reg [ DATA_WIDTH-1:0] temp_s_axi_rdata_reg = {DATA_WIDTH{1'b0}};
-  reg [            1:0] temp_s_axi_rresp_reg = 2'd0;
-  reg                   temp_s_axi_rlast_reg = 1'b0;
-  reg [RUSER_WIDTH-1:0] temp_s_axi_ruser_reg = 1'b0;
+  reg [   ID_WIDTH-1:0] temp_s_axi_rid_reg;
+  reg [ DATA_WIDTH-1:0] temp_s_axi_rdata_reg;
+  reg [            1:0] temp_s_axi_rresp_reg;
+  reg                   temp_s_axi_rlast_reg;
+  reg [RUSER_WIDTH-1:0] temp_s_axi_ruser_reg;
   reg temp_s_axi_rvalid_reg, temp_s_axi_rvalid_next;
 
   // datapath control

@@ -7,7 +7,6 @@
 // defined here (and not in periphs.h) because it is the only peripheral used
 // by the bootloader
 #define UART0_BASE 0xf4000000
-#define CLINT0_BASE 0xf8000000
 
 #define PROGNAME "IOb-Bootloader"
 

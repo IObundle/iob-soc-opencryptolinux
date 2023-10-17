@@ -28,36 +28,16 @@ module iob_soc_opencryptolinux #(
   localparam PERIPHERAL_AXI_LEN_W = 8;
   localparam PERIPHERAL_AXI_ADDR_W = 32;
   localparam PERIPHERAL_AXI_DATA_W = 32;
-  localparam IBUS_INTMEM_AXI_ID_W = 1;
-  localparam IBUS_INTMEM_AXI_LEN_W = 8;
-  localparam IBUS_INTMEM_AXI_ADDR_W = 32;
-  localparam IBUS_INTMEM_AXI_DATA_W = 32;
-  localparam IBUS_EXTMEM_AXI_ID_W = 1;
-  localparam IBUS_EXTMEM_AXI_LEN_W = 8;
-  localparam IBUS_EXTMEM_AXI_ADDR_W = 32;
-  localparam IBUS_EXTMEM_AXI_DATA_W = 32;
-  localparam DBUS_INTMEM_AXI_ID_W = 1;
-  localparam DBUS_INTMEM_AXI_LEN_W = 8;
-  localparam DBUS_INTMEM_AXI_ADDR_W = 32;
-  localparam DBUS_INTMEM_AXI_DATA_W = 32;
-  localparam DBUS_EXTMEM_AXI_ID_W = 1;
-  localparam DBUS_EXTMEM_AXI_LEN_W = 8;
-  localparam DBUS_EXTMEM_AXI_ADDR_W = 32;
-  localparam DBUS_EXTMEM_AXI_DATA_W = 32;
+  localparam INTMEM_AXI_ID_W = 1;
+  localparam INTMEM_AXI_LEN_W = 8;
+  localparam INTMEM_AXI_ADDR_W = 32;
+  localparam INTMEM_AXI_DATA_W = 32;
 
-  localparam N_SLAVES = 3;  // PLIC, UART and CLINT
+  localparam N_SLAVES = 4;  // BOOT_CTR, UART, CLINT and PLIC
 
 
   `include "iob_soc_opencryptolinux_pwires.vs"
 
-
-  wire iBus_intmem_iob_avalid;
-  wire [ADDR_W-1:0] iBus_intmem_iob_addr;
-  wire [DATA_W-1:0] iBus_intmem_iob_wdata;
-  wire [DATA_W/8-1:0] iBus_intmem_iob_wstrb;
-  wire iBus_intmem_iob_rvalid;
-  wire [DATA_W-1:0] iBus_intmem_iob_rdata;
-  wire iBus_intmem_iob_ready;
 
   wire peripheral_iob_avalid;
   wire [ADDR_W-1:0] peripheral_iob_addr;
@@ -78,15 +58,28 @@ module iob_soc_opencryptolinux #(
   wire boot;
   wire cpu_reset;
 
-  //
-  //  CPU
-  //
   // Axi instruction bus
   `include "iBus_axi_wire.vs"
   // Axi data bus
   `include "dBus_axi_wire.vs"
+  // Internal memmory AXI bus
+  `include "intmem_axi_wire.vs"
+  // Periphrals AXI bus
+  `include "peripheral_axi_wire.vs"
 
-  //instantiate the cpu
+  wire [ADDR_W-1:0] extmem_axi_awaddr;
+  wire [ADDR_W-1:0] extmem_axi_araddr;
+
+  assign axi_awlock_o[1] = 1'b0;
+  assign axi_arlock_o[1] = 1'b0;
+  assign axi_awid_o[AXI_ID_W-1:1] = {AXI_ID_W{1'b0}};
+  assign axi_arid_o[AXI_ID_W-1:1] = {AXI_ID_W{1'b0}};
+  assign axi_awaddr_o[AXI_ADDR_W-1:0] = extmem_axi_awaddr[MEM_ADDR_W-1:0] + MEM_ADDR_OFFSET;
+  assign axi_araddr_o[AXI_ADDR_W-1:0] = extmem_axi_araddr[MEM_ADDR_W-1:0] + MEM_ADDR_OFFSET;
+
+  //
+  //  CPU
+  //
   iob_VexRiscv #(
       .ADDR_W    (ADDR_W),
       .DATA_W    (DATA_W),
@@ -96,10 +89,10 @@ module iob_soc_opencryptolinux #(
       .cke_i         (cke_i),
       .arst_i        (arst_i),
       .cpu_reset_i   (cpu_reset),
-      .clint_req     (slaves_req[(N_SLAVES-1)*69+:`REQ_W]),
-      .clint_resp    (slaves_resp[(N_SLAVES-1)*34+:`RESP_W]),
-      .plic_req      (slaves_req[0+:`REQ_W]),
-      .plic_resp     (slaves_resp[0+:`RESP_W]),
+      .clint_req     (slaves_req[(N_SLAVES-2)*69+:`REQ_W]),
+      .clint_resp    (slaves_resp[(N_SLAVES-2)*34+:`RESP_W]),
+      .plic_req      (slaves_req[(N_SLAVES-1)*69+:`REQ_W]),
+      .plic_resp     (slaves_resp[(N_SLAVES-1)*34+:`RESP_W]),
       .plicInterrupts(32'd0),
       // Axi instruction bus
       `include "iBus_axi_m_portmap.vs"
@@ -108,226 +101,163 @@ module iob_soc_opencryptolinux #(
       .boot_i        (boot)
   );
 
-
   //
-  // SPLIT CPU BUSES TO ACCESS INTERNAL OR EXTERNAL MEMORY
+  // AXI interconnect {I, D} -> {peripheral, internal, external}
   //
-
-  // Intructions intmem AXI bus
-  `include "iBus_intmem_axi_wire.vs"
-  // Intructions intmem AXI bus
-  `include "iBus_extmem_axi_wire.vs"
-  // Data internal AXI bus
-  `include "peripheral_axi_wire.vs"
-  // Intructions intmem AXI bus
-  `include "dBus_intmem_axi_wire.vs"
-  // Data extmem AXI bus
-  `include "dBus_extmem_axi_wire.vs"
-
-  // Instructions bus interconnect {I, D} -> {internal, external}
   axi_interconnect #(
       .ID_WIDTH  (1),
       .DATA_WIDTH(DATA_W),
       .ADDR_WIDTH(ADDR_W),
-      .M_ADDR_WIDTH({{32'd31}, {32'd31}}),
-      .S_COUNT   (1),
-      .M_COUNT   (2)
-  ) iBus_axi_interconnect (
-      .clk(clk_i),
-      .rst(arst_i),
-
-      .s_axi_awid(iBus_axi_awid),
-      .s_axi_awaddr(iBus_axi_awaddr),
-      .s_axi_awlen(iBus_axi_awlen),
-      .s_axi_awsize(iBus_axi_awsize),
-      .s_axi_awburst(iBus_axi_awburst),
-      .s_axi_awlock(iBus_axi_awlock[0]),
-      .s_axi_awcache(iBus_axi_awcache),
-      .s_axi_awprot(iBus_axi_awprot),
-      .s_axi_awqos(iBus_axi_awqos),
-      .s_axi_awvalid(iBus_axi_awvalid),
-      .s_axi_awready(iBus_axi_awready),
-      .s_axi_wdata(iBus_axi_wdata),
-      .s_axi_wstrb(iBus_axi_wstrb),
-      .s_axi_wlast(iBus_axi_wlast),
-      .s_axi_wvalid(iBus_axi_wvalid),
-      .s_axi_wready(iBus_axi_wready),
-      .s_axi_bid(iBus_axi_bid),
-      .s_axi_bresp(iBus_axi_bresp),
-      .s_axi_bvalid(iBus_axi_bvalid),
-      .s_axi_bready(iBus_axi_bready),
-      .s_axi_arid(iBus_axi_arid),
-      .s_axi_araddr(iBus_axi_araddr),
-      .s_axi_arlen(iBus_axi_arlen),
-      .s_axi_arsize(iBus_axi_arsize),
-      .s_axi_arburst(iBus_axi_arburst),
-      .s_axi_arlock(iBus_axi_arlock[0]),
-      .s_axi_arcache(iBus_axi_arcache),
-      .s_axi_arprot(iBus_axi_arprot),
-      .s_axi_arqos(iBus_axi_arqos),
-      .s_axi_arvalid(iBus_axi_arvalid),
-      .s_axi_arready(iBus_axi_arready),
-      .s_axi_rid(iBus_axi_rid),
-      .s_axi_rdata(iBus_axi_rdata),
-      .s_axi_rresp(iBus_axi_rresp),
-      .s_axi_rlast(iBus_axi_rlast),
-      .s_axi_rvalid(iBus_axi_rvalid),
-      .s_axi_rready(iBus_axi_rready),
-
-      .m_axi_awid({iBus_intmem_axi_awid, iBus_extmem_axi_awid}),
-      .m_axi_awaddr({iBus_intmem_axi_awaddr, iBus_extmem_axi_awaddr}),
-      .m_axi_awlen({iBus_intmem_axi_awlen, iBus_extmem_axi_awlen}),
-      .m_axi_awsize({iBus_intmem_axi_awsize, iBus_extmem_axi_awsize}),
-      .m_axi_awburst({iBus_intmem_axi_awburst, iBus_extmem_axi_awburst}),
-      .m_axi_awlock({iBus_intmem_axi_awlock[0], iBus_extmem_axi_awlock[0]}),
-      .m_axi_awcache({iBus_intmem_axi_awcache, iBus_extmem_axi_awcache}),
-      .m_axi_awprot({iBus_intmem_axi_awprot, iBus_extmem_axi_awprot}),
-      .m_axi_awqos({iBus_intmem_axi_awqos, iBus_extmem_axi_awqos}),
-      .m_axi_awvalid({iBus_intmem_axi_awvalid, iBus_extmem_axi_awvalid}),
-      .m_axi_awready({iBus_intmem_axi_awready, iBus_extmem_axi_awready}),
-      .m_axi_wdata({iBus_intmem_axi_wdata, iBus_extmem_axi_wdata}),
-      .m_axi_wstrb({iBus_intmem_axi_wstrb, iBus_extmem_axi_wstrb}),
-      .m_axi_wlast({iBus_intmem_axi_wlast, iBus_extmem_axi_wlast}),
-      .m_axi_wvalid({iBus_intmem_axi_wvalid, iBus_extmem_axi_wvalid}),
-      .m_axi_wready({iBus_intmem_axi_wready, iBus_extmem_axi_wready}),
-      .m_axi_bid({iBus_intmem_axi_bid, iBus_extmem_axi_bid}),
-      .m_axi_bresp({iBus_intmem_axi_bresp, iBus_extmem_axi_bresp}),
-      .m_axi_bvalid({iBus_intmem_axi_bvalid, iBus_extmem_axi_bvalid}),
-      .m_axi_bready({iBus_intmem_axi_bready, iBus_extmem_axi_bready}),
-      .m_axi_arid({iBus_intmem_axi_arid, iBus_extmem_axi_arid}),
-      .m_axi_araddr({iBus_intmem_axi_araddr, iBus_extmem_axi_araddr}),
-      .m_axi_arlen({iBus_intmem_axi_arlen, iBus_extmem_axi_arlen}),
-      .m_axi_arsize({iBus_intmem_axi_arsize, iBus_extmem_axi_arsize}),
-      .m_axi_arburst({iBus_intmem_axi_arburst, iBus_extmem_axi_arburst}),
-      .m_axi_arlock({iBus_intmem_axi_arlock[0], iBus_extmem_axi_arlock[0]}),
-      .m_axi_arcache({iBus_intmem_axi_arcache, iBus_extmem_axi_arcache}),
-      .m_axi_arprot({iBus_intmem_axi_arprot, iBus_extmem_axi_arprot}),
-      .m_axi_arqos({iBus_intmem_axi_arqos, iBus_extmem_axi_arqos}),
-      .m_axi_arvalid({iBus_intmem_axi_arvalid, iBus_extmem_axi_arvalid}),
-      .m_axi_arready({iBus_intmem_axi_arready, iBus_extmem_axi_arready}),
-      .m_axi_rid({iBus_intmem_axi_rid, iBus_extmem_axi_rid}),
-      .m_axi_rdata({iBus_intmem_axi_rdata, iBus_extmem_axi_rdata}),
-      .m_axi_rresp({iBus_intmem_axi_rresp, iBus_extmem_axi_rresp}),
-      .m_axi_rlast({iBus_intmem_axi_rlast, iBus_extmem_axi_rlast}),
-      .m_axi_rvalid({iBus_intmem_axi_rvalid, iBus_extmem_axi_rvalid}),
-      .m_axi_rready({iBus_intmem_axi_rready, iBus_extmem_axi_rready}),
-
-      //optional signals
-      .s_axi_awuser(1'b0),
-      .s_axi_wuser (1'b0),
-      .s_axi_aruser(1'b0),
-      .m_axi_buser (2'b00),
-      .m_axi_ruser (2'b00)
-  );
-
-  //
-  // SPLIT INTERNAL MEMORY AND PERIPHERALS BUS
-  //
-
-  // Data bus interconnect {I, D} -> {internal, external}
-  axi_interconnect #(
-      .ID_WIDTH  (1),
-      .DATA_WIDTH(DATA_W),
-      .ADDR_WIDTH(ADDR_W),
-      .M_ADDR_WIDTH({{32'd31}, {32'd30}, {32'd30}}),
-      .S_COUNT   (1),
+      .M_ADDR_WIDTH({{32'd30}, {32'd30}, {32'd31}}),
+      .S_COUNT   (2),
       .M_COUNT   (3)
   ) dBus_axi_interconnect (
       .clk(clk_i),
       .rst(arst_i),
 
-      .s_axi_awid(dBus_axi_awid),
-      .s_axi_awaddr(dBus_axi_awaddr),
-      .s_axi_awlen(dBus_axi_awlen),
-      .s_axi_awsize(dBus_axi_awsize),
-      .s_axi_awburst(dBus_axi_awburst),
-      .s_axi_awlock(dBus_axi_awlock[0]),
-      .s_axi_awcache(dBus_axi_awcache),
-      .s_axi_awprot(dBus_axi_awprot),
-      .s_axi_awqos(dBus_axi_awqos),
-      .s_axi_awvalid(dBus_axi_awvalid),
-      .s_axi_awready(dBus_axi_awready),
-      .s_axi_wdata(dBus_axi_wdata),
-      .s_axi_wstrb(dBus_axi_wstrb),
-      .s_axi_wlast(dBus_axi_wlast),
-      .s_axi_wvalid(dBus_axi_wvalid),
-      .s_axi_wready(dBus_axi_wready),
-      .s_axi_bid(dBus_axi_bid),
-      .s_axi_bresp(dBus_axi_bresp),
-      .s_axi_bvalid(dBus_axi_bvalid),
-      .s_axi_bready(dBus_axi_bready),
-      .s_axi_arid(dBus_axi_arid),
-      .s_axi_araddr(dBus_axi_araddr),
-      .s_axi_arlen(dBus_axi_arlen),
-      .s_axi_arsize(dBus_axi_arsize),
-      .s_axi_arburst(dBus_axi_arburst),
-      .s_axi_arlock(dBus_axi_arlock[0]),
-      .s_axi_arcache(dBus_axi_arcache),
-      .s_axi_arprot(dBus_axi_arprot),
-      .s_axi_arqos(dBus_axi_arqos),
-      .s_axi_arvalid(dBus_axi_arvalid),
-      .s_axi_arready(dBus_axi_arready),
-      .s_axi_rid(dBus_axi_rid),
-      .s_axi_rdata(dBus_axi_rdata),
-      .s_axi_rresp(dBus_axi_rresp),
-      .s_axi_rlast(dBus_axi_rlast),
-      .s_axi_rvalid(dBus_axi_rvalid),
-      .s_axi_rready(dBus_axi_rready),
+      .s_axi_awid({iBus_axi_awid, dBus_axi_awid}),
+      .s_axi_awaddr({iBus_axi_awaddr, dBus_axi_awaddr}),
+      .s_axi_awlen({iBus_axi_awlen, dBus_axi_awlen}),
+      .s_axi_awsize({iBus_axi_awsize, dBus_axi_awsize}),
+      .s_axi_awburst({iBus_axi_awburst, dBus_axi_awburst}),
+      .s_axi_awlock({iBus_axi_awlock[0], dBus_axi_awlock[0]}),
+      .s_axi_awcache({iBus_axi_awcache, dBus_axi_awcache}),
+      .s_axi_awprot({iBus_axi_awprot, dBus_axi_awprot}),
+      .s_axi_awqos({iBus_axi_awqos, dBus_axi_awqos}),
+      .s_axi_awvalid({iBus_axi_awvalid, dBus_axi_awvalid}),
+      .s_axi_awready({iBus_axi_awready, dBus_axi_awready}),
+      .s_axi_wdata({iBus_axi_wdata, dBus_axi_wdata}),
+      .s_axi_wstrb({iBus_axi_wstrb, dBus_axi_wstrb}),
+      .s_axi_wlast({iBus_axi_wlast, dBus_axi_wlast}),
+      .s_axi_wvalid({iBus_axi_wvalid, dBus_axi_wvalid}),
+      .s_axi_wready({iBus_axi_wready, dBus_axi_wready}),
+      .s_axi_bid({iBus_axi_bid, dBus_axi_bid}),
+      .s_axi_bresp({iBus_axi_bresp, dBus_axi_bresp}),
+      .s_axi_bvalid({iBus_axi_bvalid, dBus_axi_bvalid}),
+      .s_axi_bready({iBus_axi_bready, dBus_axi_bready}),
+      .s_axi_arid({iBus_axi_arid, dBus_axi_arid}),
+      .s_axi_araddr({iBus_axi_araddr, dBus_axi_araddr}),
+      .s_axi_arlen({iBus_axi_arlen, dBus_axi_arlen}),
+      .s_axi_arsize({iBus_axi_arsize, dBus_axi_arsize}),
+      .s_axi_arburst({iBus_axi_arburst, dBus_axi_arburst}),
+      .s_axi_arlock({iBus_axi_arlock[0], dBus_axi_arlock[0]}),
+      .s_axi_arcache({iBus_axi_arcache, dBus_axi_arcache}),
+      .s_axi_arprot({iBus_axi_arprot, dBus_axi_arprot}),
+      .s_axi_arqos({iBus_axi_arqos, dBus_axi_arqos}),
+      .s_axi_arvalid({iBus_axi_arvalid, dBus_axi_arvalid}),
+      .s_axi_arready({iBus_axi_arready, dBus_axi_arready}),
+      .s_axi_rid({iBus_axi_rid, dBus_axi_rid}),
+      .s_axi_rdata({iBus_axi_rdata, dBus_axi_rdata}),
+      .s_axi_rresp({iBus_axi_rresp, dBus_axi_rresp}),
+      .s_axi_rlast({iBus_axi_rlast, dBus_axi_rlast}),
+      .s_axi_rvalid({iBus_axi_rvalid, dBus_axi_rvalid}),
+      .s_axi_rready({iBus_axi_rready, dBus_axi_rready}),
 
-      .m_axi_awid({dBus_intmem_axi_awid, peripheral_axi_awid, dBus_extmem_axi_awid}),
-      .m_axi_awaddr({dBus_intmem_axi_awaddr, peripheral_axi_awaddr, dBus_extmem_axi_awaddr}),
-      .m_axi_awlen({dBus_intmem_axi_awlen, peripheral_axi_awlen, dBus_extmem_axi_awlen}),
-      .m_axi_awsize({dBus_intmem_axi_awsize, peripheral_axi_awsize, dBus_extmem_axi_awsize}),
-      .m_axi_awburst({dBus_intmem_axi_awburst, peripheral_axi_awburst, dBus_extmem_axi_awburst}),
-      .m_axi_awlock({
-        dBus_intmem_axi_awlock[0], peripheral_axi_awlock[0], dBus_extmem_axi_awlock[0]
-      }),
-      .m_axi_awcache({dBus_intmem_axi_awcache, peripheral_axi_awcache, dBus_extmem_axi_awcache}),
-      .m_axi_awprot({dBus_intmem_axi_awprot, peripheral_axi_awprot, dBus_extmem_axi_awprot}),
-      .m_axi_awqos({dBus_intmem_axi_awqos, peripheral_axi_awqos, dBus_extmem_axi_awqos}),
-      .m_axi_awvalid({dBus_intmem_axi_awvalid, peripheral_axi_awvalid, dBus_extmem_axi_awvalid}),
-      .m_axi_awready({dBus_intmem_axi_awready, peripheral_axi_awready, dBus_extmem_axi_awready}),
-      .m_axi_wdata({dBus_intmem_axi_wdata, peripheral_axi_wdata, dBus_extmem_axi_wdata}),
-      .m_axi_wstrb({dBus_intmem_axi_wstrb, peripheral_axi_wstrb, dBus_extmem_axi_wstrb}),
-      .m_axi_wlast({dBus_intmem_axi_wlast, peripheral_axi_wlast, dBus_extmem_axi_wlast}),
-      .m_axi_wvalid({dBus_intmem_axi_wvalid, peripheral_axi_wvalid, dBus_extmem_axi_wvalid}),
-      .m_axi_wready({dBus_intmem_axi_wready, peripheral_axi_wready, dBus_extmem_axi_wready}),
-      .m_axi_bid({dBus_intmem_axi_bid, peripheral_axi_bid, dBus_extmem_axi_bid}),
-      .m_axi_bresp({dBus_intmem_axi_bresp, peripheral_axi_bresp, dBus_extmem_axi_bresp}),
-      .m_axi_bvalid({dBus_intmem_axi_bvalid, peripheral_axi_bvalid, dBus_extmem_axi_bvalid}),
-      .m_axi_bready({dBus_intmem_axi_bready, peripheral_axi_bready, dBus_extmem_axi_bready}),
-      .m_axi_arid({dBus_intmem_axi_arid, peripheral_axi_arid, dBus_extmem_axi_arid}),
-      .m_axi_araddr({dBus_intmem_axi_araddr, peripheral_axi_araddr, dBus_extmem_axi_araddr}),
-      .m_axi_arlen({dBus_intmem_axi_arlen, peripheral_axi_arlen, dBus_extmem_axi_arlen}),
-      .m_axi_arsize({dBus_intmem_axi_arsize, peripheral_axi_arsize, dBus_extmem_axi_arsize}),
-      .m_axi_arburst({dBus_intmem_axi_arburst, peripheral_axi_arburst, dBus_extmem_axi_arburst}),
-      .m_axi_arlock({
-        dBus_intmem_axi_arlock[0], peripheral_axi_arlock[0], dBus_extmem_axi_arlock[0]
-      }),
-      .m_axi_arcache({dBus_intmem_axi_arcache, peripheral_axi_arcache, dBus_extmem_axi_arcache}),
-      .m_axi_arprot({dBus_intmem_axi_arprot, peripheral_axi_arprot, dBus_extmem_axi_arprot}),
-      .m_axi_arqos({dBus_intmem_axi_arqos, peripheral_axi_arqos, dBus_extmem_axi_arqos}),
-      .m_axi_arvalid({dBus_intmem_axi_arvalid, peripheral_axi_arvalid, dBus_extmem_axi_arvalid}),
-      .m_axi_arready({dBus_intmem_axi_arready, peripheral_axi_arready, dBus_extmem_axi_arready}),
-      .m_axi_rid({dBus_intmem_axi_rid, peripheral_axi_rid, dBus_extmem_axi_rid}),
-      .m_axi_rdata({dBus_intmem_axi_rdata, peripheral_axi_rdata, dBus_extmem_axi_rdata}),
-      .m_axi_rresp({dBus_intmem_axi_rresp, peripheral_axi_rresp, dBus_extmem_axi_rresp}),
-      .m_axi_rlast({dBus_intmem_axi_rlast, peripheral_axi_rlast, dBus_extmem_axi_rlast}),
-      .m_axi_rvalid({dBus_intmem_axi_rvalid, peripheral_axi_rvalid, dBus_extmem_axi_rvalid}),
-      .m_axi_rready({dBus_intmem_axi_rready, peripheral_axi_rready, dBus_extmem_axi_rready}),
+      .m_axi_awid({peripheral_axi_awid, intmem_axi_awid, axi_awid_o[0]}),
+      .m_axi_awaddr({peripheral_axi_awaddr, intmem_axi_awaddr, extmem_axi_awaddr}),
+      .m_axi_awlen({peripheral_axi_awlen, intmem_axi_awlen, axi_awlen_o}),
+      .m_axi_awsize({peripheral_axi_awsize, intmem_axi_awsize, axi_awsize_o}),
+      .m_axi_awburst({peripheral_axi_awburst, intmem_axi_awburst, axi_awburst_o}),
+      .m_axi_awlock({peripheral_axi_awlock[0], intmem_axi_awlock[0], axi_awlock_o[0]}),
+      .m_axi_awcache({peripheral_axi_awcache, intmem_axi_awcache, axi_awcache_o}),
+      .m_axi_awprot({peripheral_axi_awprot, intmem_axi_awprot, axi_awprot_o}),
+      .m_axi_awqos({peripheral_axi_awqos, intmem_axi_awqos, axi_awqos_o}),
+      .m_axi_awvalid({peripheral_axi_awvalid, intmem_axi_awvalid, axi_awvalid_o}),
+      .m_axi_awready({peripheral_axi_awready, intmem_axi_awready, axi_awready_i}),
+      .m_axi_wdata({peripheral_axi_wdata, intmem_axi_wdata, axi_wdata_o}),
+      .m_axi_wstrb({peripheral_axi_wstrb, intmem_axi_wstrb, axi_wstrb_o}),
+      .m_axi_wlast({peripheral_axi_wlast, intmem_axi_wlast, axi_wlast_o}),
+      .m_axi_wvalid({peripheral_axi_wvalid, intmem_axi_wvalid, axi_wvalid_o}),
+      .m_axi_wready({peripheral_axi_wready, intmem_axi_wready, axi_wready_i}),
+      .m_axi_bid({peripheral_axi_bid, intmem_axi_bid, axi_bid_i[0]}),
+      .m_axi_bresp({peripheral_axi_bresp, intmem_axi_bresp, axi_bresp_i}),
+      .m_axi_bvalid({peripheral_axi_bvalid, intmem_axi_bvalid, axi_bvalid_i}),
+      .m_axi_bready({peripheral_axi_bready, intmem_axi_bready, axi_bready_o}),
+      .m_axi_arid({peripheral_axi_arid, intmem_axi_arid, axi_arid_o[0]}),
+      .m_axi_araddr({peripheral_axi_araddr, intmem_axi_araddr, extmem_axi_araddr}),
+      .m_axi_arlen({peripheral_axi_arlen, intmem_axi_arlen, axi_arlen_o}),
+      .m_axi_arsize({peripheral_axi_arsize, intmem_axi_arsize, axi_arsize_o}),
+      .m_axi_arburst({peripheral_axi_arburst, intmem_axi_arburst, axi_arburst_o}),
+      .m_axi_arlock({peripheral_axi_arlock[0], intmem_axi_arlock[0], axi_arlock_o[0]}),
+      .m_axi_arcache({peripheral_axi_arcache, intmem_axi_arcache, axi_arcache_o}),
+      .m_axi_arprot({peripheral_axi_arprot, intmem_axi_arprot, axi_arprot_o}),
+      .m_axi_arqos({peripheral_axi_arqos, intmem_axi_arqos, axi_arqos_o}),
+      .m_axi_arvalid({peripheral_axi_arvalid, intmem_axi_arvalid, axi_arvalid_o}),
+      .m_axi_arready({peripheral_axi_arready, intmem_axi_arready, axi_arready_i}),
+      .m_axi_rid({peripheral_axi_rid, intmem_axi_rid, axi_rid_i[0]}),
+      .m_axi_rdata({peripheral_axi_rdata, intmem_axi_rdata, axi_rdata_i}),
+      .m_axi_rresp({peripheral_axi_rresp, intmem_axi_rresp, axi_rresp_i}),
+      .m_axi_rlast({peripheral_axi_rlast, intmem_axi_rlast, axi_rlast_i}),
+      .m_axi_rvalid({peripheral_axi_rvalid, intmem_axi_rvalid, axi_rvalid_i}),
+      .m_axi_rready({peripheral_axi_rready, intmem_axi_rready, axi_rready_o}),
 
       //optional signals
-      .s_axi_awuser(1'b0),
-      .s_axi_wuser (1'b0),
-      .s_axi_aruser(1'b0),
+      .s_axi_awuser(2'b00),
+      .s_axi_wuser (2'b00),
+      .s_axi_aruser(2'b00),
       .m_axi_buser (3'b000),
       .m_axi_ruser (3'b000)
   );
 
-  // instantiate axi2iob CPU data
+
+  //
+  // INTERNAL SRAM MEMORY
+  //
+  axi_ram #(
+      .DATA_WIDTH(DATA_W),
+      .ADDR_WIDTH(SRAM_ADDR_W),
+      .ID_WIDTH(INTMEM_AXI_ID_W),
+      .FILE("iob_soc_opencryptolinux_boot.hex"),
+      .FILE_SIZE(2 ** (BOOTROM_ADDR_W - 2))
+  ) boot_ram (
+      .clk_i(clk_i),
+      .rst_i(arst_i),
+
+      .axi_awid_i(intmem_axi_awid),
+      .axi_awaddr_i(intmem_axi_awaddr[SRAM_ADDR_W-1:0]),
+      .axi_awlen_i(intmem_axi_awlen),
+      .axi_awsize_i(intmem_axi_awsize),
+      .axi_awburst_i(intmem_axi_awburst),
+      .axi_awlock_i(intmem_axi_awlock),
+      .axi_awcache_i(intmem_axi_awcache),
+      .axi_awprot_i(intmem_axi_awprot),
+      .axi_awqos_i(intmem_axi_awqos),
+      .axi_awvalid_i(intmem_axi_awvalid),
+      .axi_awready_o(intmem_axi_awready),
+      .axi_wdata_i(intmem_axi_wdata),
+      .axi_wstrb_i(intmem_axi_wstrb),
+      .axi_wlast_i(intmem_axi_wlast),
+      .axi_wvalid_i(intmem_axi_wvalid),
+      .axi_wready_o(intmem_axi_wready),
+      .axi_bid_o(intmem_axi_bid),
+      .axi_bresp_o(intmem_axi_bresp),
+      .axi_bvalid_o(intmem_axi_bvalid),
+      .axi_bready_i(intmem_axi_bready),
+      .axi_arid_i(intmem_axi_arid),
+      .axi_araddr_i(intmem_axi_araddr[SRAM_ADDR_W-1:0]),
+      .axi_arlen_i(intmem_axi_arlen),
+      .axi_arsize_i(intmem_axi_arsize),
+      .axi_arburst_i(intmem_axi_arburst),
+      .axi_arlock_i(intmem_axi_arlock),
+      .axi_arcache_i(intmem_axi_arcache),
+      .axi_arprot_i(intmem_axi_arprot),
+      .axi_arqos_i(intmem_axi_arqos),
+      .axi_arvalid_i(intmem_axi_arvalid),
+      .axi_arready_o(intmem_axi_arready),
+      .axi_rid_o(intmem_axi_rid),
+      .axi_rdata_o(intmem_axi_rdata),
+      .axi_rresp_o(intmem_axi_rresp),
+      .axi_rlast_o(intmem_axi_rlast),
+      .axi_rvalid_o(intmem_axi_rvalid),
+      .axi_rready_i(intmem_axi_rready)
+  );
+
+  //
+  // Peripheral interface AXIL to IOb-bus
+  //
   axil2iob #(
-      .AXIL_ADDR_W  (ADDR_W),
-      .AXIL_DATA_W  (DATA_W)
+      .AXIL_ADDR_W(ADDR_W),
+      .AXIL_DATA_W(DATA_W)
   ) peripheral_axil2iob (
       .clk_i(clk_i),
       .cke_i(cke_i),
@@ -366,7 +296,7 @@ module iob_soc_opencryptolinux #(
       .ADDR_W  (ADDR_W),
       .DATA_W  (DATA_W),
       .N_SLAVES(N_SLAVES),
-      .P_SLAVES(AddrMsb - 1)
+      .P_SLAVES(AddrMsb - 4)
   ) pbus_split (
       .clk_i(clk_i),
       .arst_i(arst_i),
@@ -381,210 +311,24 @@ module iob_soc_opencryptolinux #(
   );
 
 
-  //
-  // INTERNAL SRAM MEMORY
-  //
-  int_mem #(
-      .ADDR_W        (ADDR_W),
-      .DATA_W        (DATA_W),
-      .BOOT_HEXFILE  ("iob_soc_opencryptolinux_boot.hex"),
-      .SRAM_ADDR_W   (SRAM_ADDR_W),
-      .BOOTROM_ADDR_W(BOOTROM_ADDR_W),
-      .B_BIT         (Bbit)
-  ) int_mem0 (
-      .clk_i    (clk_i),
-      .arst_i   (arst_i),
-      .cke_i    (cke_i),
-      .boot     (boot),
+
+  boot_ctr #(
+      .DATA_W(UART0_DATA_W),
+      .ADDR_W(UART0_ADDR_W)
+  ) boot_ctr (
+      .boot(boot),
       .cpu_reset(cpu_reset),
-
-      // instruction bus
-      .i_axi_awid(iBus_intmem_axi_awid),
-      .i_axi_awaddr(iBus_intmem_axi_awaddr),
-      .i_axi_awlen(iBus_intmem_axi_awlen),
-      .i_axi_awsize(iBus_intmem_axi_awsize),
-      .i_axi_awburst(iBus_intmem_axi_awburst),
-      .i_axi_awlock(iBus_intmem_axi_awlock[0]),
-      .i_axi_awcache(iBus_intmem_axi_awcache),
-      .i_axi_awprot(iBus_intmem_axi_awprot),
-      .i_axi_awvalid(iBus_intmem_axi_awvalid),
-      .i_axi_awready(iBus_intmem_axi_awready),
-      .i_axi_wdata(iBus_intmem_axi_wdata),
-      .i_axi_wstrb(iBus_intmem_axi_wstrb),
-      .i_axi_wlast(iBus_intmem_axi_wlast),
-      .i_axi_wvalid(iBus_intmem_axi_wvalid),
-      .i_axi_wready(iBus_intmem_axi_wready),
-      .i_axi_bid(iBus_intmem_axi_bid),
-      .i_axi_bresp(iBus_intmem_axi_bresp),
-      .i_axi_bvalid(iBus_intmem_axi_bvalid),
-      .i_axi_bready(iBus_intmem_axi_bready),
-      .i_axi_arid(iBus_intmem_axi_arid),
-      .i_axi_araddr(iBus_intmem_axi_araddr),
-      .i_axi_arlen(iBus_intmem_axi_arlen),
-      .i_axi_arsize(iBus_intmem_axi_arsize),
-      .i_axi_arburst(iBus_intmem_axi_arburst),
-      .i_axi_arlock(iBus_intmem_axi_arlock[0]),
-      .i_axi_arcache(iBus_intmem_axi_arcache),
-      .i_axi_arprot(iBus_intmem_axi_arprot),
-      .i_axi_arvalid(iBus_intmem_axi_arvalid),
-      .i_axi_arready(iBus_intmem_axi_arready),
-      .i_axi_rid(iBus_intmem_axi_rid),
-      .i_axi_rdata(iBus_intmem_axi_rdata),
-      .i_axi_rresp(iBus_intmem_axi_rresp),
-      .i_axi_rlast(iBus_intmem_axi_rlast),
-      .i_axi_rvalid(iBus_intmem_axi_rvalid),
-      .i_axi_rready(iBus_intmem_axi_rready),
-
-      //data bus
-      .d_axi_awid(dBus_intmem_axi_awid),
-      .d_axi_awaddr(dBus_intmem_axi_awaddr),
-      .d_axi_awlen(dBus_intmem_axi_awlen),
-      .d_axi_awsize(dBus_intmem_axi_awsize),
-      .d_axi_awburst(dBus_intmem_axi_awburst),
-      .d_axi_awlock(dBus_intmem_axi_awlock[0]),
-      .d_axi_awcache(dBus_intmem_axi_awcache),
-      .d_axi_awprot(dBus_intmem_axi_awprot),
-      .d_axi_awvalid(dBus_intmem_axi_awvalid),
-      .d_axi_awready(dBus_intmem_axi_awready),
-      .d_axi_wdata(dBus_intmem_axi_wdata),
-      .d_axi_wstrb(dBus_intmem_axi_wstrb),
-      .d_axi_wlast(dBus_intmem_axi_wlast),
-      .d_axi_wvalid(dBus_intmem_axi_wvalid),
-      .d_axi_wready(dBus_intmem_axi_wready),
-      .d_axi_bid(dBus_intmem_axi_bid),
-      .d_axi_bresp(dBus_intmem_axi_bresp),
-      .d_axi_bvalid(dBus_intmem_axi_bvalid),
-      .d_axi_bready(dBus_intmem_axi_bready),
-      .d_axi_arid(dBus_intmem_axi_arid),
-      .d_axi_araddr(dBus_intmem_axi_araddr),
-      .d_axi_arlen(dBus_intmem_axi_arlen),
-      .d_axi_arsize(dBus_intmem_axi_arsize),
-      .d_axi_arburst(dBus_intmem_axi_arburst),
-      .d_axi_arlock(dBus_intmem_axi_arlock[0]),
-      .d_axi_arcache(dBus_intmem_axi_arcache),
-      .d_axi_arprot(dBus_intmem_axi_arprot),
-      .d_axi_arvalid(dBus_intmem_axi_arvalid),
-      .d_axi_arready(dBus_intmem_axi_arready),
-      .d_axi_rid(dBus_intmem_axi_rid),
-      .d_axi_rdata(dBus_intmem_axi_rdata),
-      .d_axi_rresp(dBus_intmem_axi_rresp),
-      .d_axi_rlast(dBus_intmem_axi_rlast),
-      .d_axi_rvalid(dBus_intmem_axi_rvalid),
-      .d_axi_rready(dBus_intmem_axi_rready)
+      .iob_avalid_i(slaves_req[`AVALID(0)]),
+      .iob_addr_i(slaves_req[`ADDRESS(0, `IOB_UART16550_SWREG_ADDR_W)]),
+      .iob_wdata_i(slaves_req[`WDATA(0)]),
+      .iob_wstrb_i(slaves_req[`WSTRB(0)]),
+      .iob_rvalid_o(slaves_resp[`RVALID(0)]),
+      .iob_rdata_o(slaves_resp[`RDATA(0)]),
+      .iob_ready_o(slaves_resp[`READY(0)]),
+      .clk_i(clk_i),
+      .arst_i(arst_i),
+      .cke_i(cke_i)
   );
-
-  wire extmem_axi_arlock;
-  wire extmem_axi_awlock;
-  wire [7:0] extmem_axi_bid;
-  wire [7:0] extmem_axi_rid;
-  wire [MEM_ADDR_W-1:0] internal_axi_awaddr;
-  wire [MEM_ADDR_W-1:0] internal_axi_araddr;
-  assign axi_awlock_o = {1'B0, extmem_axi_awlock};
-  assign axi_arlock_o = {1'B0, extmem_axi_arlock};
-  assign {iBus_extmem_axi_bid, dBus_extmem_axi_bid} = {extmem_axi_bid[4], extmem_axi_bid[0]};
-  assign {iBus_extmem_axi_rid, dBus_extmem_axi_rid} = {extmem_axi_rid[4], extmem_axi_rid[0]};
-  // Instructions bus interconnect {I, D} -> {internal, external}
-  axi_interconnect #(
-      .ID_WIDTH  (AXI_ID_W),
-      .DATA_WIDTH(DATA_W),
-      .ADDR_WIDTH(MEM_ADDR_W),
-      .M_ADDR_WIDTH(MEM_ADDR_W),
-      .S_COUNT   (2),
-      .M_COUNT   (1)
-  ) extmem_axi_interconnect (
-      .clk(clk_i),
-      .rst(arst_i),
-
-      .s_axi_awid({3'b000, iBus_extmem_axi_awid, 3'b000, dBus_extmem_axi_awid}),
-      .s_axi_awaddr({
-        iBus_extmem_axi_awaddr[MEM_ADDR_W-1:0], dBus_extmem_axi_awaddr[MEM_ADDR_W-1:0]
-      }),
-      .s_axi_awlen({iBus_extmem_axi_awlen, dBus_extmem_axi_awlen}),
-      .s_axi_awsize({iBus_extmem_axi_awsize, dBus_extmem_axi_awsize}),
-      .s_axi_awburst({iBus_extmem_axi_awburst, dBus_extmem_axi_awburst}),
-      .s_axi_awlock({iBus_extmem_axi_awlock[0], dBus_extmem_axi_awlock[0]}),
-      .s_axi_awcache({iBus_extmem_axi_awcache, dBus_extmem_axi_awcache}),
-      .s_axi_awprot({iBus_extmem_axi_awprot, dBus_extmem_axi_awprot}),
-      .s_axi_awqos({iBus_extmem_axi_awqos, dBus_extmem_axi_awqos}),
-      .s_axi_awvalid({iBus_extmem_axi_awvalid, dBus_extmem_axi_awvalid}),
-      .s_axi_awready({iBus_extmem_axi_awready, dBus_extmem_axi_awready}),
-      .s_axi_wdata({iBus_extmem_axi_wdata, dBus_extmem_axi_wdata}),
-      .s_axi_wstrb({iBus_extmem_axi_wstrb, dBus_extmem_axi_wstrb}),
-      .s_axi_wlast({iBus_extmem_axi_wlast, dBus_extmem_axi_wlast}),
-      .s_axi_wvalid({iBus_extmem_axi_wvalid, dBus_extmem_axi_wvalid}),
-      .s_axi_wready({iBus_extmem_axi_wready, dBus_extmem_axi_wready}),
-      .s_axi_bid(extmem_axi_bid),
-      .s_axi_bresp({iBus_extmem_axi_bresp, dBus_extmem_axi_bresp}),
-      .s_axi_bvalid({iBus_extmem_axi_bvalid, dBus_extmem_axi_bvalid}),
-      .s_axi_bready({iBus_extmem_axi_bready, dBus_extmem_axi_bready}),
-      .s_axi_arid({3'b000, iBus_extmem_axi_arid, 3'b000, dBus_extmem_axi_arid}),
-      .s_axi_araddr({
-        iBus_extmem_axi_araddr[MEM_ADDR_W-1:0], dBus_extmem_axi_araddr[MEM_ADDR_W-1:0]
-      }),
-      .s_axi_arlen({iBus_extmem_axi_arlen, dBus_extmem_axi_arlen}),
-      .s_axi_arsize({iBus_extmem_axi_arsize, dBus_extmem_axi_arsize}),
-      .s_axi_arburst({iBus_extmem_axi_arburst, dBus_extmem_axi_arburst}),
-      .s_axi_arlock({iBus_extmem_axi_arlock[0], dBus_extmem_axi_arlock[0]}),
-      .s_axi_arcache({iBus_extmem_axi_arcache, dBus_extmem_axi_arcache}),
-      .s_axi_arprot({iBus_extmem_axi_arprot, dBus_extmem_axi_arprot}),
-      .s_axi_arqos({iBus_extmem_axi_arqos, dBus_extmem_axi_arqos}),
-      .s_axi_arvalid({iBus_extmem_axi_arvalid, dBus_extmem_axi_arvalid}),
-      .s_axi_arready({iBus_extmem_axi_arready, dBus_extmem_axi_arready}),
-      .s_axi_rid(extmem_axi_rid),
-      .s_axi_rdata({iBus_extmem_axi_rdata, dBus_extmem_axi_rdata}),
-      .s_axi_rresp({iBus_extmem_axi_rresp, dBus_extmem_axi_rresp}),
-      .s_axi_rlast({iBus_extmem_axi_rlast, dBus_extmem_axi_rlast}),
-      .s_axi_rvalid({iBus_extmem_axi_rvalid, dBus_extmem_axi_rvalid}),
-      .s_axi_rready({iBus_extmem_axi_rready, dBus_extmem_axi_rready}),
-
-      .m_axi_awid(axi_awid_o),
-      .m_axi_awaddr(internal_axi_awaddr),
-      .m_axi_awlen(axi_awlen_o),
-      .m_axi_awsize(axi_awsize_o),
-      .m_axi_awburst(axi_awburst_o),
-      .m_axi_awlock(extmem_axi_awlock),
-      .m_axi_awcache(axi_awcache_o),
-      .m_axi_awprot(axi_awprot_o),
-      .m_axi_awqos(axi_awqos_o),
-      .m_axi_awvalid(axi_awvalid_o),
-      .m_axi_awready(axi_awready_i),
-      .m_axi_wdata(axi_wdata_o),
-      .m_axi_wstrb(axi_wstrb_o),
-      .m_axi_wlast(axi_wlast_o),
-      .m_axi_wvalid(axi_wvalid_o),
-      .m_axi_wready(axi_wready_i),
-      .m_axi_bid(axi_bid_i),
-      .m_axi_bresp(axi_bresp_i),
-      .m_axi_bvalid(axi_bvalid_i),
-      .m_axi_bready(axi_bready_o),
-      .m_axi_arid(axi_arid_o),
-      .m_axi_araddr(internal_axi_araddr),
-      .m_axi_arlen(axi_arlen_o),
-      .m_axi_arsize(axi_arsize_o),
-      .m_axi_arburst(axi_arburst_o),
-      .m_axi_arlock(extmem_axi_arlock),
-      .m_axi_arcache(axi_arcache_o),
-      .m_axi_arprot(axi_arprot_o),
-      .m_axi_arqos(axi_arqos_o),
-      .m_axi_arvalid(axi_arvalid_o),
-      .m_axi_arready(axi_arready_i),
-      .m_axi_rid(axi_rid_i),
-      .m_axi_rdata(axi_rdata_i),
-      .m_axi_rresp(axi_rresp_i),
-      .m_axi_rlast(axi_rlast_i),
-      .m_axi_rvalid(axi_rvalid_i),
-      .m_axi_rready(axi_rready_o),
-
-      //optional signals
-      .s_axi_awuser(2'b00),
-      .s_axi_wuser (2'b00),
-      .s_axi_aruser(2'b00),
-      .m_axi_buser (1'b0),
-      .m_axi_ruser (1'b0)
-  );
-
-  assign axi_awaddr_o[AXI_ADDR_W-1:0] = internal_axi_awaddr + MEM_ADDR_OFFSET;
-  assign axi_araddr_o[AXI_ADDR_W-1:0] = internal_axi_araddr + MEM_ADDR_OFFSET;
 
   `include "iob_soc_opencryptolinux_periphs_inst.vs"
 
