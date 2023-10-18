@@ -97,7 +97,7 @@ module iob_soc_opencryptolinux #(
       .clint_resp    (slaves_resp[(N_SLAVES-2)*34+:`RESP_W]),
       .plic_req      (slaves_req[(N_SLAVES-1)*69+:`REQ_W]),
       .plic_resp     (slaves_resp[(N_SLAVES-1)*34+:`RESP_W]),
-      .plicInterrupts(32'd0),
+      .plicInterrupts({{31{1'b0}}, uart_interrupt_o}),
       // Axi instruction bus
       `include "iBus_axi_m_portmap.vs"
       // Axi data bus

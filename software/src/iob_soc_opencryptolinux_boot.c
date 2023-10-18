@@ -11,7 +11,7 @@
 #define PROGNAME "IOb-Bootloader"
 
 #define DC1 17 // Device Control 1 (used to indicate end of bootloader)
-#define EXT_MEM 0x80000000
+#define EXT_MEM 0x00000000
 
 int main() {
 
