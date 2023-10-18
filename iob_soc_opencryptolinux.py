@@ -11,6 +11,8 @@ from iob_uart16550 import iob_uart16550
 from iob_plic import iob_plic
 from iob_clint import iob_clint
 from iob_uart import iob_uart
+from iob_spi import iob_spi
+from axil2iob import axil2iob
 
 
 class iob_soc_opencryptolinux(iob_soc):
@@ -28,6 +30,8 @@ class iob_soc_opencryptolinux(iob_soc):
         # Instantiate OpenCryptoLinux peripherals
         if iob_uart16550 in cls.submodule_list:
             cls.peripherals.append(iob_uart16550("UART0", "Default UART interface"))
+        if iob_clint in cls.submodule_list:
+            cls.peripherals.append(iob_clint("CLINT0", "CLINT peripheral"))
         if iob_plic in cls.submodule_list:
             cls.peripherals.append(
                 iob_plic(
@@ -36,18 +40,26 @@ class iob_soc_opencryptolinux(iob_soc):
                     parameters={"N_SOURCES": "32", "N_TARGETS": "2"},
                 )
             )
-        if iob_clint in cls.submodule_list:
-            cls.peripherals.append(iob_clint("CLINT0", "CLINT peripheral"))
+        if iob_spi in cls.submodule_list:
+            cls.peripherals.append(iob_spi("SPI0", "SPI master peripheral"))
 
     @classmethod
     def _create_submodules_list(cls, extra_submodules=[]):
         """Create submodules list with dependencies of this module"""
         super()._create_submodules_list(
             [
+                {"interface": "peripheral_axi_wire"},
+                {"interface": "intmem_axi_wire"},
+                {"interface": "dBus_axi_wire"},
+                {"interface": "iBus_axi_wire"},
+                {"interface": "dBus_axi_m_port"},
+                {"interface": "iBus_axi_m_port"},
+                {"interface": "dBus_axi_m_portmap"},
+                {"interface": "iBus_axi_m_portmap"},
                 iob_vexriscv,
                 iob_uart16550,
-                iob_clint,
-                iob_plic,
+                axil2iob,
+                # iob_spi,
                 (iob_uart, {"purpose": "simulation"}),
             ]
             + extra_submodules
@@ -58,6 +70,7 @@ class iob_soc_opencryptolinux(iob_soc):
             if type(cls.submodule_list[i]) == type and cls.submodule_list[i].name in [
                 "iob_picorv32",
                 "iob_uart",
+                "axi_interconnect",
             ]:
                 cls.submodule_list.pop(i)
                 continue
@@ -73,6 +86,10 @@ class iob_soc_opencryptolinux(iob_soc):
             src_file = os.path.join(src, fname)
             if os.path.isfile(src_file):
                 shutil.copy2(src_file, dst)
+
+        dst = f"{cls.build_dir}/hardware/src"
+        src_file = f"{__class__.setup_dir}/hardware/src/axi_interconnect.v"
+        shutil.copy2(src_file, dst)
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
@@ -114,10 +131,18 @@ class iob_soc_opencryptolinux(iob_soc):
                 {
                     "name": "BOOTROM_ADDR_W",
                     "type": "P",
-                    "val": "13",
+                    "val": "12",
                     "min": "1",
                     "max": "32",
                     "descr": "Boot ROM address width",
+                },
+                {
+                    "name": "SRAM_ADDR_W",
+                    "type": "P",
+                    "val": "15",
+                    "min": "1",
+                    "max": "32",
+                    "descr": "SRAM address width",
                 },
                 {
                     "name": "MEM_ADDR_W",
