@@ -8,13 +8,13 @@ module boot_ctr #(
     output wire boot,
     output wire cpu_reset,
 
-    input  [     1-1:0] iob_avalid_i,
-    input  [ADDR_W-1:0] iob_addr_i,
-    input  [DATA_W-1:0] iob_wdata_i,
-    input  [STRB_W-1:0] iob_wstrb_i,
-    output [     1-1:0] iob_rvalid_o,
-    output [DATA_W-1:0] iob_rdata_o,
-    output [     1-1:0] iob_ready_o,
+    input  wire [     1-1:0] iob_avalid_i,
+    input  wire [ADDR_W-1:0] iob_addr_i,
+    input  wire [DATA_W-1:0] iob_wdata_i,
+    input  wire [STRB_W-1:0] iob_wstrb_i,
+    output wire [     1-1:0] iob_rvalid_o,
+    output wire [DATA_W-1:0] iob_rdata_o,
+    output wire [     1-1:0] iob_ready_o,
 
     `include "clk_en_rst_s_port.vs"
 );
@@ -23,11 +23,16 @@ module boot_ctr #(
   wire boot_wr;
   reg  boot_nxt;
   //create CPU reset pulse
-  wire cpu_rst_req;
+  wire cpu_reset_req;
   wire rst_sync;
 
   assign boot_wr = iob_avalid_i & (|iob_wstrb_i);
-  assign cpu_rst_req = (iob_avalid_i & (|iob_wstrb_i) & iob_wdata_i[1]) | rst_sync;
+  assign cpu_reset_req = (iob_avalid_i & (|iob_wstrb_i) & iob_wdata_i[1]) | rst_sync;
+
+  // IOb-Bus
+  assign iob_rvalid_o = 1'b0; // has no read registers
+  assign iob_rdata_o = {DATA_W{1'b0}};
+  assign iob_ready_o = 1'b1;
 
   iob_reg_re #(
       .DATA_W (1),
@@ -69,7 +74,7 @@ module boot_ctr #(
       .clk_i  (clk_i),
       .arst_i (arst_i),
       .cke_i  (cke_i),
-      .start_i(cpu_rst_req),
+      .start_i(cpu_reset_req),
       .pulse_o(cpu_reset)
   );
 

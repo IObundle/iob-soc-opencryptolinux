@@ -77,6 +77,10 @@ module iob_soc_opencryptolinux #(
   assign axi_awaddr_o[AXI_ADDR_W-1:0] = extmem_axi_awaddr[MEM_ADDR_W-1:0] + MEM_ADDR_OFFSET;
   assign axi_araddr_o[AXI_ADDR_W-1:0] = extmem_axi_araddr[MEM_ADDR_W-1:0] + MEM_ADDR_OFFSET;
 
+  assign peripheral_axi_bid = {PERIPHERAL_AXI_ID_W{1'b0}};
+  assign peripheral_axi_rid = {PERIPHERAL_AXI_ID_W{1'b0}};
+  assign peripheral_axi_rlast = 1'b1;
+
   //
   //  CPU
   //

@@ -12,7 +12,7 @@
 
 #define UART0_BASE 0xf4000000
 #define CLINT0_BASE 0xf8000000
-#define PLIC0_BASE 0xf0000000
+#define PLIC0_BASE 0xfc000000
 
 #define MTIMER_SECONDS_TO_CLOCKS(SEC)           \
     ((uint64_t)(((SEC)*(FREQ))))
@@ -43,7 +43,6 @@ int main() {
 
   // Setup timer
   timestamp = clint_getTime(CLINT0_BASE);
-  printf("%x\n", (uint32_t)timestamp);
   clint_setCmp(CLINT0_BASE, MTIMER_SECONDS_TO_CLOCKS(0.001)+(uint32_t)timestamp, 0);
 
   // Enable MIE.MTI
@@ -70,7 +69,6 @@ static void irq_entry(void) {
   printf("Entered IRQ.\n");
   uint32_t this_cause = csr_read_mcause();
   timestamp = clint_getTime(CLINT0_BASE);
-  printf("%x\n", (uint32_t)timestamp);
   if (this_cause & MCAUSE_INTERRUPT_BIT_MASK) {
     this_cause &= 0xFF;
     // Known exceptions

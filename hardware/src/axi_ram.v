@@ -266,7 +266,7 @@ module axi_ram #(
       endcase
    end
 
-   always @(posedge clk_i) begin
+   always @(posedge clk_i, posedge rst_i) begin
       if (rst_i) begin
          write_state_reg <= WRITE_STATE_IDLE;
          axi_awready_reg <= 1'b0;
@@ -294,7 +294,9 @@ module axi_ram #(
 
          axi_bid_reg     <= axi_bid_next;
       end
+   end
 
+   always @(posedge clk_i) begin
       for (i = 0; i < WORD_WIDTH; i = i + 1) begin
          if (mem_wr_en & axi_wstrb_i[i]) begin
             mem[write_addr_valid][WORD_SIZE*i+:WORD_SIZE] <= axi_wdata_i[WORD_SIZE*i+:WORD_SIZE];
@@ -361,7 +363,7 @@ module axi_ram #(
       endcase
    end
 
-   always @(posedge clk_i) begin
+   always @(posedge clk_i, posedge rst_i) begin
       if (rst_i) begin
          read_state_reg      <= READ_STATE_IDLE;
          axi_arready_reg     <= 1'b0;

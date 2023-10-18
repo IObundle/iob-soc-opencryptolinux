@@ -13,7 +13,7 @@ jal ra, main
 
 //reboot to run firmware
 li s5, 2 //cpu_rst_req=1, boot=0
-li s6, BOOTCTR_BASE
+li s6, 0xf0000000
 sw s5, 0(s6)
 
 ebreak

@@ -20,7 +20,7 @@ _start:
 
     //reboot to run bootloader
     li s5, 3 //cpu_rst_req=1, boot=1
-    li s6, BOOTCTR_BASE
+    li s6, 0xf0000000
     sw s5, 0(s6)//cpu_rst_req=1, boot=1
 
     ebreak

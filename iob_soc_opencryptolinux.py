@@ -70,6 +70,7 @@ class iob_soc_opencryptolinux(iob_soc):
             if type(cls.submodule_list[i]) == type and cls.submodule_list[i].name in [
                 "iob_picorv32",
                 "iob_uart",
+                "axi_interconnect",
             ]:
                 cls.submodule_list.pop(i)
                 continue
@@ -85,6 +86,10 @@ class iob_soc_opencryptolinux(iob_soc):
             src_file = os.path.join(src, fname)
             if os.path.isfile(src_file):
                 shutil.copy2(src_file, dst)
+
+        dst = f"{cls.build_dir}/hardware/src"
+        src_file = f"{__class__.setup_dir}/hardware/src/axi_interconnect.v"
+        shutil.copy2(src_file, dst)
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
