@@ -57,15 +57,10 @@ module boot_ctr #(
       .data_i(boot_nxt),
       .data_o(boot)
   );
-  iob_reg #(
-      .DATA_W (1),
-      .RST_VAL(1)
-  ) sync_reset (
+  iob_reset_sync sync_reset (
       .clk_i (clk_i),
       .arst_i(arst_i),
-      .cke_i (cke_i),
-      .data_i(1'b0),
-      .data_o(rst_sync)
+      .arst_o(rst_sync)
   );
   iob_pulse_gen #(
       .START   (0),

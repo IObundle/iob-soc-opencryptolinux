@@ -13,6 +13,7 @@ from iob_clint import iob_clint
 from iob_uart import iob_uart
 from iob_spi import iob_spi
 from axil2iob import axil2iob
+from iob_reset_sync import iob_reset_sync
 
 
 class iob_soc_opencryptolinux(iob_soc):
@@ -59,6 +60,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_vexriscv,
                 iob_uart16550,
                 axil2iob,
+                iob_reset_sync,
                 # iob_spi,
                 (iob_uart, {"purpose": "simulation"}),
             ]
