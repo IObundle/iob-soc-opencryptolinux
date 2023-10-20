@@ -81,6 +81,8 @@ module iob_soc_opencryptolinux #(
   assign peripheral_axi_rid = {PERIPHERAL_AXI_ID_W{1'b0}};
   assign peripheral_axi_rlast = 1'b1;
 
+  assign cpu_trap_o = 1'b0;
+
   //
   //  CPU
   //

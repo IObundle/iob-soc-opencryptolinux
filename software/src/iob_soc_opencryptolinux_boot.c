@@ -11,7 +11,7 @@
 #define PROGNAME "IOb-Bootloader"
 
 #define DC1 17 // Device Control 1 (used to indicate end of bootloader)
-#define EXT_MEM 0x00000000
+#define EXT_MEM 0x80000000
 
 int main() {
 
@@ -42,6 +42,7 @@ int main() {
 
 #ifndef INIT_MEM
 #ifdef RUN_LINUX
+
   // receive firmware from host
   int file_size = 0;
   char opensbi[] = "fw_jump.bin";
@@ -59,6 +60,9 @@ int main() {
     uart16550_puts(PROGNAME);
     uart16550_puts(": Loading firmware...\n");
   }
+
+  uart16550_putc((char)DC1);
+
 #else
 
   // receive firmware from host
@@ -75,10 +79,10 @@ int main() {
     uart16550_puts(PROGNAME);
     uart16550_puts(": ERROR loading firmware\n");
   }
+
 #endif
 #endif
 
-  uart16550_putc((char)DC1);
   // Clear CPU registers, to not pass arguments to the next
   asm volatile("li a0,0");
   asm volatile("li a1,0");

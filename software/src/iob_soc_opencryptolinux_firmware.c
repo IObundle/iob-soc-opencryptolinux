@@ -20,8 +20,44 @@
 // Machine mode interrupt service routine
 static void irq_entry(void) __attribute__((interrupt("machine")));
 
+char *send_string = "Sending this string as a file to console.\n"
+                    "The file is then requested back from console.\n"
+                    "The sent file is compared to the received file to confirm "
+                    "correct file transfer via UART using console.\n"
+                    "Generating the file in the firmware creates an uniform "
+                    "file transfer between pc-emul, simulation and fpga without"
+                    " adding extra targets for file generation.\n";
+
 // Global to hold current timestamp
 static volatile uint64_t timestamp = 0;
+
+// copy src to dst
+// return number of copied chars (excluding '\0')
+int string_copy(char *dst, char *src) {
+  if (dst == NULL || src == NULL) {
+    return -1;
+  }
+  int cnt = 0;
+  while (src[cnt] != 0) {
+    dst[cnt] = src[cnt];
+    cnt++;
+  }
+  dst[cnt] = '\0';
+  return cnt;
+}
+
+// 0: same string
+// otherwise: different
+int compare_str(char *str1, char *str2, int str_size) {
+  int c = 0;
+  while (c < str_size) {
+    if (str1[c] != str2[c]) {
+      return str1[c] - str2[c];
+    }
+    c++;
+  }
+  return 0;
+}
 
 int main() {
   char pass_string[] = "Test passed!";
@@ -54,11 +90,33 @@ int main() {
   // Wait for interrupt
   __asm__ volatile("wfi");
 
-  printf("Exit...\n");
-  uart16550_finish();
-
   // Global interrupt disable
   csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+
+
+  // test file send
+  char *sendfile = malloc(1000);
+  int send_file_size = 0;
+  send_file_size = string_copy(sendfile, send_string);
+  uart16550_sendfile("Sendfile.txt", send_file_size, sendfile);
+
+  // test file receive
+  char *recvfile = malloc(10000);
+  int file_size = 0;
+  file_size = uart16550_recvfile("Sendfile.txt", recvfile);
+
+  // compare files
+  if (compare_str(sendfile, recvfile, send_file_size)) {
+    printf("FAILURE: Send and received file differ!\n");
+  } else {
+    printf("SUCCESS: Send and received file match!\n");
+  }
+
+  free(sendfile);
+  free(recvfile);
+
+  printf("Exit...\n");
+  uart16550_finish();
 
   return 0;
 }
