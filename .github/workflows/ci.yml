@@ -15,7 +15,6 @@ on:
   push:
     branches:
       - master
-      - python-setup
   # Don't forget to require approval for all outside collaborators
   pull_request:
     branches: '*'
@@ -29,7 +28,6 @@ jobs:
     timeout-minutes: 30
     # run even if previous job failed
     if: ${{ !cancelled() }}
-    # run after indicated job
 
     steps:
       - uses: actions/checkout@v3
@@ -47,7 +45,6 @@ jobs:
     timeout-minutes: 30
     # run even if previous job failed
     if: ${{ !cancelled() }}
-    # run after indicated job
 
     steps:
       - uses: actions/checkout@v3
