@@ -11,7 +11,7 @@ from iob_uart16550 import iob_uart16550
 from iob_plic import iob_plic
 from iob_clint import iob_clint
 from iob_uart import iob_uart
-from iob_spi import iob_spi
+from iob_spi_master import iob_spi_master
 from axil2iob import axil2iob
 from iob_reset_sync import iob_reset_sync
 
@@ -41,8 +41,8 @@ class iob_soc_opencryptolinux(iob_soc):
                     parameters={"N_SOURCES": "32", "N_TARGETS": "2"},
                 )
             )
-        if iob_spi in cls.submodule_list:
-            cls.peripherals.append(iob_spi("SPI0", "SPI master peripheral"))
+        if iob_spi_master in cls.submodule_list:
+            cls.peripherals.append(iob_spi_master("SPI0", "SPI master peripheral"))
 
     @classmethod
     def _create_submodules_list(cls, extra_submodules=[]):

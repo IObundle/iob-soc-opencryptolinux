@@ -1,1 +1,1 @@
-../../submodules/LIB/submodules/VERILOG_AXI/rtl/arbiter.v
+../../submodules/IOBSOC/submodules/AXI/rtl/arbiter.v

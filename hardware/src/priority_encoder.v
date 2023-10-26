@@ -1,1 +1,1 @@
-../../submodules/LIB/submodules/VERILOG_AXI/rtl/priority_encoder.v
+../../submodules/IOBSOC/submodules/AXI/rtl/priority_encoder.v

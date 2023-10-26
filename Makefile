@@ -2,7 +2,8 @@ CORE := iob_soc_opencryptolinux
 
 DISABLE_LINT:=1
 
-include submodules/LIB/setup.mk
+LIB_DIR:=submodules/IOBSOC/submodules/LIB
+include $(LIB_DIR)/setup.mk
 
 INIT_MEM ?= 1
 RUN_LINUX ?= 1
@@ -14,6 +15,9 @@ endif
 ifeq ($(RUN_LINUX),1)
 SETUP_ARGS += RUN_LINUX
 endif
+
+setup:
+	make build-setup SETUP_ARGS="$(SETUP_ARGS)"
 
 sim-test:
 	# IOb-SoC-Opencryptolinux only supports USE_EXTMEM=1
