@@ -69,11 +69,19 @@ module iob_soc_opencryptolinux #(
 
   wire [ADDR_W-1:0] extmem_axi_awaddr;
   wire [ADDR_W-1:0] extmem_axi_araddr;
+  wire [7:0] extmem_axi_awlen;
+  wire [7:0] extmem_axi_arlen;
 
   assign axi_awlock_o[1] = 1'b0;
   assign axi_arlock_o[1] = 1'b0;
-  assign axi_awid_o[AXI_ID_W-1:1] = {AXI_ID_W{1'b0}};
-  assign axi_arid_o[AXI_ID_W-1:1] = {AXI_ID_W{1'b0}};
+  assign axi_awlen_o = extmem_axi_awlen[AXI_LEN_W-1:0];
+  assign axi_arlen_o = extmem_axi_arlen[AXI_LEN_W-1:0];
+  generate
+    if (AXI_ID_W != 1) begin : g_fill_ID_signal
+      assign axi_awid_o[AXI_ID_W-1:1] = {(AXI_ID_W - 1) {1'b0}};
+      assign axi_arid_o[AXI_ID_W-1:1] = {(AXI_ID_W - 1) {1'b0}};
+    end
+  endgenerate
   assign axi_awaddr_o[AXI_ADDR_W-1:0] = extmem_axi_awaddr[MEM_ADDR_W-1:0] + MEM_ADDR_OFFSET;
   assign axi_araddr_o[AXI_ADDR_W-1:0] = extmem_axi_araddr[MEM_ADDR_W-1:0] + MEM_ADDR_OFFSET;
 
@@ -161,7 +169,7 @@ module iob_soc_opencryptolinux #(
 
       .m_axi_awid({peripheral_axi_awid, intmem_axi_awid, axi_awid_o[0]}),
       .m_axi_awaddr({peripheral_axi_awaddr, intmem_axi_awaddr, extmem_axi_awaddr}),
-      .m_axi_awlen({peripheral_axi_awlen, intmem_axi_awlen, axi_awlen_o}),
+      .m_axi_awlen({peripheral_axi_awlen, intmem_axi_awlen, extmem_axi_awlen}),
       .m_axi_awsize({peripheral_axi_awsize, intmem_axi_awsize, axi_awsize_o}),
       .m_axi_awburst({peripheral_axi_awburst, intmem_axi_awburst, axi_awburst_o}),
       .m_axi_awlock({peripheral_axi_awlock[0], intmem_axi_awlock[0], axi_awlock_o[0]}),
@@ -181,7 +189,7 @@ module iob_soc_opencryptolinux #(
       .m_axi_bready({peripheral_axi_bready, intmem_axi_bready, axi_bready_o}),
       .m_axi_arid({peripheral_axi_arid, intmem_axi_arid, axi_arid_o[0]}),
       .m_axi_araddr({peripheral_axi_araddr, intmem_axi_araddr, extmem_axi_araddr}),
-      .m_axi_arlen({peripheral_axi_arlen, intmem_axi_arlen, axi_arlen_o}),
+      .m_axi_arlen({peripheral_axi_arlen, intmem_axi_arlen, extmem_axi_arlen}),
       .m_axi_arsize({peripheral_axi_arsize, intmem_axi_arsize, axi_arsize_o}),
       .m_axi_arburst({peripheral_axi_arburst, intmem_axi_arburst, axi_arburst_o}),
       .m_axi_arlock({peripheral_axi_arlock[0], intmem_axi_arlock[0], axi_arlock_o[0]}),
