@@ -1,5 +1,8 @@
 CORE := iob_soc_opencryptolinux
 
+SIMULATOR ?= icarus
+BOARD ?= CYCLONEV-GT-DK
+
 DISABLE_LINT:=1
 
 LIB_DIR:=submodules/IOBSOC/submodules/LIB
@@ -26,11 +29,13 @@ sim-test:
 	make clean && make setup USE_EXTMEM=1 && make -C ../iob_soc_opencryptolinux_V*/ sim-test
 	make clean && make setup INIT_MEM=0 USE_EXTMEM=1 && make -C ../iob_soc_opencryptolinux_V*/ sim-test
 
+fpga-run:
+	make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM) RUN_LINUX=$(RUN_LINUX) && make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD)
+	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD)
+
 fpga-test:
 	# IOb-SoC-Opencryptolinux only supports USE_EXTMEM=1
-	#make clean && make setup && make -C ../iob_soc_opencryptolinux_V*/ fpga-test
-	#make clean && make setup INIT_MEM=0 && make -C ../iob_soc_opencryptolinux_V*/ fpga-test
-	make clean && make setup INIT_MEM=0 USE_EXTMEM=1 && make -C ../iob_soc_opencryptolinux_V*/ fpga-test
+	make clean setup fpga-run INIT_MEM=0 USE_EXTMEM=1
 
 test-all:
 	make clean && make setup && make -C ../iob_soc_opencryptolinux_V*/ pc-emul-test
