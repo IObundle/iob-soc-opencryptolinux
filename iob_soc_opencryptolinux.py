@@ -9,8 +9,6 @@ from verilog_tools import inplace_change
 from iob_soc import iob_soc
 from iob_vexriscv import iob_vexriscv
 from iob_uart16550 import iob_uart16550
-from iob_plic import iob_plic
-from iob_clint import iob_clint
 from iob_uart import iob_uart
 from iob_spi_master import iob_spi_master
 from axil2iob import axil2iob
