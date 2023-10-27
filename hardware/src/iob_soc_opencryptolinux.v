@@ -33,7 +33,7 @@ module iob_soc_opencryptolinux #(
   localparam INTMEM_AXI_ADDR_W = 32;
   localparam INTMEM_AXI_DATA_W = 32;
 
-  localparam N_SLAVES = 4;  // BOOT_CTR, UART, CLINT and PLIC
+  localparam N_SLAVES = `IOB_SOC_OPENCRYPTOLINUX_N_SLAVES;  // peripherals (includes internal BOOT_CTR, PLIC and CLINT)
 
 
   `include "iob_soc_opencryptolinux_pwires.vs"
@@ -103,10 +103,11 @@ module iob_soc_opencryptolinux #(
       .cke_i         (cke_i),
       .arst_i        (arst_i),
       .cpu_reset_i   (cpu_reset),
-      .clint_req     (slaves_req[(N_SLAVES-2)*69+:`REQ_W]),
-      .clint_resp    (slaves_resp[(N_SLAVES-2)*34+:`RESP_W]),
-      .plic_req      (slaves_req[(N_SLAVES-1)*69+:`REQ_W]),
-      .plic_resp     (slaves_resp[(N_SLAVES-1)*34+:`RESP_W]),
+      // PLIC and CLINT are the last peripherals
+      .clint_req     (slaves_req[(N_SLAVES-2)*`REQ_W+:`REQ_W]),
+      .clint_resp    (slaves_resp[(N_SLAVES-2)*`RESP_W+:`RESP_W]),
+      .plic_req      (slaves_req[(N_SLAVES-1)*`REQ_W+:`REQ_W]),
+      .plic_resp     (slaves_resp[(N_SLAVES-1)*`RESP_W+:`RESP_W]),
       .plicInterrupts({{31{1'b0}}, uart_interrupt_o}),
       // Axi instruction bus
       `include "iBus_axi_m_portmap.vs"
