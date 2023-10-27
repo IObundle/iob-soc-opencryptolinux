@@ -32,16 +32,6 @@ class iob_soc_opencryptolinux(iob_soc):
         # Instantiate OpenCryptoLinux peripherals
         if iob_uart16550 in cls.submodule_list:
             cls.peripherals.append(iob_uart16550("UART0", "Default UART interface"))
-        if iob_clint in cls.submodule_list:
-            cls.peripherals.append(iob_clint("CLINT0", "CLINT peripheral"))
-        if iob_plic in cls.submodule_list:
-            cls.peripherals.append(
-                iob_plic(
-                    "PLIC0",
-                    "PLIC peripheral",
-                    parameters={"N_SOURCES": "32", "N_TARGETS": "2"},
-                )
-            )
         if iob_spi_master in cls.submodule_list:
             cls.peripherals.append(iob_spi_master("SPI0", "SPI master peripheral"))
 
@@ -250,87 +240,6 @@ class iob_soc_opencryptolinux(iob_soc):
                         "bits": [],
                     },
                     {"corename": "external", "if_name": "uart", "port": "", "bits": []},
-                ),
-            ]
-        if iob_clint in cls.submodule_list:
-            cls.peripheral_portmap += [
-                # Map `mtip` of CLINT0 to an internal wire named `CLINT0_mtip`
-                (
-                    {
-                        "corename": "CLINT0",
-                        "if_name": "clint_io",
-                        "port": "mtip",
-                        "bits": [],
-                    },
-                    {
-                        "corename": "internal",
-                        "if_name": "CLINT0",
-                        "port": "",
-                        "bits": [],
-                    },
-                ),
-                # Map `msip` of CLINT0 to an internal wire named `CLINT0_msip`
-                (
-                    {
-                        "corename": "CLINT0",
-                        "if_name": "clint_io",
-                        "port": "msip",
-                        "bits": [],
-                    },
-                    {
-                        "corename": "internal",
-                        "if_name": "CLINT0",
-                        "port": "",
-                        "bits": [],
-                    },
-                ),
-                # Map `msip` of CLINT0 to an internal wire named `CLINT0_msip`
-                (
-                    {
-                        "corename": "CLINT0",
-                        "if_name": "clint_io",
-                        "port": "rt_clk",
-                        "bits": [],
-                    },
-                    {
-                        "corename": "internal",
-                        "if_name": "CLINT0",
-                        "port": "",
-                        "bits": [],
-                    },
-                ),
-            ]
-        if iob_plic in cls.submodule_list:
-            cls.peripheral_portmap += [
-                # Map `mtip` of PLIC0 to an internal wire named `PLIC0_irq`
-                (
-                    {
-                        "corename": "PLIC0",
-                        "if_name": "plic_io",
-                        "port": "irq",
-                        "bits": [],
-                    },
-                    {
-                        "corename": "internal",
-                        "if_name": "PLIC0",
-                        "port": "",
-                        "bits": [],
-                    },
-                ),
-                # Map `msip` of PLIC0 to an internal wire named `PLIC0_src`
-                (
-                    {
-                        "corename": "PLIC0",
-                        "if_name": "plic_io",
-                        "port": "src",
-                        "bits": [],
-                    },
-                    {
-                        "corename": "internal",
-                        "if_name": "PLIC0",
-                        "port": "",
-                        "bits": [],
-                    },
                 ),
             ]
 
