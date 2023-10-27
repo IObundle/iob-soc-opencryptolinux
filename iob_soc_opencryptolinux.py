@@ -4,6 +4,7 @@ import sys
 import shutil
 
 from mk_configuration import update_define
+from verilog_tools import inplace_change
 
 from iob_soc import iob_soc
 from iob_vexriscv import iob_vexriscv
@@ -11,7 +12,7 @@ from iob_uart16550 import iob_uart16550
 from iob_plic import iob_plic
 from iob_clint import iob_clint
 from iob_uart import iob_uart
-from iob_spi import iob_spi
+from iob_spi_master import iob_spi_master
 from axil2iob import axil2iob
 from iob_reset_sync import iob_reset_sync
 
@@ -41,8 +42,8 @@ class iob_soc_opencryptolinux(iob_soc):
                     parameters={"N_SOURCES": "32", "N_TARGETS": "2"},
                 )
             )
-        if iob_spi in cls.submodule_list:
-            cls.peripherals.append(iob_spi("SPI0", "SPI master peripheral"))
+        if iob_spi_master in cls.submodule_list:
+            cls.peripherals.append(iob_spi_master("SPI0", "SPI master peripheral"))
 
     @classmethod
     def _create_submodules_list(cls, extra_submodules=[]):
@@ -89,9 +90,16 @@ class iob_soc_opencryptolinux(iob_soc):
             if os.path.isfile(src_file):
                 shutil.copy2(src_file, dst)
 
-        dst = f"{cls.build_dir}/hardware/src"
-        src_file = f"{__class__.setup_dir}/hardware/src/axi_interconnect.v"
-        shutil.copy2(src_file, dst)
+        # If RUN_LINUX is not set, use 3000000 baud in simulation
+        for arg in sys.argv[1:]:
+            if arg == "RUN_LINUX":
+                break
+        else:
+            inplace_change(
+                os.path.join(cls.build_dir, "hardware/simulation/bsp.vh"),
+                "define BAUD 115200",
+                "define BAUD 3000000",
+            )
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):

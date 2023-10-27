@@ -326,7 +326,7 @@ module iob_soc_opencryptolinux #(
 
 
 
-  boot_ctr #(
+  iob_soc_opencryptolinux_boot_ctr #(
       .DATA_W(UART0_DATA_W),
       .ADDR_W(UART0_ADDR_W)
   ) boot_ctr (

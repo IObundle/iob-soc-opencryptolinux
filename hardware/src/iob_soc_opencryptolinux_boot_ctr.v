@@ -1,6 +1,6 @@
 `timescale 1 ns / 1 ps
 
-module boot_ctr #(
+module iob_soc_opencryptolinux_boot_ctr #(
     parameter ADDR_W = 0,
     parameter DATA_W = 0,
     parameter STRB_W = (DATA_W / 8)
