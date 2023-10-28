@@ -14,6 +14,12 @@
 #define CLINT0_BASE 0xf8000000
 #define PLIC0_BASE 0xfc000000
 
+#ifdef SIMULATION
+#define WAIT_TIME 0.001
+#else
+#define WAIT_TIME 1
+#endif
+
 #define MTIMER_SECONDS_TO_CLOCKS(SEC)           \
     ((uint64_t)(((SEC)*(FREQ))))
 
@@ -79,7 +85,7 @@ int main() {
 
   // Setup timer
   timestamp = clint_getTime(CLINT0_BASE);
-  clint_setCmp(CLINT0_BASE, MTIMER_SECONDS_TO_CLOCKS(0.001)+(uint32_t)timestamp, 0);
+  clint_setCmp(CLINT0_BASE, MTIMER_SECONDS_TO_CLOCKS(WAIT_TIME)+(uint32_t)timestamp, 0);
 
   // Enable MIE.MTI
   csr_set_bits_mie(MIE_MTI_BIT_MASK);
@@ -134,7 +140,7 @@ static void irq_entry(void) {
     case RISCV_INT_POS_MTI:
       printf("Time interrupt.\n");
       // Timer exception, keep up the one second tick.
-      clint_setCmp(CLINT0_BASE, MTIMER_SECONDS_TO_CLOCKS(0.001)+(uint32_t)timestamp, 0);
+      clint_setCmp(CLINT0_BASE, MTIMER_SECONDS_TO_CLOCKS(WAIT_TIME)+(uint32_t)timestamp, 0);
       break;
     }
   }

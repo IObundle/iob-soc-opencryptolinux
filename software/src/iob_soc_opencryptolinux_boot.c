@@ -61,8 +61,6 @@ int main() {
     uart16550_puts(": Loading firmware...\n");
   }
 
-  uart16550_putc((char)DC1);
-
 #else
 
   // receive firmware from host
@@ -81,6 +79,10 @@ int main() {
   }
 
 #endif
+#endif
+
+#ifdef RUN_LINUX
+  uart16550_putc((char)DC1);
 #endif
 
   // Clear CPU registers, to not pass arguments to the next
