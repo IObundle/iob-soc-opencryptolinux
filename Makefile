@@ -8,8 +8,9 @@ DISABLE_LINT:=1
 LIB_DIR:=submodules/IOBSOC/submodules/LIB
 include $(LIB_DIR)/setup.mk
 
-INIT_MEM ?= 1
-RUN_LINUX ?= 1
+INIT_MEM ?= 0
+RUN_LINUX ?= 0
+USE_EXTMEM := 1
 
 ifeq ($(INIT_MEM),1)
 SETUP_ARGS += INIT_MEM

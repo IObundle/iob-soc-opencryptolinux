@@ -129,7 +129,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 {
                     "name": "BOOTROM_ADDR_W",
                     "type": "P",
-                    "val": "12",
+                    "val": "15",
                     "min": "1",
                     "max": "32",
                     "descr": "Boot ROM address width",
