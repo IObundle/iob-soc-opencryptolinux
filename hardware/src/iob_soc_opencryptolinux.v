@@ -220,7 +220,7 @@ module iob_soc_opencryptolinux #(
   //
   axi_ram #(
       .DATA_WIDTH(DATA_W),
-      .ADDR_WIDTH(SRAM_ADDR_W),
+      .ADDR_WIDTH(BOOTROM_ADDR_W),
       .ID_WIDTH(INTMEM_AXI_ID_W),
       .PIPELINE_OUTPUT(2),
       .FILE("iob_soc_opencryptolinux_boot.hex")
@@ -229,7 +229,7 @@ module iob_soc_opencryptolinux #(
       .rst_i(arst_i),
 
       .axi_awid_i(intmem_axi_awid),
-      .axi_awaddr_i(intmem_axi_awaddr[SRAM_ADDR_W-1:0]),
+      .axi_awaddr_i(intmem_axi_awaddr[BOOTROM_ADDR_W-1:0]),
       .axi_awlen_i(intmem_axi_awlen),
       .axi_awsize_i(intmem_axi_awsize),
       .axi_awburst_i(intmem_axi_awburst),
@@ -249,7 +249,7 @@ module iob_soc_opencryptolinux #(
       .axi_bvalid_o(intmem_axi_bvalid),
       .axi_bready_i(intmem_axi_bready),
       .axi_arid_i(intmem_axi_arid),
-      .axi_araddr_i(intmem_axi_araddr[SRAM_ADDR_W-1:0]),
+      .axi_araddr_i(intmem_axi_araddr[BOOTROM_ADDR_W-1:0]),
       .axi_arlen_i(intmem_axi_arlen),
       .axi_arsize_i(intmem_axi_arsize),
       .axi_arburst_i(intmem_axi_arburst),
