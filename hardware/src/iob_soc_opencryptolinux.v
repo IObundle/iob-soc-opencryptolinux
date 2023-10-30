@@ -33,7 +33,7 @@ module iob_soc_opencryptolinux #(
   localparam INTMEM_AXI_ADDR_W = 32;
   localparam INTMEM_AXI_DATA_W = 32;
 
-  localparam N_SLAVES = 4;  // BOOT_CTR, UART, CLINT and PLIC
+  localparam N_SLAVES = `IOB_SOC_OPENCRYPTOLINUX_N_SLAVES + 2;  // BOOT_CTR, UART, CLINT and PLIC
 
 `ifdef MEM_NO_READ_ON_WRITE
   localparam READ_ON_WRITE = 0;
