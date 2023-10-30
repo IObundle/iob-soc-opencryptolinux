@@ -49,17 +49,15 @@ int main() {
   char kernel[] = "Image";
   char dtb[] = "iob_soc.dtb";
   char rootfs[] = "rootfs.cpio.gz";
-  if (uart16550_getc() == FRX) { // file receive: load firmware
-    file_size = uart16550_recvfile(opensbi, prog_start_addr);
-    prog_start_addr = (char *)(EXT_MEM + 0x00400000);
-    file_size = uart16550_recvfile(kernel, prog_start_addr);
-    prog_start_addr = (char *)(EXT_MEM + 0x00F80000);
-    file_size = uart16550_recvfile(dtb, prog_start_addr);
-    prog_start_addr = (char *)(EXT_MEM + 0x01000000);
-    file_size = uart16550_recvfile(rootfs, prog_start_addr);
-    uart16550_puts(PROGNAME);
-    uart16550_puts(": Loading firmware...\n");
-  }
+  file_size = uart16550_recvfile(opensbi, prog_start_addr);
+  prog_start_addr = (char *)(EXT_MEM + 0x00400000);
+  file_size = uart16550_recvfile(kernel, prog_start_addr);
+  prog_start_addr = (char *)(EXT_MEM + 0x00F80000);
+  file_size = uart16550_recvfile(dtb, prog_start_addr);
+  prog_start_addr = (char *)(EXT_MEM + 0x01000000);
+  file_size = uart16550_recvfile(rootfs, prog_start_addr);
+  uart16550_puts(PROGNAME);
+  uart16550_puts(": Loading firmware...\n");
 
 #else
 
