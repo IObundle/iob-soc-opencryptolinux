@@ -9,7 +9,7 @@ LIB_DIR:=submodules/IOBSOC/submodules/LIB
 include $(LIB_DIR)/setup.mk
 
 INIT_MEM ?= 0
-RUN_LINUX ?= 0
+RUN_LINUX ?= 1
 USE_EXTMEM := 1
 
 ifeq ($(INIT_MEM),1)
