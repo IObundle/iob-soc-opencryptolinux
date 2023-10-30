@@ -166,7 +166,6 @@ module axi_ram #(
   assign axi_rlast_o   = PIPELINE_OUTPUT ? axi_rlast_pipe_reg : axi_rlast_reg;
   assign axi_rvalid_o  = PIPELINE_OUTPUT ? axi_rvalid_pipe_reg : axi_rvalid_reg;
 
-  integer i, j;
   localparam mem_init_file_int = FILE;
 
   initial begin
@@ -176,6 +175,7 @@ module axi_ram #(
   end
 
   generate
+    genvar i;
     for (i = 0; i < WORD_WIDTH; i = i + 1) begin : g_Bytes_in_word
       if (READ_ON_WRITE) begin : g_always_read
         always @(posedge clk_i) begin
