@@ -152,28 +152,28 @@ always @(posedge trap[1]) begin
    assign ETH0_MTxClk     = eth_clk;
 
    //add core test module in testbench
-   iob_eth_tb_gen eth_tb (
-      .clk  (clk),
-      .reset(arst),
+   //iob_eth_tb_gen eth_tb (
+   //   .clk  (clk),
+   //   .reset(arst),
 
-      // This module acts like a loopback
-      .MRxClk (ETH0_MTxClk),
-      .MRxD   (ETH0_MTxD),
-      .MRxDv  (ETH0_MTxEn),
-      .MRxErr (ETH0_MTxErr),
+   //   // This module acts like a loopback
+   //   .MRxClk (ETH0_MTxClk),
+   //   .MRxD   (ETH0_MTxD),
+   //   .MRxDv  (ETH0_MTxEn),
+   //   .MRxErr (ETH0_MTxErr),
 
-      // The wires are thus reversed
-      .MTxClk (ETH0_MRxClk),
-      .MTxD   (ETH0_MRxD),
-      .MTxEn  (ETH0_MRxDv),
-      .MTxErr (ETH0_MRxErr),
+   //   // The wires are thus reversed
+   //   .MTxClk (ETH0_MRxClk),
+   //   .MTxD   (ETH0_MRxD),
+   //   .MTxEn  (ETH0_MRxDv),
+   //   .MTxErr (ETH0_MRxErr),
 
-      .MColl(1'b0),
-      .MCrS(1'b0),
+   //   .MColl(1'b0),
+   //   .MCrS(1'b0),
 
-      .MDC(),
-      .MDIO(),
-   );
+   //   .MDC(),
+   //   .MDIO()
+   //);
 `endif
 
 endmodule
