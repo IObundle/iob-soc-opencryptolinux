@@ -35,11 +35,6 @@ module iob_soc_opencryptolinux #(
 
   localparam N_SLAVES = `IOB_SOC_OPENCRYPTOLINUX_N_SLAVES + 2;  // BOOT_CTR, UART, CLINT and PLIC
 
-`ifdef MEM_NO_READ_ON_WRITE
-  localparam READ_ON_WRITE = 0;
-`else
-  localparam READ_ON_WRITE = 1;
-`endif
 
   `include "iob_soc_opencryptolinux_pwires.vs"
 
@@ -226,7 +221,11 @@ module iob_soc_opencryptolinux #(
       .DATA_WIDTH(DATA_W),
       .ADDR_WIDTH(SRAM_ADDR_W),
       .ID_WIDTH(INTMEM_AXI_ID_W),
-      .READ_ON_WRITE(READ_ON_WRITE),
+`ifdef MEM_NO_READ_ON_WRITE
+      .READ_ON_WRITE(0),
+`else
+      .READ_ON_WRITE(1),
+`endif
       .PIPELINE_OUTPUT(2),
       .FILE("iob_soc_opencryptolinux_boot.hex")
   ) boot_ram (
