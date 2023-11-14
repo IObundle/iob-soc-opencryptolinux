@@ -2,9 +2,11 @@
 import os
 import sys
 import shutil
+import math
 
 from mk_configuration import update_define
 from verilog_tools import inplace_change
+from iob_soc_opencryptolinux_create_periphs_tmp import create_periphs_tmp
 
 from iob_soc import iob_soc
 from iob_vexriscv import iob_vexriscv
@@ -33,6 +35,36 @@ class iob_soc_opencryptolinux(iob_soc):
         if iob_spi_master in cls.submodule_list:
             cls.peripherals.append(iob_spi_master("SPI0", "SPI master peripheral"))
 
+        # Add custom N_SLAVES and N_SLAVES_W
+        cls.confs += [
+            {
+                "name": "N_SLAVES",
+                "type": "M",
+                "val": str(
+                    len(cls.peripherals) + 3
+                ),  # + 3 for internal BOOT_CTR, PLIC and CLINT
+                "min": "NA",
+                "max": "NA",
+                "descr": "Number of peripherals",
+            },
+            {
+                "name": "N_SLAVES_W",
+                "type": "M",
+                "val": str(
+                    math.ceil(
+                        math.log(
+                            len(cls.peripherals)
+                            + 3,  # + 3 for internal BOOT_CTR, PLIC and CLINT
+                            2,
+                        )
+                    )
+                ),
+                "min": "NA",
+                "max": "NA",
+                "descr": "Peripheral bus width",
+            },
+        ]
+
     @classmethod
     def _create_submodules_list(cls, extra_submodules=[]):
         """Create submodules list with dependencies of this module"""
@@ -50,7 +82,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_uart16550,
                 axil2iob,
                 iob_reset_sync,
-                # iob_spi,
+                # iob_spi_master,
                 (iob_uart, {"purpose": "simulation"}),
             ]
             + extra_submodules
@@ -88,6 +120,13 @@ class iob_soc_opencryptolinux(iob_soc):
                 "define BAUD 115200",
                 "define BAUD 3000000",
             )
+
+        # Override periphs_tmp.h of iob-soc with one specific for opencryptolinux
+        create_periphs_tmp(
+            next(i["val"] for i in cls.confs if i["name"] == "ADDR_W"),
+            cls.peripherals,
+            f"{cls.build_dir}/software/{cls.name}_periphs.h",
+        )
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
