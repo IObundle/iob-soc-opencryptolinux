@@ -71,7 +71,6 @@ module iob_soc_opencryptolinux_sim_wrapper (
    axi_ram #(
 `ifdef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
       .FILE      ("init_ddr_contents.hex"),  //This file contains firmware for both systems
-      .FILE_SIZE (2 ** (AXI_ADDR_W - 2)),
 `endif
       .ID_WIDTH  (AXI_ID_W),
       .DATA_WIDTH(AXI_DATA_W),

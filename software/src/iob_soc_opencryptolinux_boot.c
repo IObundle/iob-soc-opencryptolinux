@@ -6,7 +6,7 @@
 
 // defined here (and not in periphs.h) because it is the only peripheral used
 // by the bootloader
-#define UART0_BASE 0xf4000000
+#define UART0_BASE ((UART0<<(ADDR_W-4-N_SLAVES_W))|(0xf<<(ADDR_W-4)))
 
 #define PROGNAME "IOb-Bootloader"
 
@@ -49,17 +49,15 @@ int main() {
   char kernel[] = "Image";
   char dtb[] = "iob_soc.dtb";
   char rootfs[] = "rootfs.cpio.gz";
-  if (uart16550_getc() == FRX) { // file receive: load firmware
-    file_size = uart16550_recvfile(opensbi, prog_start_addr);
-    prog_start_addr = (char *)(EXT_MEM + 0x00400000);
-    file_size = uart16550_recvfile(kernel, prog_start_addr);
-    prog_start_addr = (char *)(EXT_MEM + 0x00F80000);
-    file_size = uart16550_recvfile(dtb, prog_start_addr);
-    prog_start_addr = (char *)(EXT_MEM + 0x01000000);
-    file_size = uart16550_recvfile(rootfs, prog_start_addr);
-    uart16550_puts(PROGNAME);
-    uart16550_puts(": Loading firmware...\n");
-  }
+  file_size = uart16550_recvfile(opensbi, prog_start_addr);
+  prog_start_addr = (char *)(EXT_MEM + 0x00400000);
+  file_size = uart16550_recvfile(kernel, prog_start_addr);
+  prog_start_addr = (char *)(EXT_MEM + 0x00F80000);
+  file_size = uart16550_recvfile(dtb, prog_start_addr);
+  prog_start_addr = (char *)(EXT_MEM + 0x01000000);
+  file_size = uart16550_recvfile(rootfs, prog_start_addr);
+  uart16550_puts(PROGNAME);
+  uart16550_puts(": Loading firmware...\n");
 
 #else
 

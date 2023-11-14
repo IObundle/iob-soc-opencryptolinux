@@ -2,6 +2,7 @@
 #include "clint.h"
 #include "iob-uart16550.h"
 #include "iob_soc_opencryptolinux_conf.h"
+#include "iob_soc_opencryptolinux_periphs.h"
 #include "iob_soc_opencryptolinux_system.h"
 #include "iob_str.h"
 #include "plic.h"
@@ -9,10 +10,6 @@
 
 #include "riscv-csr.h"
 #include "riscv-interrupts.h"
-
-#define UART0_BASE 0xf4000000
-#define CLINT0_BASE 0xf8000000
-#define PLIC0_BASE 0xfc000000
 
 #ifdef SIMULATION
 #define WAIT_TIME 0.001
