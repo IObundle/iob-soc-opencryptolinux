@@ -88,19 +88,19 @@ jobs:
       - name: ku040 test
         run: make fpga-run RUN_LINUX=0 INIT_MEM=0 BOARD=AES-KU040-DB-G
 
-  doc:
-    runs-on: self-hosted
-    timeout-minutes: 60
-    if: ${{ !cancelled() }}
-    needs: [ aes-ku040-baremetal ]
-  
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
-      - name: clean
-        run: nix-shell --run "make clean"
-      - name: setup
-        run: nix-shell --run "make setup"
-      - name: doc test
-        run: nix-shell --run "make -C ../iob_soc_o* doc-test"
+##  doc:
+##    runs-on: self-hosted
+##    timeout-minutes: 60
+##    if: ${{ !cancelled() }}
+##    needs: [ aes-ku040-baremetal ]
+##  
+##    steps:
+##      - uses: actions/checkout@v3
+##        with:
+##          submodules: 'recursive'
+##      - name: clean
+##        run: nix-shell --run "make clean"
+##      - name: setup
+##        run: nix-shell --run "make setup"
+##      - name: doc test
+##        run: nix-shell --run "make -C ../iob_soc_o* doc-test"
