@@ -6,7 +6,10 @@
 
 // defined here (and not in periphs.h) because it is the only peripheral used
 // by the bootloader
-#define UART0_BASE ((UART0<<(ADDR_W-4-N_SLAVES_W))|(0xf<<(ADDR_W-4)))
+#define UART0_BASE                                                             \
+  ((IOB_SOC_OPENCRYPTOLINUX_UART0 << (IOB_SOC_OPENCRYPTOLINUX_ADDR_W - 4 -     \
+                                      IOB_SOC_OPENCRYPTOLINUX_N_SLAVES_W)) |   \
+   (0xf << (IOB_SOC_OPENCRYPTOLINUX_ADDR_W - 4)))
 
 #define PROGNAME "IOb-Bootloader"
 
@@ -40,8 +43,8 @@ int main() {
     uart16550_puts(": Waiting for Console ACK.\n");
   }
 
-#ifndef INIT_MEM
-#ifdef RUN_LINUX
+#ifndef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
+#ifdef IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX
 
   // receive firmware from host
   int file_size = 0;
