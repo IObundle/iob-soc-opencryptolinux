@@ -74,8 +74,8 @@ module iob_soc_opencryptolinux #(
 
   assign axi_awlock_o[1] = 1'b0;
   assign axi_arlock_o[1] = 1'b0;
-  assign axi_awlen_o = extmem_axi_awlen[AXI_LEN_W-1:0];
-  assign axi_arlen_o = extmem_axi_arlen[AXI_LEN_W-1:0];
+  assign axi_awlen_o[AXI_LEN_W-1:0] = extmem_axi_awlen[AXI_LEN_W-1:0];
+  assign axi_arlen_o[AXI_LEN_W-1:0] = extmem_axi_arlen[AXI_LEN_W-1:0];
   generate
     if (AXI_ID_W != 1) begin : g_fill_ID_signal
       assign axi_awid_o[AXI_ID_W-1:1] = {(AXI_ID_W - 1) {1'b0}};
