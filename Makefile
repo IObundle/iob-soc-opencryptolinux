@@ -1,7 +1,7 @@
 CORE := iob_soc_opencryptolinux
 
 SIMULATOR ?= icarus
-BOARD ?= CYCLONEV-GT-DK
+BOARD ?= AES-KU040-DB-G
 
 DISABLE_LINT:=1
 
