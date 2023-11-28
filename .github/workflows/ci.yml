@@ -23,6 +23,17 @@ on:
 
 jobs:
 
+  spi:
+    runs-on: self-hosted
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: run simulation test
+        run: make -C submodules/CACHE test
+
   iverilog-baremetal:
     runs-on: self-hosted
     timeout-minutes: 30
