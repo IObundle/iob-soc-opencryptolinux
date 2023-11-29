@@ -13,7 +13,7 @@ VTOP:=iob_soc_opencryptolinux_sim_wrapper
 
 endif
 
-CONSOLE_CMD=../../scripts/console.py -L
+CONSOLE_CMD ?=../../scripts/console.py -L
 
 GRAB_TIMEOUT ?= 3600
 
