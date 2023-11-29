@@ -1,10 +1,10 @@
 #include "bsp.h"
-#include "clint.h"
 #include "iob-uart16550.h"
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_periphs.h"
 #include "iob_soc_opencryptolinux_system.h"
 #include "iob_str.h"
+#include "clint.h"
 #include "plic.h"
 #include "printf.h"
 
@@ -119,6 +119,7 @@ int main() {
   free(recvfile);
 
   printf("Exit...\n");
+  uart16550_sendfile("test.log", iob_strlen(pass_string), pass_string);
   uart16550_finish();
 
   return 0;
