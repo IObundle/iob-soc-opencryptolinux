@@ -23,6 +23,11 @@ endif
 setup:
 	make build-setup SETUP_ARGS="$(SETUP_ARGS)"
 
+test-linux:
+	nix-shell --run "make clean"
+	nix-shell --run "make setup INIT_MEM=1 RUN_LINUX=1"
+	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
+
 sim-test:
 	# IOb-SoC-Opencryptolinux only supports USE_EXTMEM=1
 	#make clean && make setup && make -C ../iob_soc_opencryptolinux_V*/ sim-test
