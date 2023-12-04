@@ -13,6 +13,7 @@ GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO = $(call GET_MACRO,IOB_SOC_OPENCRYPTOLINU
 
 iob_soc_opencryptolinux_boot.hex: ../../software/iob_soc_opencryptolinux_boot.bin
 	../../scripts/makehex.py $< $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,BOOTROM_ADDR_W) > $@
+	../../scripts/hex_split.py iob_soc_opencryptolinux_boot .
 
 #OS
 ifeq ($(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,RUN_LINUX),1)

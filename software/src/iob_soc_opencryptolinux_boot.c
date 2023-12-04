@@ -82,7 +82,7 @@ int main() {
 #endif
 #endif
 
-#ifdef RUN_LINUX
+#ifdef IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX
   uart16550_putc((char)DC1);
 #endif
 

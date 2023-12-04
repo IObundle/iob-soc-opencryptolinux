@@ -23,7 +23,7 @@ endif
 setup:
 	make build-setup SETUP_ARGS="$(SETUP_ARGS)"
 
-test-linux:
+sim-test-linux:
 	nix-shell --run "make clean"
 	nix-shell --run "make setup INIT_MEM=1 RUN_LINUX=1"
 	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
