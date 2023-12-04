@@ -113,13 +113,11 @@ class iob_soc_opencryptolinux(iob_soc):
         # If RUN_LINUX is not set, use 3000000 baud in simulation
         for arg in sys.argv[1:]:
             if arg == "RUN_LINUX":
-                break
-        else:
-            inplace_change(
-                os.path.join(cls.build_dir, "hardware/simulation/bsp.vh"),
-                "define BAUD 115200",
-                "define BAUD 3000000",
-            )
+                inplace_change(
+                    os.path.join(cls.build_dir, "hardware/simulation/src/bsp.vh"),
+                    "define BAUD 3000000",
+                    "define BAUD 115200",
+                )
 
         # Override periphs_tmp.h of iob-soc with one specific for opencryptolinux
         create_periphs_tmp(
