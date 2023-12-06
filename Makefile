@@ -29,11 +29,12 @@ sim-test-linux:
 	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
 
 sim-test:
-	# IOb-SoC-Opencryptolinux only supports USE_EXTMEM=1
-	#make clean && make setup && make -C ../iob_soc_opencryptolinux_V*/ sim-test
-	#make clean && make setup INIT_MEM=0 && make -C ../iob_soc_opencryptolinux_V*/ sim-test
-	make clean && make setup USE_EXTMEM=1 && make -C ../iob_soc_opencryptolinux_V*/ sim-test
-	make clean && make setup INIT_MEM=0 USE_EXTMEM=1 && make -C ../iob_soc_opencryptolinux_V*/ sim-test
+	nix-shell --run "make clean"
+	nix-shell --run "make setup INIT_MEM=1 RUN_LINUX=0"
+	nix-shell --run "make -C ../iob_soc_o* sim-run"
+	nix-shell --run "make clean"
+	nix-shell --run "make setup INIT_MEM=0 RUN_LINUX=0"
+	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
 
 fpga-run:
 	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM) RUN_LINUX=$(RUN_LINUX) && make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD)'
