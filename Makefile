@@ -2,6 +2,7 @@ CORE := iob_soc_opencryptolinux
 
 SIMULATOR ?= icarus
 BOARD ?= AES-KU040-DB-G
+GRAB_TIMEOUT ?= 1800
 
 DISABLE_LINT:=1
 
@@ -38,16 +39,14 @@ sim-test:
 
 fpga-run:
 	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM) RUN_LINUX=$(RUN_LINUX) && make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD)'
-	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD)
+	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) GRAB_TIMEOUT=$(GRAB_TIMEOUT)
 
 fpga-test:
 	# IOb-SoC-Opencryptolinux only supports USE_EXTMEM=1
 	make clean setup fpga-run INIT_MEM=0 USE_EXTMEM=1
 
 test-all:
-	make clean && make setup && make -C ../iob_soc_opencryptolinux_V*/ pc-emul-test
-	#make sim-test SIMULATOR=icarus
-	make sim-test SIMULATOR=verilator
+	make sim-test
 	make fpga-test BOARD=CYCLONEV-GT-DK
 	make fpga-test BOARD=AES-KU040-DB-G
 	make clean && make setup && make -C ../iob_soc_opencryptolinux_V*/ doc-test
