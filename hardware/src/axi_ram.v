@@ -185,19 +185,23 @@ module axi_ram #(
       end
     end else begin : g_no_read_on_write
       localparam file_suffix = {"7", "6", "5", "4", "3", "2", "1", "0"};
+      wire [VALID_ADDR_WIDTH-1:0] ram_addr_valid;
+      wire [WORD_WIDTH-1:0] ram_en;
+      assign ram_addr_valid = mem_wr_en ? write_addr_valid : read_addr_valid;
       for (i = 0; i < WORD_WIDTH; i = i + 1) begin : g_Bytes_in_word
         localparam mem_init_file_int = (FILE != "none") ?
              {FILE, "_", file_suffix[8*(i+1)-1-:8], ".hex"} : "none";
+        assign ram_en[i] = mem_wr_en ? axi_wstrb_i[i] : 1'b1;
 
         iob_ram_sp #(
             .HEXFILE(mem_init_file_int),
-            .ADDR_W (ADDR_WIDTH),
+            .ADDR_W (VALID_ADDR_WIDTH),
             .DATA_W (WORD_SIZE)
         ) ram (
             .clk_i(clk_i),
 
-            .en_i  (axi_wstrb_i[i]),
-            .addr_i(mem_wr_en? write_addr_valid:read_addr_valid),
+            .en_i  (ram_en[i]),
+            .addr_i(ram_addr_valid),
             .d_i   (axi_wdata_i[WORD_SIZE*i+:WORD_SIZE]),
             .we_i  (mem_wr_en),
             .d_o   (axi_rdata_reg[WORD_SIZE*i+:WORD_SIZE])
