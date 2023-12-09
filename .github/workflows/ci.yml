@@ -36,7 +36,7 @@ jobs:
       - name: clean
         run: nix-shell --run "make clean"
       - name: setup init_mem ext_mem
-        run: nix-shell --run "make setup RUN_LINUX=0 INIT_MEM=1"
+        run: nix-shell --run "make setup INIT_MEM=1"
       - name: verilator test
         run: nix-shell --run "make -C ../iob_soc_o* sim-run"
 
@@ -53,25 +53,25 @@ jobs:
       - name: clean
         run: nix-shell --run "make clean"
       - name: setup init_mem ext_mem
-        run: nix-shell --run "make setup RUN_LINUX=0 INIT_MEM=0"
+        run: nix-shell --run "make setup INIT_MEM=0"
       - name: verilator test
         run: nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
 
   
-##  cyclonev-baremetal:
-##    runs-on: self-hosted
-##    timeout-minutes: 60
-##    # run even if previous job failed
-##    if: ${{ !cancelled() }}
-##    # run after indicated job
-##    needs: [ verilator-baremetal ]
-##  
-##    steps:
-##      - uses: actions/checkout@v3
-##        with:
-##          submodules: 'recursive'
-##      - name: cyclonev test
-##        run: make fpga-run RUN_LINUX=0 INIT_MEM=0 BOARD=CYCLONEV-GT-DK
+  cyclonev-baremetal:
+    runs-on: self-hosted
+    timeout-minutes: 60
+    # run even if previous job failed
+    if: ${{ !cancelled() }}
+    # run after indicated job
+    needs: [ verilator-baremetal ]
+  
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: cyclonev test
+        run: make fpga-run RUN_LINUX=0 INIT_MEM=0 BOARD=CYCLONEV-GT-DK
   
   aes-ku040-baremetal:
     runs-on: self-hosted
