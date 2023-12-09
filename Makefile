@@ -26,24 +26,24 @@ setup:
 
 sim-test-linux:
 	nix-shell --run "make clean"
-	nix-shell --run "make setup INIT_MEM=1 RUN_LINUX=1"
-	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
+	nix-shell --run "make setup INIT_MEM=1"
+	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator RUN_LINUX=1"
 
 sim-test:
 	nix-shell --run "make clean"
-	nix-shell --run "make setup INIT_MEM=1 RUN_LINUX=0"
+	nix-shell --run "make setup INIT_MEM=1"
 	nix-shell --run "make -C ../iob_soc_o* sim-run"
 	nix-shell --run "make clean"
-	nix-shell --run "make setup INIT_MEM=0 RUN_LINUX=0"
+	nix-shell --run "make setup INIT_MEM=0"
 	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
 
 fpga-run:
-	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM) RUN_LINUX=$(RUN_LINUX) && make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD)'
-	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) GRAB_TIMEOUT=$(GRAB_TIMEOUT)
+	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM) && make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX)'
+	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) GRAB_TIMEOUT=$(GRAB_TIMEOUT) RUN_LINUX=$(RUN_LINUX)
 
 fpga-test:
-	# IOb-SoC-Opencryptolinux only supports USE_EXTMEM=1
-	make clean setup fpga-run INIT_MEM=0 USE_EXTMEM=1
+	# IOb-SoC-Opencryptolinux always uses external memory
+	make clean setup fpga-run INIT_MEM=0
 
 test-all:
 	make sim-test
