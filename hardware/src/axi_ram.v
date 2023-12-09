@@ -171,7 +171,7 @@ module axi_ram #(
     if (READ_ON_WRITE) begin : g_always_read
       localparam mem_init_file_int = {FILE, ".hex"};
       initial begin
-        if (mem_init_file_int != "none") begin
+        if (FILE != "none") begin
           $readmemh(mem_init_file_int, mem, 0, 2 ** VALID_ADDR_WIDTH - 1);
         end
       end

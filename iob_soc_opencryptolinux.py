@@ -116,20 +116,8 @@ class iob_soc_opencryptolinux(iob_soc):
         dst = f"{cls.build_dir}/scripts"
         src_file = f"{__class__.setup_dir}/submodules/IOBSOC/submodules/LIB/scripts/noncanonical.py"
         shutil.copy2(src_file, dst)
-
-        # Copy iob_mem_load file to build directory
-        dst = f"{cls.build_dir}/hardware"
-        src_file = f"{__class__.setup_dir}/hardware/iob_mem_load.txt"
+        src_file = f"{__class__.setup_dir}/scripts/check_if_run_linux.py"
         shutil.copy2(src_file, dst)
-
-        # If RUN_LINUX is not set, use 3000000 baud in simulation
-        for arg in sys.argv[1:]:
-            if arg == "RUN_LINUX":
-                inplace_change(
-                    os.path.join(cls.build_dir, "hardware/simulation/src/bsp.vh"),
-                    "define BAUD 3000000",
-                    "define BAUD 115200",
-                )
 
         # Override periphs_tmp.h of iob-soc with one specific for opencryptolinux
         create_periphs_tmp(

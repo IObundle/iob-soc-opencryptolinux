@@ -45,7 +45,7 @@ int main() {
   }
 
 #ifndef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
-  file_size = uart16550_recvfile("../iob_mem_load.txt", prog_start_addr);
+  file_size = uart16550_recvfile("../iob_mem.txt", prog_start_addr);
   // compute_mem_load_txt
   int state = 0;
   int file_name_count = 0;
@@ -83,8 +83,8 @@ int main() {
           uart16550_puts(PROGNAME);
           uart16550_puts(": invalid hexadecimal character.\n");
         }
-        file_address_array[file_count] =
-            file_address_array[file_count] * 16 + hexDecimal;
+        file_address_array[file_count-1] =
+            file_address_array[file_count-1] * 16 + hexDecimal;
       }
     }
   }
