@@ -38,8 +38,14 @@ sim-test:
 	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
 
 fpga-run:
-	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM) && make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX)'
-	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) GRAB_TIMEOUT=$(GRAB_TIMEOUT) RUN_LINUX=$(RUN_LINUX)
+	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM)'
+	nix-shell --run 'RUN_LINUX=$(RUN_LINUX) make -C ../$(CORE)_V*/ fpga-fw-build'
+	BOARD=$(BOARD) GRAB_TIMEOUT=$(GRAB_TIMEOUT) make -C ../$(CORE)_V*/ fpga-run 
+
+fpga-connect:
+	nix-shell --run 'RUN_LINUX=$(RUN_LINUX) make -C ../$(CORE)_V*/ fpga-fw-build'
+#   Should run under 'bash', running with 'fish' as a shell gives an error
+	BOARD=$(BOARD) GRAB_TIMEOUT=$(GRAB_TIMEOUT) make -C ../$(CORE)_V*/ fpga-run 
 
 fpga-test:
 	# IOb-SoC-Opencryptolinux always uses external memory
