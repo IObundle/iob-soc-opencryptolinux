@@ -95,6 +95,7 @@ class iob_soc_opencryptolinux(iob_soc):
             if type(cls.submodule_list[i]) == type and cls.submodule_list[i].name in [
                 "iob_picorv32",
                 "iob_uart",
+                "iob_cache",
                 "axi_interconnect",
             ]:
                 cls.submodule_list.pop(i)
