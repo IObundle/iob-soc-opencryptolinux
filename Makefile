@@ -39,11 +39,11 @@ sim-test:
 
 fpga-run:
 	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM)'
-	nix-shell --run 'RUN_LINUX=$(RUN_LINUX) make -C ../$(CORE)_V*/ fpga-fw-build'
+	nix-shell --run 'BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) make -C ../$(CORE)_V*/ fpga-fw-build'
 	BOARD=$(BOARD) GRAB_TIMEOUT=$(GRAB_TIMEOUT) make -C ../$(CORE)_V*/ fpga-run 
 
 fpga-connect:
-	nix-shell --run 'RUN_LINUX=$(RUN_LINUX) make -C ../$(CORE)_V*/ fpga-fw-build'
+	nix-shell --run 'BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) make -C ../$(CORE)_V*/ fpga-fw-build'
 #   Should run under 'bash', running with 'fish' as a shell gives an error
 	BOARD=$(BOARD) GRAB_TIMEOUT=$(GRAB_TIMEOUT) make -C ../$(CORE)_V*/ fpga-run 
 
