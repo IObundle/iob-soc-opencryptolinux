@@ -40,12 +40,12 @@ sim-test:
 fpga-run:
 	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM)'
 	nix-shell --run 'BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) make -C ../$(CORE)_V*/ fpga-fw-build'
-	BOARD=$(BOARD) GRAB_TIMEOUT=$(GRAB_TIMEOUT) make -C ../$(CORE)_V*/ fpga-run 
+	BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) GRAB_TIMEOUT=$(GRAB_TIMEOUT) make -C ../$(CORE)_V*/ fpga-run 
 
 fpga-connect:
 	nix-shell --run 'BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) make -C ../$(CORE)_V*/ fpga-fw-build'
 #   Should run under 'bash', running with 'fish' as a shell gives an error
-	BOARD=$(BOARD) GRAB_TIMEOUT=$(GRAB_TIMEOUT) make -C ../$(CORE)_V*/ fpga-run 
+	BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) GRAB_TIMEOUT=$(GRAB_TIMEOUT) make -C ../$(CORE)_V*/ fpga-run 
 
 fpga-test:
 	# IOb-SoC-Opencryptolinux always uses external memory
