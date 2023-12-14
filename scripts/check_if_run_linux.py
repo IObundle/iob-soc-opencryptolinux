@@ -8,9 +8,9 @@ if len(sys.argv) > 2:
 else:
     RUN_LINUX = "0"
 
-# Generate "iob_mem.txt" according to which binary firmware the SoC should load to RAM
+# Generate "iob_mem.config" according to which binary firmware the SoC should load to RAM
 
-iob_mem_file = f"{ROOT_DIR}/hardware/iob_mem.txt"
+iob_mem_file = f"{ROOT_DIR}/hardware/iob_mem.config"
 with open(iob_mem_file, "w") as file:
     if RUN_LINUX == "1":
         file.write(

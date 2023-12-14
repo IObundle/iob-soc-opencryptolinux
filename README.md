@@ -2,6 +2,36 @@
 
 IOb-SoC-OpenCryptoLinux is a System-on-Chip (SoC) template comprising an open-source RISC-V processor (VexRiscv), an internal boot memory subsystem, a UART, and an interface to external memory. The external memory interface is a 3rd party memory controller IP (typically a DDR controller) using an AXI4 master bus.
 
+## Getting Started (Quickly)
+
+This section offers a quick guide for users to start using IOb-SoC-OpenCryptoLinux. The following commands streamline the setup process for simulation and running on an FPGA board:
+
+```bash
+# Clone the repository
+git clone --recursive git@github.com:IObundle/iob-soc-opencryptolinux.git
+# Navigate to the project directory
+cd iob-soc-opencryptolinux
+# Simulate bare-metal firmware with IVerilog and Verilator
+make sim-test
+# Simulate the Linux OS with Verilator
+make sim-test-linux
+# Run Linux on the KU board by default
+make fpga-run
+# After running `fpga-run`, select either bare-metal firmware (with `RUN_LINUX` is 0) or the Linux OS (with `RUN_LINUX` is 1)
+make fpga-connect RUN_LINUX=0
+```
+
+These commands aim to expedite the setup process for both simulation and FPGA board execution. Adjust the values as needed for your specific use case.
+
+## Differences to [IOb-SoC](https://github.com/IObundle/iob-soc)
+This section outlines the distinctions between IOb-SoC and IOb-SoC-OpenCryptoLinux.
+
+Compared to IOb-SoC, IOb-SoC-OpenCryptoLinux features a distinct CPU and employs AXI in the internal signals, deviating from the IOb-bus used by IOb-SoC. Another significant difference is the placement of firmware, as the one in IOb-SoC-OpenCryptoLinux always resides in external memory.
+
+Additionally, the bootloader in IOb-SoC-OpenCryptoLinux differs from that in IOb-SoC. In IOb-SoC-OpenCryptoLinux, the bootloader is directly loaded into internal RAM, whereas in IOb-SoC, the bootloader binary starts in ROM and is then copied to RAM.
+
+The boot control unit in IOb-SoC-OpenCryptoLinux, unlike IOb-SoC, is a distinct module and exclusively manages the boot process state. On the software side, the IOb-SoC-OpenCryptoLinux bootloader initially loads a file named iob_mem.config, which specifies the files and their respective memory addresses to be copied into external memory.
+
 ## Nix environment
 
 You can use
