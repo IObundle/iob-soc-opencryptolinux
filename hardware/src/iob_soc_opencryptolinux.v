@@ -222,8 +222,13 @@ module iob_soc_opencryptolinux #(
       .DATA_WIDTH(DATA_W),
       .ADDR_WIDTH(BOOTROM_ADDR_W),
       .ID_WIDTH(INTMEM_AXI_ID_W),
+`ifdef MEM_NO_READ_ON_WRITE
+      .READ_ON_WRITE(0),
+`else
+      .READ_ON_WRITE(1),
+`endif
       .PIPELINE_OUTPUT(2),
-      .FILE("iob_soc_opencryptolinux_boot.hex")
+      .FILE("iob_soc_opencryptolinux_boot")
   ) boot_ram (
       .clk_i(clk_i),
       .rst_i(arst_i),

@@ -21,6 +21,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 */
+/*
+Changes made (2023 Pedro Antunes):
+- formated the code with Verible
+- removed intialization in "reg" type signals declaration.
+- added reset to registers that did not previously have a reset value.
+*/
 
 // Language: Verilog 2001
 
@@ -181,10 +187,10 @@ module axi_interconnect #(
     output wire [             M_COUNT-1:0] m_axi_rready
 );
 
-  parameter CL_S_COUNT = $clog2(S_COUNT);
-  parameter CL_M_COUNT = $clog2(M_COUNT);
+  localparam CL_S_COUNT = $clog2(S_COUNT);
+  localparam CL_M_COUNT = $clog2(M_COUNT);
 
-  parameter AUSER_WIDTH = AWUSER_WIDTH > ARUSER_WIDTH ? AWUSER_WIDTH : ARUSER_WIDTH;
+  localparam AUSER_WIDTH = AWUSER_WIDTH > ARUSER_WIDTH ? AWUSER_WIDTH : ARUSER_WIDTH;
 
   // default address computation
   function automatic [M_COUNT*M_REGIONS*ADDR_WIDTH-1:0] calcBaseAddrs(input integer dummy);
@@ -203,7 +209,7 @@ module axi_interconnect #(
     end
   endfunction
 
-  parameter M_BASE_ADDR_INT = M_BASE_ADDR ? M_BASE_ADDR : calcBaseAddrs(0);
+  localparam M_BASE_ADDR_INT = M_BASE_ADDR ? M_BASE_ADDR : calcBaseAddrs(0);
 
   integer i, j;
 

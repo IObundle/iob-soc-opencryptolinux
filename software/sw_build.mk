@@ -13,32 +13,38 @@ GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO = $(call GET_MACRO,IOB_SOC_OPENCRYPTOLINU
 
 iob_soc_opencryptolinux_boot.hex: ../../software/iob_soc_opencryptolinux_boot.bin
 	../../scripts/makehex.py $< $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,BOOTROM_ADDR_W) > $@
+	../../scripts/hex_split.py iob_soc_opencryptolinux_boot .
 
 #OS
-ifeq ($(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,RUN_LINUX),1)
+ifeq ($(RUN_LINUX),1)
 OS_DIR = ../../software/src
-OPENSBI_DIR = $(OS_DIR)/fw_jump.bin
-DTB_DIR = $(OS_DIR)/iob_soc.dtb
+OPENSBI_DIR = fw_jump.bin
+DTB_DIR = iob_soc.dtb
 DTB_ADDR:=00F80000
-LINUX_DIR = $(OS_DIR)/Image
+LINUX_DIR = Image
 LINUX_ADDR:=00400000
-ROOTFS_DIR = $(OS_DIR)/rootfs.cpio.gz
+ROOTFS_DIR = rootfs.cpio.gz
 ROOTFS_ADDR:=01000000
 FIRM_ARGS = $(OPENSBI_DIR)
 FIRM_ARGS += $(DTB_DIR) $(DTB_ADDR)
 FIRM_ARGS += $(LINUX_DIR) $(LINUX_ADDR)
 FIRM_ARGS += $(ROOTFS_DIR) $(ROOTFS_ADDR)
 FIRM_ADDR_W = $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,OS_ADDR_W)
+FIRMWARE := fw_jump.bin iob_soc.dtb Image rootfs.cpio.gz
 else
 FIRM_ARGS = $<
 FIRM_ADDR_W = $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,SRAM_ADDR_W)
+FIRMWARE := iob_soc_opencryptolinux_firmware.bin
 endif
-iob_soc_opencryptolinux_firmware.hex: iob_soc_opencryptolinux_firmware.bin
+iob_soc_opencryptolinux_firmware.hex: $(FIRMWARE)
 	../../scripts/makehex.py $(FIRM_ARGS) $(FIRM_ADDR_W) > $@
 	../../scripts/hex_split.py iob_soc_opencryptolinux_firmware .
 
 iob_soc_opencryptolinux_firmware.bin: ../../software/iob_soc_opencryptolinux_firmware.bin
 	cp $< $@
+
+fw_jump.bin iob_soc.dtb Image rootfs.cpio.gz:
+	cp $(OS_DIR)/$@ .
 
 ../../software/%.bin:
 	make -C ../../ fw-build
@@ -68,8 +74,11 @@ IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=$(filter-out %_emul.c, $(wildcard src/iob*cach
 
 build_iob_soc_opencryptolinux_software: iob_soc_opencryptolinux_firmware iob_soc_opencryptolinux_boot
 
-iob_soc_opencryptolinux_firmware:
+iob_soc_opencryptolinux_firmware: check_if_run_linux
 	make $@.elf INCLUDES="$(IOB_SOC_OPENCRYPTOLINUX_INCLUDES)" LFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_LFLAGS) -Wl,-Map,$@.map" SRC="$(IOB_SOC_OPENCRYPTOLINUX_FW_SRC)" TEMPLATE_LDS="$(TEMPLATE_LDS)"
+
+check_if_run_linux:
+	python3 $(ROOT_DIR)/scripts/check_if_run_linux.py $(ROOT_DIR) $(RUN_LINUX)
 
 iob_soc_opencryptolinux_boot:
 	make $@.elf INCLUDES="$(IOB_SOC_OPENCRYPTOLINUX_INCLUDES)" LFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_LFLAGS) -Wl,-Map,$@.map" SRC="$(IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC)" TEMPLATE_LDS="$(TEMPLATE_LDS)"
@@ -98,11 +107,3 @@ EMUL_SRC+=src/iob_str.c
 # PERIPHERAL SOURCES
 EMUL_SRC+=$(wildcard src/iob-*.c)
 
-EMUL_TEST_LIST+=pcemul_test1
-pcemul_test1:
-	make run_emul TEST_LOG="> test.log"
-
-
-CLEAN_LIST+=clean1
-clean1:
-	@rm -rf iob_soc_opencryptolinux_conf.h

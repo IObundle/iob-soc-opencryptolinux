@@ -21,6 +21,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 */
+/*
+Changes made (2023 Pedro Antunes):
+- formated the code with Verible;
+- removed intialization in "reg" type signals declaration;
+- added reset to registers that did not previously have a reset value;
+- separated memory writes and reads from the registers always block
+- added support for memories that can not read and write at the same time
+*/
 
 // Language: Verilog 2001
 
@@ -30,19 +38,17 @@ THE SOFTWARE.
  * AXI4 RAM
  */
 module axi_ram #(
-    // Width of data bus in bits
     parameter DATA_WIDTH      = 32,
-    // Width of address bus in bits
     parameter ADDR_WIDTH      = 16,
-    // Width of wstrb (width of data bus in words)
     parameter STRB_WIDTH      = (DATA_WIDTH / 8),
-    // Width of ID signal
+    parameter READ_ON_WRITE   = 1,
+    // Width of AXI signals
     parameter ID_WIDTH        = 8,
     parameter LEN_WIDTH       = 8,
     // Extra pipeline register on output
     parameter PIPELINE_OUTPUT = 0,
-    parameter FILE            = "none",
-    parameter HEX_DATA_W      = DATA_WIDTH
+    // File with which to preload RAM
+    parameter FILE            = "none"
 ) (
     input wire clk_i,
     input wire rst_i,
@@ -114,7 +120,6 @@ module axi_ram #(
   reg [1:0] write_state_reg, write_state_next;
 
   reg mem_wr_en;
-  reg mem_rd_en;
 
   reg [ID_WIDTH-1:0] read_id_reg, read_id_next;
   reg [ADDR_WIDTH-1:0] read_addr_reg, read_addr_next;
@@ -161,14 +166,49 @@ module axi_ram #(
   assign axi_rlast_o   = PIPELINE_OUTPUT ? axi_rlast_pipe_reg : axi_rlast_reg;
   assign axi_rvalid_o  = PIPELINE_OUTPUT ? axi_rvalid_pipe_reg : axi_rvalid_reg;
 
-  integer i, j;
-  localparam mem_init_file_int = FILE;
+  generate
+    genvar i;
+    if (READ_ON_WRITE) begin : g_always_read
+      localparam mem_init_file_int = {FILE, ".hex"};
+      initial begin
+        if (FILE != "none") begin
+          $readmemh(mem_init_file_int, mem, 0, 2 ** VALID_ADDR_WIDTH - 1);
+        end
+      end
+      for (i = 0; i < WORD_WIDTH; i = i + 1) begin : g_Bytes_in_word
+        always @(posedge clk_i) begin
+          if (mem_wr_en & axi_wstrb_i[i]) begin
+            mem[write_addr_valid][WORD_SIZE*i+:WORD_SIZE] <= axi_wdata_i[WORD_SIZE*i+:WORD_SIZE];
+          end
+          axi_rdata_reg[WORD_SIZE*i+:WORD_SIZE] <= mem[read_addr_valid][WORD_SIZE*i+:WORD_SIZE];
+        end
+      end
+    end else begin : g_no_read_on_write
+      localparam file_suffix = {"7", "6", "5", "4", "3", "2", "1", "0"};
+      wire [VALID_ADDR_WIDTH-1:0] ram_addr_valid;
+      wire [WORD_WIDTH-1:0] ram_en;
+      assign ram_addr_valid = mem_wr_en ? write_addr_valid : read_addr_valid;
+      for (i = 0; i < WORD_WIDTH; i = i + 1) begin : g_Bytes_in_word
+        localparam mem_init_file_int = (FILE != "none") ?
+             {FILE, "_", file_suffix[8*(i+1)-1-:8], ".hex"} : "none";
+        assign ram_en[i] = mem_wr_en ? axi_wstrb_i[i] : 1'b1;
 
-  initial begin
-    if (mem_init_file_int != "none") begin
-      $readmemh(mem_init_file_int, mem, 0, 2 ** VALID_ADDR_WIDTH - 1);
+        iob_ram_sp #(
+            .HEXFILE(mem_init_file_int),
+            .ADDR_W (VALID_ADDR_WIDTH),
+            .DATA_W (WORD_SIZE)
+        ) ram (
+            .clk_i(clk_i),
+
+            .en_i  (ram_en[i]),
+            .addr_i(ram_addr_valid),
+            .d_i   (axi_wdata_i[WORD_SIZE*i+:WORD_SIZE]),
+            .we_i  (mem_wr_en),
+            .d_o   (axi_rdata_reg[WORD_SIZE*i+:WORD_SIZE])
+        );
+      end
     end
-  end
+  endgenerate
 
   always_comb begin
     write_state_next = WRITE_STATE_IDLE;
@@ -274,18 +314,8 @@ module axi_ram #(
     end
   end
 
-  always @(posedge clk_i) begin
-    for (i = 0; i < WORD_WIDTH; i = i + 1) begin
-      if (mem_wr_en & axi_wstrb_i[i]) begin
-        mem[write_addr_valid][WORD_SIZE*i+:WORD_SIZE] <= axi_wdata_i[WORD_SIZE*i+:WORD_SIZE];
-      end
-    end
-  end
-
   always_comb begin
     read_state_next = READ_STATE_IDLE;
-
-    mem_rd_en = 1'b0;
 
     axi_rid_next = axi_rid_reg;
     axi_rlast_next = axi_rlast_reg;
@@ -318,7 +348,6 @@ module axi_ram #(
       end
       READ_STATE_BURST: begin
         if (axi_rready_i || (PIPELINE_OUTPUT && !axi_rvalid_pipe_reg) || !axi_rvalid_reg) begin
-          mem_rd_en       = 1'b1;
           axi_rvalid_next = 1'b1;
           axi_rid_next    = read_id_reg;
           axi_rlast_next  = read_count_reg == 0;
@@ -355,7 +384,6 @@ module axi_ram #(
 
       axi_rid_reg         <= {ID_WIDTH{1'b0}};
       axi_rlast_reg       <= 1'b0;
-      axi_rdata_reg       <= {DATA_WIDTH{1'b0}};
       axi_rid_pipe_reg    <= {ID_WIDTH{1'b0}};
       axi_rdata_pipe_reg  <= {DATA_WIDTH{1'b0}};
       axi_rlast_pipe_reg  <= 1'b0;
@@ -376,10 +404,6 @@ module axi_ram #(
 
       axi_rid_reg    <= axi_rid_next;
       axi_rlast_reg  <= axi_rlast_next;
-
-      if (mem_rd_en) begin
-        axi_rdata_reg <= mem[read_addr_valid];
-      end
 
       if (!axi_rvalid_pipe_reg || axi_rready_i) begin
         axi_rid_pipe_reg   <= axi_rid_reg;
