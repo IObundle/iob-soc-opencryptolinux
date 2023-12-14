@@ -8,28 +8,33 @@
 //Peripherals _swreg_def.vh file includes.
 `include "iob_soc_opencryptolinux_periphs_swreg_def.vs"
 
-module iob_soc_opencryptolinux_sim_wrapper (
-   output trap_o,
-   //tester uart
-   input uart_avalid,
-   input [`IOB_UART_SWREG_ADDR_W-1:0] uart_addr,
-   input [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] uart_wdata,
-   input [3:0] uart_wstrb,
-   output [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] uart_rdata,
-   output uart_ready,
-   output uart_rvalid,
-`ifdef IOB_SOC_OPENCRYPTOLINUX_USE_ETHERNET
-   //IOb-SoC Ethernet
-   input ethernet_avalid,
-   input [`IOB_ETH_SWREG_ADDR_W-1:0] ethernet_addr,
-   input [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] ethernet_wdata,
-   input [3:0] ethernet_wstrb,
-   output [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] ethernet_rdata,
-   output ethernet_ready,
-   output ethernet_rvalid,
+`ifndef IOB_ETH_SWREG_ADDR_W
+`define IOB_ETH_SWREG_ADDR_W 12
 `endif
-   input [1-1:0] clk_i,  //V2TEX_IO System clock input.
-   input [1-1:0] rst_i  //V2TEX_IO System reset, asynchronous and active high.
+
+module iob_soc_opencryptolinux_sim_wrapper (
+`include "clk_rst_s_port.vs"
+   output                             trap_o,
+
+`ifdef IOB_SOC_OPENCRYPTOLINUX_USE_ETHERNET
+   // Ethernet for testbench
+   input                                        ethernet_valid_i,
+   input [`IOB_ETH_SWREG_ADDR_W-1:0]            ethernet_addr_i,
+   input [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0]  ethernet_wdata_i,
+   input [3:0]                                  ethernet_wstrb_i,
+   output [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] ethernet_rdata_o,
+   output                                       ethernet_ready_o,
+   output                                       ethernet_rvalid_o,
+`endif
+
+   // UART for testbench
+   input                                        uart_valid_i,
+   input [`IOB_UART_SWREG_ADDR_W-1:0]           uart_addr_i,
+   input [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0]  uart_wdata_i,
+   input [3:0]                                  uart_wstrb_i,
+   output [`IOB_SOC_OPENCRYPTOLINUX_DATA_W-1:0] uart_rdata_o,
+   output                                       uart_ready_o,
+   output                                       uart_rvalid_o
 );
 
    localparam AXI_ID_W = 4;
@@ -37,12 +42,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
    localparam AXI_ADDR_W = `DDR_ADDR_W;
    localparam AXI_DATA_W = `DDR_DATA_W;
 
-   wire clk = clk_i;
-   wire cke = 1'b1;
-   wire arst = rst_i;
-
    `include "iob_soc_opencryptolinux_wrapper_pwires.vs"
-
 
    /////////////////////////////////////////////
    // TEST PROCEDURE
@@ -68,11 +68,18 @@ module iob_soc_opencryptolinux_sim_wrapper (
       .AXI_DATA_W(AXI_DATA_W)
    ) soc0 (
       `include "iob_soc_opencryptolinux_pportmaps.vs"
-      .clk_i (clk),
-      .cke_i (cke),
-      .arst_i(arst),
+      .clk_i (clk_i),
+      .cke_i (1'b1),
+      .arst_i(arst_i),
       .trap_o(trap_o)
    );
+
+
+    // interconnect clk and arst
+    wire clk_interconnect;
+    wire arst_interconnect;
+    assign clk_interconnect = clk_i;
+    assign arst_interconnect = arst_i;
 
    `include "iob_soc_opencryptolinux_interconnect.vs"
 
@@ -88,57 +95,25 @@ module iob_soc_opencryptolinux_sim_wrapper (
    ) ddr_model_mem (
       `include "iob_memory_axi_s_portmap.vs"
 
-      .clk_i(clk),
-      .rst_i(arst)
+      .clk_i(clk_i),
+      .rst_i(arst_i)
    );
 
-   //finish simulation on trap
-   /* //Sut
-always @(posedge trap[0]) begin
-      #10 $display("Found SUT CPU trap condition");
-      $finish;
-   end
-//IOb-SoC
-always @(posedge trap[1]) begin
-      #10 $display("Found iob_soc CPU trap condition");
-      $finish;
-   end */
-
-   //sram monitor - use for debugging programs
-   /*
-    wire [`IOB_SOC_SRAM_ADDR_W-1:0] sram_daddr = uut.int_mem0.int_sram.d_addr;
-    wire sram_dwstrb = |uut.int_mem0.int_sram.d_wstrb & uut.int_mem0.int_sram.d_valid;
-    wire sram_drdstrb = !uut.int_mem0.int_sram.d_wstrb & uut.int_mem0.int_sram.d_valid;
-    wire [`IOB_SOC_DATA_W-1:0] sram_dwdata = uut.int_mem0.int_sram.d_wdata;
-
-
-    wire sram_iwstrb = |uut.int_mem0.int_sram.i_wstrb & uut.int_mem0.int_sram.i_valid;
-    wire sram_irdstrb = !uut.int_mem0.int_sram.i_wstrb & uut.int_mem0.int_sram.i_valid;
-    wire [`IOB_SOC_SRAM_ADDR_W-1:0] sram_iaddr = uut.int_mem0.int_sram.i_addr;
-    wire [`IOB_SOC_DATA_W-1:0] sram_irdata = uut.int_mem0.int_sram.i_rdata;
-
-    
-    always @(posedge sram_dwstrb)
-    if(sram_daddr == 13'h090d)  begin
-    #10 $display("Found CPU memory condition at %f : %x : %x", $time, sram_daddr, sram_dwdata );
-    //$finish;
-      end
-    */
    //Manually added testbench uart core. RS232 pins attached to the same pins
    //of the iob_soc UART0 instance to communicate with it
    // The interface of iob_soc UART0 is assumed to be the first portmapped interface (UART_*)
    iob_uart uart_tb (
-      .clk_i (clk),
-      .cke_i (cke),
-      .arst_i(arst),
+      .clk_i (clk_i),
+      .cke_i (1'b1),
+      .arst_i(arst_i),
 
-      .iob_avalid_i(uart_avalid),
-      .iob_addr_i  (uart_addr),
-      .iob_wdata_i (uart_wdata),
-      .iob_wstrb_i (uart_wstrb),
-      .iob_rdata_o (uart_rdata),
-      .iob_rvalid_o(uart_rvalid),
-      .iob_ready_o (uart_ready),
+      .iob_valid_i(uart_valid_i),
+      .iob_addr_i  (uart_addr_i),
+      .iob_wdata_i (uart_wdata_i),
+      .iob_wstrb_i (uart_wstrb_i),
+      .iob_rdata_o (uart_rdata_o),
+      .iob_rvalid_o(uart_rvalid_o),
+      .iob_ready_o (uart_ready_o),
 
       .txd_o(uart_rxd_i),
       .rxd_i(uart_txd_o),
@@ -152,7 +127,7 @@ always @(posedge trap[1]) begin
    reg [1:0] eth_cnt = 2'b0;
    reg       eth_clk;
 
-   always @(posedge clk) begin
+   always @(posedge clk_i) begin
       eth_cnt <= eth_cnt + 1'b1;
       eth_clk <= eth_cnt[1];
    end
@@ -184,13 +159,13 @@ always @(posedge trap[1]) begin
       .MCrS(1'b0),
       .MDC(),
       .MDIO(),
-      .iob_avalid_i(ethernet_avalid),
-      .iob_addr_i  (ethernet_addr),
-      .iob_wdata_i (ethernet_wdata),
-      .iob_wstrb_i (ethernet_wstrb),
-      .iob_rvalid_o(ethernet_rvalid),
-      .iob_rdata_o (ethernet_rdata),
-      .iob_ready_o (ethernet_ready),
+      .iob_valid_i(ethernet_valid_i),
+      .iob_addr_i  (ethernet_addr_i),
+      .iob_wdata_i (ethernet_wdata_i),
+      .iob_wstrb_i (ethernet_wstrb_i),
+      .iob_rvalid_o(ethernet_rvalid_o),
+      .iob_rdata_o (ethernet_rdata_o),
+      .iob_ready_o (ethernet_ready_o),
       .axi_awid_o        (),
       .axi_awaddr_o      (),
       .axi_awlen_o       (),
@@ -228,9 +203,9 @@ always @(posedge trap[1]) begin
       .axi_rlast_i       (1'b0),
       .axi_rvalid_i      (1'b0),
       .axi_rready_o      (),
-      .clk_i(clk),
-      .arst_i(arst),
-      .cke_i(cke)
+      .clk_i(clk_i),
+      .arst_i(arst_i),
+      .cke_i(1'b1)
       );
 `endif
 
