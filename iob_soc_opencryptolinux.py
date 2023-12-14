@@ -113,9 +113,9 @@ class iob_soc_opencryptolinux(iob_soc):
             if os.path.isfile(src_file):
                 shutil.copy2(src_file, dst)
 
-        # Copy NonCanonical script to scripts build directory
+        # Copy terminalMode script to scripts build directory
         dst = f"{cls.build_dir}/scripts"
-        src_file = f"{__class__.setup_dir}/submodules/IOBSOC/submodules/LIB/scripts/noncanonical.py"
+        src_file = f"{__class__.setup_dir}/submodules/IOBSOC/submodules/LIB/scripts/terminalMode.py"
         shutil.copy2(src_file, dst)
         src_file = f"{__class__.setup_dir}/scripts/check_if_run_linux.py"
         shutil.copy2(src_file, dst)
