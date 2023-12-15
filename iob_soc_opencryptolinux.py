@@ -121,6 +121,7 @@ class iob_soc_opencryptolinux(iob_soc):
 
         # Override periphs_tmp.h of iob-soc with one specific for opencryptolinux
         create_periphs_tmp(
+            cls.name,
             next(i["val"] for i in cls.confs if i["name"] == "ADDR_W"),
             cls.peripherals,
             f"{cls.build_dir}/software/{cls.name}_periphs.h",
