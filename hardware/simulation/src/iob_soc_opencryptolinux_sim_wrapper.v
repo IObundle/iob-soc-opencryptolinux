@@ -70,7 +70,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
    //IOb-SoC-OpenCryptoLinux and SUT access the same memory.
    axi_ram #(
 `ifdef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
-      .FILE      ("init_ddr_contents.hex"),  //This file contains firmware for both systems
+      .FILE      ("init_ddr_contents"),  //This file contains firmware for both systems
 `endif
       .ID_WIDTH  (AXI_ID_W),
       .DATA_WIDTH(AXI_DATA_W),

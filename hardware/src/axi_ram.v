@@ -166,32 +166,46 @@ module axi_ram #(
   assign axi_rlast_o   = PIPELINE_OUTPUT ? axi_rlast_pipe_reg : axi_rlast_reg;
   assign axi_rvalid_o  = PIPELINE_OUTPUT ? axi_rvalid_pipe_reg : axi_rvalid_reg;
 
-  localparam mem_init_file_int = FILE;
-
-  initial begin
-    if (mem_init_file_int != "none") begin
-      $readmemh(mem_init_file_int, mem, 0, 2 ** VALID_ADDR_WIDTH - 1);
-    end
-  end
-
   generate
     genvar i;
-    for (i = 0; i < WORD_WIDTH; i = i + 1) begin : g_Bytes_in_word
-      if (READ_ON_WRITE) begin : g_always_read
+    if (READ_ON_WRITE) begin : g_always_read
+      localparam mem_init_file_int = {FILE, ".hex"};
+      initial begin
+        if (FILE != "none") begin
+          $readmemh(mem_init_file_int, mem, 0, 2 ** VALID_ADDR_WIDTH - 1);
+        end
+      end
+      for (i = 0; i < WORD_WIDTH; i = i + 1) begin : g_Bytes_in_word
         always @(posedge clk_i) begin
           if (mem_wr_en & axi_wstrb_i[i]) begin
             mem[write_addr_valid][WORD_SIZE*i+:WORD_SIZE] <= axi_wdata_i[WORD_SIZE*i+:WORD_SIZE];
           end
           axi_rdata_reg[WORD_SIZE*i+:WORD_SIZE] <= mem[read_addr_valid][WORD_SIZE*i+:WORD_SIZE];
         end
-      end else begin : g_no_read_on_write
-        always @(posedge clk_i) begin
-          if (mem_wr_en & axi_wstrb_i[i]) begin
-            mem[write_addr_valid][WORD_SIZE*i+:WORD_SIZE] <= axi_wdata_i[WORD_SIZE*i+:WORD_SIZE];
-          end else begin
-            axi_rdata_reg[WORD_SIZE*i+:WORD_SIZE] <= mem[read_addr_valid][WORD_SIZE*i+:WORD_SIZE];
-          end
-        end
+      end
+    end else begin : g_no_read_on_write
+      localparam file_suffix = {"7", "6", "5", "4", "3", "2", "1", "0"};
+      wire [VALID_ADDR_WIDTH-1:0] ram_addr_valid;
+      wire [WORD_WIDTH-1:0] ram_en;
+      assign ram_addr_valid = mem_wr_en ? write_addr_valid : read_addr_valid;
+      for (i = 0; i < WORD_WIDTH; i = i + 1) begin : g_Bytes_in_word
+        localparam mem_init_file_int = (FILE != "none") ?
+             {FILE, "_", file_suffix[8*(i+1)-1-:8], ".hex"} : "none";
+        assign ram_en[i] = mem_wr_en ? axi_wstrb_i[i] : 1'b1;
+
+        iob_ram_sp #(
+            .HEXFILE(mem_init_file_int),
+            .ADDR_W (VALID_ADDR_WIDTH),
+            .DATA_W (WORD_SIZE)
+        ) ram (
+            .clk_i(clk_i),
+
+            .en_i  (ram_en[i]),
+            .addr_i(ram_addr_valid),
+            .d_i   (axi_wdata_i[WORD_SIZE*i+:WORD_SIZE]),
+            .we_i  (mem_wr_en),
+            .d_o   (axi_rdata_reg[WORD_SIZE*i+:WORD_SIZE])
+        );
       end
     end
   endgenerate

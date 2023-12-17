@@ -228,7 +228,7 @@ module iob_soc_opencryptolinux #(
       .READ_ON_WRITE(1),
 `endif
       .PIPELINE_OUTPUT(2),
-      .FILE("iob_soc_opencryptolinux_boot.hex")
+      .FILE("iob_soc_opencryptolinux_boot")
   ) boot_ram (
       .clk_i(clk_i),
       .rst_i(arst_i),

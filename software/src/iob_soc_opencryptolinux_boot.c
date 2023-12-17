@@ -1,8 +1,8 @@
 #include "bsp.h"
+#include "clint.h"
 #include "iob-uart16550.h"
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_system.h"
-#include "clint.h"
 
 // defined here (and not in periphs.h) because it is the only peripheral used
 // by the bootloader
@@ -17,6 +17,8 @@
 #define EXT_MEM 0x80000000
 
 int main() {
+  int file_size;
+  char *prog_start_addr;
 
   // init uart
   uart16550_init(UART0_BASE, FREQ / (16 * BAUD));
@@ -35,7 +37,6 @@ int main() {
   uart16550_puts(": DDR in use and program runs from DDR\n");
 
   // address to copy firmware to
-  char *prog_start_addr;
   prog_start_addr = (char *)(EXT_MEM);
 
   while (uart16550_getc() != ACK) {
@@ -44,47 +45,58 @@ int main() {
   }
 
 #ifndef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
-#ifdef IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX
-
-  // receive firmware from host
-  int file_size = 0;
-  char opensbi[] = "fw_jump.bin";
-  char kernel[] = "Image";
-  char dtb[] = "iob_soc.dtb";
-  char rootfs[] = "rootfs.cpio.gz";
-  file_size = uart16550_recvfile(opensbi, prog_start_addr);
-  prog_start_addr = (char *)(EXT_MEM + 0x00400000);
-  file_size = uart16550_recvfile(kernel, prog_start_addr);
-  prog_start_addr = (char *)(EXT_MEM + 0x00F80000);
-  file_size = uart16550_recvfile(dtb, prog_start_addr);
-  prog_start_addr = (char *)(EXT_MEM + 0x01000000);
-  file_size = uart16550_recvfile(rootfs, prog_start_addr);
-  uart16550_puts(PROGNAME);
-  uart16550_puts(": Loading firmware...\n");
-
-#else
-
-  // receive firmware from host
-  int file_size = 0;
-  char r_fw[] = "iob_soc_opencryptolinux_firmware.bin";
-  file_size = uart16550_recvfile(r_fw, prog_start_addr);
-  uart16550_puts(PROGNAME);
-  uart16550_puts(": Loading firmware...\n");
-
-  // sending firmware back for debug
-  if (file_size)
-    uart16550_sendfile(r_fw, file_size, prog_start_addr);
-  else {
-    uart16550_puts(PROGNAME);
-    uart16550_puts(": ERROR loading firmware\n");
+  file_size = uart16550_recvfile("../iob_mem.config", prog_start_addr);
+  // compute_mem_load_txt
+  int state = 0;
+  int file_name_count = 0;
+  int file_count = 0;
+  char file_name_array[4][50];
+  long int file_address_array[4];
+  char hexChar = 0;
+  int hexDecimal = 0;
+  int i = 0;
+  for (i = 0; i < file_size; i++) {
+    hexChar = *(prog_start_addr + i);
+    //uart16550_puts(&hexChar); /* Used for debugging. */
+    if (state == 0) {
+      if (hexChar == ' ') {
+        file_name_array[file_count][file_name_count] = '\0';
+        file_name_count = 0;
+        file_address_array[file_count] = 0;
+        file_count = file_count + 1;
+        state = 1;
+      } else {
+        file_name_array[file_count][file_name_count] = hexChar;
+        file_name_count = file_name_count + 1;
+      }
+    } else if (state == 1) {
+      if (hexChar == '\n') {
+        state = 0;
+      } else {
+        if ('0' <= hexChar && hexChar <= '9') {
+          hexDecimal = hexChar - '0';
+        } else if ('a' <= hexChar && hexChar <= 'f') {
+          hexDecimal = 10 + hexChar - 'a';
+        } else if ('A' <= hexChar && hexChar <= 'F') {
+          hexDecimal = 10 + hexChar - 'A';
+        } else {
+          uart16550_puts(PROGNAME);
+          uart16550_puts(": invalid hexadecimal character.\n");
+        }
+        file_address_array[file_count-1] =
+            file_address_array[file_count-1] * 16 + hexDecimal;
+      }
+    }
   }
 
-#endif
+  for (i = 0; i < file_count; i++) {
+    prog_start_addr = (char *)(EXT_MEM + file_address_array[i]);
+    file_size = uart16550_recvfile(file_name_array[i], prog_start_addr);
+  }
 #endif
 
-#ifdef RUN_LINUX
+  uart16550_sendfile("test.log", 12, "Test passed!");
   uart16550_putc((char)DC1);
-#endif
 
   // Clear CPU registers, to not pass arguments to the next
   asm volatile("li a0,0");

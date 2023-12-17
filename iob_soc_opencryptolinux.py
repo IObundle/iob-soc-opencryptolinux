@@ -15,6 +15,7 @@ from iob_uart import iob_uart
 from iob_spi_master import iob_spi_master
 from axil2iob import axil2iob
 from iob_reset_sync import iob_reset_sync
+from iob_ram_sp import iob_ram_sp
 
 
 class iob_soc_opencryptolinux(iob_soc):
@@ -82,6 +83,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_uart16550,
                 axil2iob,
                 iob_reset_sync,
+                iob_ram_sp,
                 # iob_spi_master,
                 (iob_uart, {"purpose": "simulation"}),
             ]
@@ -93,6 +95,7 @@ class iob_soc_opencryptolinux(iob_soc):
             if type(cls.submodule_list[i]) == type and cls.submodule_list[i].name in [
                 "iob_picorv32",
                 "iob_uart",
+                "iob_cache",
                 "axi_interconnect",
             ]:
                 cls.submodule_list.pop(i)
@@ -110,16 +113,12 @@ class iob_soc_opencryptolinux(iob_soc):
             if os.path.isfile(src_file):
                 shutil.copy2(src_file, dst)
 
-        # If RUN_LINUX is not set, use 3000000 baud in simulation
-        for arg in sys.argv[1:]:
-            if arg == "RUN_LINUX":
-                break
-        else:
-            inplace_change(
-                os.path.join(cls.build_dir, "hardware/simulation/bsp.vh"),
-                "define BAUD 115200",
-                "define BAUD 3000000",
-            )
+        # Copy terminalMode script to scripts build directory
+        dst = f"{cls.build_dir}/scripts"
+        src_file = f"{__class__.setup_dir}/submodules/IOBSOC/submodules/LIB/scripts/terminalMode.py"
+        shutil.copy2(src_file, dst)
+        src_file = f"{__class__.setup_dir}/scripts/check_if_run_linux.py"
+        shutil.copy2(src_file, dst)
 
         # Override periphs_tmp.h of iob-soc with one specific for opencryptolinux
         create_periphs_tmp(
