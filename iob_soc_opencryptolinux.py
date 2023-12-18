@@ -13,6 +13,7 @@ from iob_vexriscv import iob_vexriscv
 from iob_uart16550 import iob_uart16550
 from iob_uart import iob_uart
 from iob_spi_master import iob_spi_master
+from N25Qxxx import N25Qxxx
 from axil2iob import axil2iob
 from iob_reset_sync import iob_reset_sync
 from iob_ram_sp import iob_ram_sp
@@ -85,6 +86,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_reset_sync,
                 iob_ram_sp,
                 iob_spi_master,
+                (N25Qxxx, {"purpose": "simulation"}),
                 (iob_uart, {"purpose": "simulation"}),
             ]
             + extra_submodules
