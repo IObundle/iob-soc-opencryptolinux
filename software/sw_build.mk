@@ -81,7 +81,7 @@ iob_soc_opencryptolinux_firmware: check_if_run_linux
 	make $@.elf INCLUDES="$(IOB_SOC_OPENCRYPTOLINUX_INCLUDES)" LFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_LFLAGS) -Wl,-Map,$@.map" SRC="$(IOB_SOC_OPENCRYPTOLINUX_FW_SRC)" TEMPLATE_LDS="$(TEMPLATE_LDS)" CFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_CFLAGS)"
 
 check_if_run_linux:
-	python3 $(ROOT_DIR)/scripts/check_if_run_linux.py $(ROOT_DIR) $(RUN_LINUX)
+	python3 $(ROOT_DIR)/scripts/check_if_run_linux.py $(ROOT_DIR) iob_soc_opencryptolinux $(RUN_LINUX)
 
 iob_soc_opencryptolinux_boot:
 	make $@.elf INCLUDES="$(IOB_SOC_OPENCRYPTOLINUX_INCLUDES)" LFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_LFLAGS) -Wl,-Map,$@.map" SRC="$(IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC)" TEMPLATE_LDS="$(TEMPLATE_LDS)" CFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_CFLAGS)"

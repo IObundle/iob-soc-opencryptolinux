@@ -45,7 +45,7 @@ int main() {
   }
 
 #ifndef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
-  file_size = uart16550_recvfile("../iob_mem.config", prog_start_addr);
+  file_size = uart16550_recvfile("../iob_soc_opencryptolinux_mem.config", prog_start_addr);
   // compute_mem_load_txt
   int state = 0;
   int file_name_count = 0;

@@ -222,7 +222,7 @@ module iob_soc_opencryptolinux #(
       .DATA_WIDTH(DATA_W),
       .ADDR_WIDTH(BOOTROM_ADDR_W),
       .ID_WIDTH(INTMEM_AXI_ID_W),
-`ifdef MEM_NO_READ_ON_WRITE
+`ifdef IOB_MEM_NO_READ_ON_WRITE
       .READ_ON_WRITE(0),
 `else
       .READ_ON_WRITE(1),
