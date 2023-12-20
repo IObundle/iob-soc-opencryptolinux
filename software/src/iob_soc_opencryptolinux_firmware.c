@@ -8,6 +8,8 @@
 #include "plic.h"
 #include "printf.h"
 
+#include "versat_accel.h"
+
 #include "riscv-csr.h"
 #include "riscv-interrupts.h"
 
@@ -54,6 +56,9 @@ int compare_str(char *str1, char *str2, int str_size) {
   return 0;
 }
 
+void VersatSHATest();
+//void AES256Test();
+
 int main() {
   char pass_string[] = "Test passed!";
   uint_xlen_t irq_entry_copy;
@@ -62,6 +67,11 @@ int main() {
   uart16550_init(UART0_BASE, FREQ / (16 * BAUD));
   clint_setCmp(CLINT0_BASE, 0xffffffffffffffff, 0);
   printf_init(&uart16550_putc);
+
+  versat_init(VERSAT0_BASE);
+
+  //AES256Test();
+  VersatSHATest();
 
   printf("\n\n\nHello world!\n\n\n");
 

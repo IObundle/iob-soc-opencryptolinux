@@ -9,7 +9,8 @@ DISABLE_LINT:=1
 LIB_DIR:=submodules/IOBSOC/submodules/LIB
 include $(LIB_DIR)/setup.mk
 
-INIT_MEM ?= 0
+VCD ?= 0
+INIT_MEM ?= 1
 RUN_LINUX ?= 1
 USE_EXTMEM := 1
 
@@ -36,6 +37,11 @@ sim-test:
 	nix-shell --run "make clean"
 	nix-shell --run "make setup INIT_MEM=0"
 	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
+
+sim-run:
+	nix-shell --run "make clean"
+	nix-shell --run "make setup INIT_MEM=$(INIT_MEM) VCD=$(VCD)"
+	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator INIT_MEM=$(INIT_MEM) VCD=$(VCD)" 
 
 fpga-run:
 	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM)'

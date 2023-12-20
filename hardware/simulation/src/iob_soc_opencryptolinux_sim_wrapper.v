@@ -44,6 +44,8 @@ module iob_soc_opencryptolinux_sim_wrapper (
 `endif
    end
 
+   `include "versat_external_memory_inst.vh"
+
    //
    // INSTANTIATE COMPONENTS
    //
@@ -58,6 +60,9 @@ module iob_soc_opencryptolinux_sim_wrapper (
       .AXI_DATA_W(AXI_DATA_W)
    ) soc0 (
       `include "iob_soc_opencryptolinux_pportmaps.vs"
+
+      //`include "versat_external_memory_portmap.vh"
+
       .clk_i (clk),
       .cke_i (cke),
       .arst_i(arst),

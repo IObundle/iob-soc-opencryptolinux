@@ -13,3 +13,6 @@
 [submodule "submodules/SPI"]
 	path = submodules/SPI
 	url = git@github.com:IObundle/iob-spi.git
+[submodule "submodules/VERSAT"]
+	path = submodules/VERSAT
+	url = git@github.com:IObundle/iob-versat.git

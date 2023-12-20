@@ -16,6 +16,7 @@ from iob_spi_master import iob_spi_master
 from axil2iob import axil2iob
 from iob_reset_sync import iob_reset_sync
 from iob_ram_sp import iob_ram_sp
+from iob_versat import CreateVersatClass
 
 
 class iob_soc_opencryptolinux(iob_soc):
@@ -35,6 +36,10 @@ class iob_soc_opencryptolinux(iob_soc):
             cls.peripherals.append(iob_uart16550("UART0", "Default UART interface"))
         if iob_spi_master in cls.submodule_list:
             cls.peripherals.append(iob_spi_master("SPI0", "SPI master peripheral"))
+        # Instantiate versat
+        if cls.versatType in cls.submodule_list:
+            cls.versat = cls.versatType("VERSAT0")
+            cls.peripherals.append(cls.versat)
 
         # Add custom N_SLAVES and N_SLAVES_W
         cls.confs += [
@@ -69,6 +74,10 @@ class iob_soc_opencryptolinux(iob_soc):
     @classmethod
     def _create_submodules_list(cls, extra_submodules=[]):
         """Create submodules list with dependencies of this module"""
+
+        versatExtra = os.path.join(os.path.dirname(__file__), "hardware/src/units")
+        cls.versatType = CreateVersatClass(False, "versatSpec.txt", "SHA", versatExtra)
+
         super()._create_submodules_list(
             [
                 {"interface": "peripheral_axi_wire"},
@@ -84,6 +93,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 axil2iob,
                 iob_reset_sync,
                 iob_ram_sp,
+                cls.versatType,
                 # iob_spi_master,
                 (iob_uart, {"purpose": "simulation"}),
             ]
@@ -119,6 +129,12 @@ class iob_soc_opencryptolinux(iob_soc):
         shutil.copy2(src_file, dst)
         src_file = f"{__class__.setup_dir}/scripts/check_if_run_linux.py"
         shutil.copy2(src_file, dst)
+
+        shutil.copytree(
+            f"{cls.setup_dir}/hardware/src/units",
+            f"{cls.build_dir}/hardware/src",
+            dirs_exist_ok=True,
+        )
 
         # Override periphs_tmp.h of iob-soc with one specific for opencryptolinux
         create_periphs_tmp(

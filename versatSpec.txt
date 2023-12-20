@@ -1,0 +1,3367 @@
+
+module FloatTest(x,y,z){
+   FloatAdd add;
+   FloatSub sub;
+   FloatMul mul;
+   FloatDiv div;
+   FloatMax max;
+   FloatMin min;
+   FloatSqrt sqrt;
+   Int2Float int2float;
+   Float2Int float2int;
+#
+   {x,y} -> add:0..1;
+   {x,y} -> sub:0..1;
+   {x,y} -> mul:0..1;
+   {x,y} -> div:0..1;
+
+   {x,y} -> max:0..1;
+   {x,y} -> min:0..1;
+   x     -> sqrt:0;
+   z     -> int2float:0;
+   x     -> float2int:0;
+
+   add       -> out:0;
+   sub       -> out:1;
+   mul       -> out:2;
+   div       -> out:3;
+   max       -> out:4;
+   min       -> out:5;
+   sqrt      -> out:6;
+   int2float -> out:7;
+   float2int -> out:8;
+}
+
+module TestDiffDelays(x,y,z){
+   FloatMul mul;
+   FloatMul mul2;
+#
+   {x,y} -> mul:0..1;
+
+   {mul,z} -> mul2:0..1;
+
+   mul2 -> out:0;
+   y -> out:1;
+}
+
+module VReadToVWrite(){
+   VRead #(.AXI_ADDR_W(AXI_ADDR_W)) read;
+   VWrite #(.AXI_ADDR_W(AXI_ADDR_W)) write;
+#
+   read -> write;
+}
+
+module MemToMem(){
+   Mem start;
+   Mem end;
+#
+   start -> end;
+}
+
+module SMVMCPU(x,y){
+   SignalMulAdd mul;
+#
+   x -> mul:0;
+   y -> mul:1;
+
+   mul -> out;
+}
+
+module SMVMCOO(){
+   Generator gen;
+   LookupTableRead #(.AXI_ADDR_W(AXI_ADDR_W)) col;
+   LookupTableRead #(.AXI_ADDR_W(AXI_ADDR_W)) row;
+   LookupTableRead #(.AXI_ADDR_W(AXI_ADDR_W)) val;
+   LookupTableRead #(.AXI_ADDR_W(AXI_ADDR_W)) vector;
+   Mul mul;
+
+   ChangeDetect change;
+   SignalAccum accum;
+   SignalMemStorage output;
+   DoneCycle cycler;
+#
+   gen -> val;
+   gen -> col;
+   gen -> row;
+   col -> vector;
+
+   val    -> mul:0;
+   vector -> mul:1;
+
+   row -> change:0;
+   row -> change:1;
+
+   mul    -> accum:0;
+   change -> accum:1;
+
+   accum:0 -> output:0;
+   accum:1 -> output:1;
+}
+
+module SMVMCSR(){
+   Generator gen;
+   TimedFlag row;
+   LookupTableRead #(.AXI_ADDR_W(AXI_ADDR_W)) col;
+   LookupTableRead #(.AXI_ADDR_W(AXI_ADDR_W)) val;
+   LookupTableRead #(.AXI_ADDR_W(AXI_ADDR_W)) vector;
+   Mul mul;
+
+   ChangeDetect change;
+   SignalAccum accum;
+   SignalMemStorage output;
+   DoneCycle cycler;
+#
+   gen -> val;
+   gen -> col;
+   col -> vector;
+
+   val    -> mul:0;
+   vector -> mul:1;
+
+   //row -> change:0;
+   //row -> change:1;
+
+   mul    -> accum:0;
+   change -> accum:1;
+
+   accum:0 -> output:0;
+   accum:1 -> output:1;
+}
+
+module SMVMBlock(){
+   Generator gen;
+   IncrementFlag flag;
+   LookupTableRead #(.AXI_ADDR_W(AXI_ADDR_W)) col;
+   LookupTableRead #(.AXI_ADDR_W(AXI_ADDR_W)) row;
+   LookupTableRead #(.AXI_ADDR_W(AXI_ADDR_W)) val;
+   LookupTableRead #(.AXI_ADDR_W(AXI_ADDR_W)) vector;
+   Mul mul;
+
+   ChangeDetect change;
+   SignalAccum accum;
+   SignalMemStorage output;
+   SignalMemStorage pos;
+   DoneCycle cycler;
+#
+   gen -> val;
+   gen -> col;
+   gen -> row;
+   col -> vector;
+
+   val    -> mul:0;
+   vector -> mul:1;
+
+   row -> change:0;
+   row -> change:1;
+   row -> flag;
+
+   mul    -> accum:0;
+   change -> accum:1;
+   //flag -> accum:1;
+
+   accum:0 -> output:0;
+   accum:1 -> output:1;
+   //flag -> output:1;
+
+   row  -> pos:0;
+   //change -> pos:1;
+   flag -> pos:1;
+}
+
+module SMVMBlock2(){
+   Generator gen;
+   IncrementFlag flag;
+   LookupTableRead col;
+   LookupTableRead row;
+   LookupTableRead val;
+   LookupTableRead vector;
+   FloatMul mul;
+
+   ChangeDetect #(.AMOUNT(0)) change;
+   ChangeDetect change2;
+   FloatAddAccum accum;
+   SignalMemStorage output;
+   SignalMemStorage pos;
+   DoneCycle cycler;
+#
+   gen -> val;
+   gen -> col;
+   gen -> row;
+   col -> vector;
+
+   val    -> mul:0;
+   vector -> mul:1;
+
+   row -> change:0;
+   row -> change:1;
+   row -> flag;
+
+   row -> change2:0;
+   row -> change2:1;
+
+   mul    -> accum:0;
+   change[-4] -> accum:1;
+
+   accum:0 -> output:0;
+   change2[3] -> output:1;
+
+   row  -> pos:0;
+   flag -> pos:1;
+}
+
+module SMVMBlock3(){
+   Generator gen;
+   IncrementFlag flag;
+   LookupTableRead col;
+   LookupTableRead row;
+   LookupTableRead val;
+   LookupTableRead vector;
+   FloatMul mul;
+
+   ChangeDetect #(.AMOUNT(0)) change;
+   ChangeDetect change2;
+   FloatAddAccum accum;
+   SignalMemWrite output;
+   //SignalMemStorage pos;
+   DoneCycle cycler;
+#
+   gen -> val;
+   gen -> col;
+   gen -> row;
+   col -> vector;
+
+   val    -> mul:0;
+   vector -> mul:1;
+
+   row -> change:0;
+   row -> change:1;
+   row -> flag;
+
+   row -> change2:0;
+   row -> change2:1;
+
+   mul    -> accum:0;
+   change[-4] -> accum:1;
+
+   accum:0 -> output:0;
+   change2[3] -> output:1;
+}
+
+module SMVMBlockUnit(){
+   TimedFlagRead #(.SIZE_W(16)) flag; // Row
+   LookupTableRead2 #(.SIZE_W(16)) col; // Col
+   LookupTableRead val; // Matrix val
+   LookupTableRead vector; 
+
+   Generator gen;
+   FloatMul mul;
+
+   MyFloatAccum accum;
+   DoneCycle cycler;
+
+   SignalMemWrite output;
+#
+   gen -> val;
+   gen -> col;
+   col -> vector;
+
+   val    -> mul:0;
+   vector -> mul:1;
+
+   gen[1] -> flag;
+
+   mul      -> accum:0;
+   flag[-2] -> accum:1;
+
+   accum:0 -> output:0;
+   flag    -> output:1;
+}
+
+module SMVMBlock(){
+   SMVMBlockUnit block0;
+   SMVMBlockUnit block1;
+   SMVMBlockUnit block2;
+   SMVMBlockUnit block3;
+#
+}
+
+
+module TripleAdd(x,y,z){
+#
+   res = x + y + z;
+   res -> out;
+}
+
+module OnlyInputToOutput(x){
+#
+   x -> out:0;
+}
+
+module SimpleAdder(){
+   Const a1;
+   Const a2;
+   Reg res;
+#
+   a = a1 + a2;
+
+   a -> res;
+}
+
+module ComplexAdder(){
+   Mem b1;   
+   Mem b2;
+   Mem memOut1;
+#
+   b = b1 + b2;
+
+   b -> memOut1;
+}
+
+module ComplexMultiplier(){
+   Mem c1;
+   Mem c2;
+   Mem memOut2;
+   Mul mul;
+#
+   c1 -> mul:0;
+   c2 -> mul:1;
+
+   mul -> memOut2;
+}
+
+module SemiComplexAdder(){
+   Const d1;
+   Mem d2;
+   Mem memOut3;
+#
+   d = d1 + d2;
+
+   d -> memOut3;
+}
+
+module StaticMuladd(x,y){
+   static Muladd mul;
+#
+   z = x + y;
+
+   x -> mul:0;
+   z -> mul:1;
+
+   mul -> out;
+}
+
+module SimpleShareConfig(){
+   share config Const {
+      a1;
+      a2;
+   }
+   share config Const{
+      b1;
+      b2;
+   }
+   Reg out0;
+   Reg out1;
+   Reg out2;
+   Reg out3;
+   Const extra;
+#
+   a = a1 + a2;
+   b = b1 + b2;
+   c = a1 + b1;
+
+   a -> out0;
+   b -> out1;
+   c -> out2;
+   extra -> out3;
+}
+
+module StaticConst(){
+   static Const var;
+#
+   var -> out:0;
+}
+
+module SimpleStatic(){
+   StaticConst c0;
+   StaticConst c1;
+#
+   c1 -> out;
+}
+
+module ComplexStatic(){
+   SimpleStatic s0;
+   SimpleStatic s1;
+#
+   s1 -> out;
+}
+
+module ComplexShareConfig(){ // 6 config, 1 static - flatten should have 5 configs
+   share config SimpleShareConfig { // 3
+      a1;
+      a2;
+   }
+   StaticConst var1; // 1 static
+   StaticConst var2; // Same static
+   share config SimpleShareConfig { // 3
+      shared1;
+      shared2;
+   }
+   Reg out0;
+   Reg out1;
+#
+   var1 -> out0;
+   var2 -> out1;
+}
+
+module StringHasher(){
+   Const weight1;
+   Const weight2;
+   Const weight3;
+   Const weight4;
+   Const weight5;
+   StaticMuladd mul1;
+   StaticMuladd mul2;
+   StaticMuladd mul3;
+   StaticMuladd mul4;
+   StaticMuladd mul5;
+   Mem bytesIn;
+   Mem bytesOut;
+#
+   bytesIn[0] -> mul1:0;
+   bytesIn[1] -> mul2:0;
+   bytesIn[2] -> mul3:0;
+   bytesIn[3] -> mul4:0;
+   bytesIn[4] -> mul5:0;
+
+   weight1 -> mul1:1;
+   weight2 -> mul2:1;
+   weight3 -> mul3:1;
+   weight4 -> mul4:1;
+   weight5 -> mul5:1;
+
+   a1 = mul1 + mul2;
+   a2 = mul3 + mul4;
+   a3 = a1 + a2;
+   a4 = a3 + mul5;
+
+   a4[1] -> bytesOut;
+}
+
+module MatrixMultiplication(){
+   Mem matA; // 0 1 2 0 1 2 0 1 2 3 4 5 3 4 5 3 4 5
+   Mem matB; // a d g b e h c f i a d 
+   Muladd ma;
+   Mem res;
+#
+   matA -> ma:0;
+   matB -> ma:1;
+
+   ma -> res;
+}
+
+module MatrixMultiplicationVread(){ 
+   VRead matA;
+   VRead matB;
+   Muladd ma;
+   VWrite res;
+#
+   matA -> ma:0;
+   matB -> ma:1;
+
+   ma -> res;
+}
+
+module ConvolutionStage(previous){
+   VRead pixels;
+   static Mem weights;
+   static Muladd muladd;
+#
+   pixels  -> muladd:0;
+   weights -> muladd:1;
+
+   res = muladd + previous;
+
+   res -> out;
+}
+
+module Convolution(){
+   ConvolutionStage stage0; // 0 <- 1
+   ConvolutionStage stage1; // 1 <- 2
+   ConvolutionStage stage2; // 2 <- 3
+   ConvolutionStage stage3; // 3 <- 4 
+   ConvolutionStage stage4; // 4 <- 5
+   Mem res; // 5 <- 6
+   Const bias; // 6 <- 0
+#
+   bias   -> stage0;
+   stage0 -> stage1;
+   stage1 -> stage2;
+   stage2 -> stage3;
+   stage3 -> stage4;
+   stage4[9] -> res;
+}
+
+module StaticMux(x,y){
+   Mux2 mux;
+#
+   x -> mux:0;
+   y -> mux:1;
+
+   mux -> out;
+}
+
+module sigma(x){
+   Const const1;
+   Const const2;
+   Const const3;
+#
+   res = (x >>< const1) ^ (x >>< const2) ^ (x >> const3);
+   res -> out;
+}
+
+module Sigma(x){
+   Const const1;
+   Const const2;
+   Const const3;
+#
+   res = (x >>< const1) ^ (x >>< const2) ^ (x >>< const3);
+   res -> out;
+}
+
+module CH(a,b,c){
+#
+   res = (a & b) ^ (~a & c);
+   res -> out;
+}
+
+module CHImpl(){
+   Const a;
+   Const b;
+   Const c;
+   CH ch;
+   Reg output;
+#
+   a -> ch:0;
+   b -> ch:1;
+   c -> ch:2;
+
+   ch -> output;
+}
+
+module Maj(x,y,z){
+#
+   res = (x & y) ^ (x & z) ^ (y & z);
+   res -> out;
+}
+
+module sigma_stage(x,y){
+   sigma sigma0(7,18,3);
+   sigma sigma1(17,19,10);
+#
+   x -> sigma0;
+   y -> sigma1;
+
+   sigma0 -> out:0;
+   sigma1 -> out:1;
+}
+
+module Comb_M_Stage(w0,w14,w9,w1){
+   static sigma_stage sigma(7,18,3,17,19,10);
+#
+   w1 -> sigma:0;
+   w14 -> sigma:1;
+  
+   res = sigma:0 + w0 + sigma:1 + w9;
+   res -> out;
+}
+
+module M_Stage(w0,w14,w9,w1){
+   Comb_M_Stage comb;
+   PipelineRegister r;
+#
+   w0 -> comb:0;
+   w14 -> comb:1;
+   w9 -> comb:2;
+   w1 -> comb:3;
+
+   comb -> r;
+
+   r -> out;
+}
+
+module M(w){
+   M_Stage m0;
+   M_Stage m1;
+   M_Stage m2;
+   M_Stage m3;
+   M_Stage m4;
+   M_Stage m5;
+   M_Stage m6;
+   M_Stage m7;
+   M_Stage m8;
+   M_Stage m9;
+   M_Stage ma;
+   M_Stage mb;
+   M_Stage mc;
+   M_Stage md;
+   M_Stage me;
+   M_Stage mf;
+   Merge merge;
+#
+   w[0] -> m0:0;
+   w[14] -> m0:1;
+   w[9] -> m0:2;
+   w[1] -> m0:3;
+
+   w[1] -> m1:0;
+   w[15] -> m1:1;
+   w[10] -> m1:2;
+   w[2] -> m1:3;
+   
+   w[2] -> m2:0;
+   m0 -> m2:1;
+   w[11] -> m2:2;
+   w[3] -> m2:3;
+   
+   w[3] -> m3:0;
+   m1 -> m3:1;
+   w[12] -> m3:2;
+   w[4] -> m3:3;
+   
+   w[4] -> m4:0;
+   m2 -> m4:1;
+   w[13] -> m4:2;
+   w[5] -> m4:3;
+   
+   w[5] -> m5:0;
+   m3 -> m5:1;
+   w[14] -> m5:2;
+   w[6] -> m5:3;
+   
+   w[6] -> m6:0;
+   m4 -> m6:1;
+   w[15] -> m6:2;
+   w[7] -> m6:3;
+   
+   w[7] -> m7:0;
+   m5 -> m7:1;
+   m0 -> m7:2;
+   w[8] -> m7:3;
+   
+   w[8] -> m8:0;
+   m6 -> m8:1;
+   m1 -> m8:2;
+   w[9] -> m8:3;
+   
+   w[9] -> m9:0;
+   m7 -> m9:1;
+   m2 -> m9:2;
+   w[10] -> m9:3;
+   
+   w[10] -> ma:0;
+   m8 -> ma:1;
+   m3 -> ma:2;
+   w[11] -> ma:3;
+   
+   w[11] -> mb:0;
+   m9 -> mb:1;
+   m4 -> mb:2;
+   w[12] -> mb:3;
+   
+   w[12] -> mc:0;
+   ma -> mc:1;
+   m5 -> mc:2;
+   w[13] -> mc:3;
+   
+   w[13] -> md:0;
+   mb -> md:1;
+   m6 -> md:2;
+   w[14] -> md:3;
+   
+   w[14] -> me:0;
+   mc -> me:1;
+   m7 -> me:2;
+   w[15] -> me:3;
+   
+   w[15] -> mf:0;
+   md -> mf:1;
+   m8 -> mf:2;
+   m0 -> mf:3;
+
+   m0 -> merge:0;
+   m1 -> merge:1;
+   m2 -> merge:2;
+   m3 -> merge:3;
+   m4 -> merge:4;
+   m5 -> merge:5;
+   m6 -> merge:6;
+   m7 -> merge:7;
+   m8 -> merge:8;
+   m9 -> merge:9;
+   ma -> merge:10;
+   mb -> merge:11;
+   mc -> merge:12;
+   md -> merge:13;
+   me -> merge:14;
+   mf -> merge:15;
+
+   merge -> out;
+}
+
+module T1(e,f,g,h,k,w){
+   CH ch;
+   Sigma s(6,11,25);
+#   
+   e -> s;
+
+   e -> ch:0;
+   f -> ch:1;
+   g -> ch:2;
+
+   a1 = h + s:0;
+   a2 = ch + k;
+   a3 = a1 + a2;
+   
+   b1 = a3 + w;
+
+   b1 -> out;
+}
+
+module T2(a,b,c){
+   Sigma s(2,13,22);
+   Maj m;
+#
+   a -> s;
+
+   a -> m:0;
+   b -> m:1;
+   c -> m:2;
+
+   d = s + m;
+
+   d -> out; 
+}
+
+module T_Stage(a,b,c,e,f,g,h,k,w){
+   T1 t1(6,11,25);
+   T2 t2(2,13,22);
+#
+   a -> t2:0;
+   b -> t2:1;
+   c -> t2:2;
+
+   e -> t1:0;
+   f -> t1:1;
+   g -> t1:2;
+   h -> t1:3;
+   k -> t1:4;
+   w -> t1:5;
+
+   t1 -> out:0;
+   t2 -> out:1;
+}
+
+module Comb_F_Stage(a,b,c,d,e,f,g,h,k,w){
+   static T_Stage t;
+#
+   a -> t:0;
+   b -> t:1;
+   c -> t:2;
+
+   e -> t:3;
+   f -> t:4;
+   g -> t:5;
+   h -> t:6;
+   k -> t:7;
+   w -> t:8;
+
+   a1 = t:0 + t:1;
+   a2 = d + t:0;
+
+   a1 -> out:0;
+   a  -> out:1;
+   b  -> out:2;
+   c  -> out:3;
+   a2 -> out:4;
+   e  -> out:5;
+   f  -> out:6;
+   g  -> out:7;
+}
+
+module F_Stage(a,b,c,d,e,f,g,h,k,w){
+   Comb_F_Stage f_stage;
+   PipelineRegister d0;
+   PipelineRegister d1;
+   PipelineRegister d2;
+   PipelineRegister d3;
+   PipelineRegister d4;
+   PipelineRegister d5;
+   PipelineRegister d6;
+   PipelineRegister d7;
+#
+   a -> f_stage:0;
+   b -> f_stage:1;
+   c -> f_stage:2;
+   d -> f_stage:3;
+   e -> f_stage:4;
+   f -> f_stage:5;
+   g -> f_stage:6;
+   h -> f_stage:7;
+   k -> f_stage:8;
+   w -> f_stage:9;
+
+   f_stage:0 -> d0; // a
+   f_stage:1 -> d1; // b
+   f_stage:2 -> d2; // c
+   f_stage:3 -> d3; // d
+   f_stage:4 -> d4; // e
+   f_stage:5 -> d5; // f
+   f_stage:6 -> d6; // g
+   f_stage:7 -> d7; // h
+
+   d0 -> out:0;
+   d1 -> out:1;
+   d2 -> out:2;
+   d3 -> out:3;
+   d4 -> out:4;
+   d5 -> out:5;
+   d6 -> out:6;
+   d7 -> out:7;
+}
+
+module F(a,b,c,d,e,f,g,h,k,w){
+   F_Stage f0;
+   F_Stage f1;
+   F_Stage f2;
+   F_Stage f3;
+   F_Stage f4;
+   F_Stage f5;
+   F_Stage f6;
+   F_Stage f7;
+   F_Stage f8;
+   F_Stage f9;
+   F_Stage fa;
+   F_Stage fb;
+   F_Stage fc;
+   F_Stage fd;
+   F_Stage fe;
+   F_Stage ff;
+#
+   a ->  f0:0;
+   b ->  f0:1;
+   c ->  f0:2;
+   d ->  f0:3;
+   e ->  f0:4;
+   f ->  f0:5;
+   g ->  f0:6;
+   h ->  f0:7;
+   k[0] -> f0:8;
+   w[0] -> f0:9;
+
+   f0:0..7 -> f1:0..7;
+   k[1] -> f1:8;
+   w[1] -> f1:9;
+
+   f1:0..7 -> f2:0..7;
+   k[2] -> f2:8;
+   w[2] -> f2:9;
+
+   f2:0..7 -> f3:0..7;
+   k[3] -> f3:8;
+   w[3] -> f3:9;
+
+   f3:0..7 -> f4:0..7;
+   k[4] -> f4:8;
+   w[4] -> f4:9;
+
+   f4:0..7 -> f5:0..7;
+   k[5] -> f5:8;
+   w[5] -> f5:9;
+
+   f5:0..7 -> f6:0..7;
+   k[6] -> f6:8;
+   w[6] -> f6:9;
+
+   f6:0..7 -> f7:0..7;
+   k[7] -> f7:8;
+   w[7] -> f7:9;
+
+   f7:0..7 -> f8:0..7;
+   k[8] -> f8:8;
+   w[8] -> f8:9;
+
+   f8:0..7 -> f9:0..7;
+   k[9] -> f9:8;
+   w[9] -> f9:9;
+
+   f9:0..7 -> fa:0..7;
+   k[10] -> fa:8;
+   w[10] -> fa:9;
+
+   fa:0..7 -> fb:0..7;
+   k[11] -> fb:8;
+   w[11] -> fb:9;
+
+   fb:0..7 -> fc:0..7;
+   k[12] -> fc:8;
+   w[12] -> fc:9;
+
+   fc:0..7 -> fd:0..7;
+   k[13] -> fd:8;
+   w[13] -> fd:9;
+
+   fd:0..7 -> fe:0..7;
+   k[14] -> fe:8;
+   w[14] -> fe:9;
+
+   fe:0..7 -> ff:0..7;
+   k[15] -> ff:8;
+   w[15] -> ff:9;
+
+   ff:0..7 -> out:0..7;
+}
+
+module ShaSingleState(in){
+   Reg reg;
+#
+   a = reg + in;
+   a -> reg;
+   reg -> out;
+}
+
+// Simple grouping of state so it appears better on the graphs
+module ShaState(x0,x1,x2,x3,x4,x5,x6,x7){
+   ShaSingleState s0;
+   ShaSingleState s1;
+   ShaSingleState s2;
+   ShaSingleState s3;
+   ShaSingleState s4;
+   ShaSingleState s5;
+   ShaSingleState s6;
+   ShaSingleState s7;
+#
+   x0 -> s0;
+   x1 -> s1;
+   x2 -> s2;
+   x3 -> s3;
+   x4 -> s4;
+   x5 -> s5;
+   x6 -> s6;
+   x7 -> s7;
+
+   s0 -> out:0;
+   s1 -> out:1;
+   s2 -> out:2;
+   s3 -> out:3;
+   s4 -> out:4;
+   s5 -> out:5;
+   s6 -> out:6;
+   s7 -> out:7;
+}
+
+module Constants(){
+   static Mem mem;
+#
+   mem -> out:0;
+}
+
+module SHA(){
+   VRead MemRead;
+   SwapEndian Swap;
+   xunitF F0;
+   xunitF F1;
+   xunitF F2;
+   xunitF F3;
+   xunitM M0;
+   xunitM M1;
+   xunitM M2;
+   //Iterative_SHA_F iF0;
+   Constants cMem0;
+   Constants cMem1;
+   Constants cMem2;
+   Constants cMem3;
+   ShaState State;
+#
+   MemRead -> Swap;
+   
+   {State:0..7,cMem0,Swap} -> F0:0..9;
+   {F0:0..7   ,cMem1,M0} -> F1:0..9;
+   {F1:0..7   ,cMem2,M1} -> F2:0..9;
+   {F2:0..7   ,cMem3,M2} -> F3:0..9;
+
+   Swap -> M0;
+   M0 -> M1;
+   M1 -> M2;
+   
+   F3:0..7 -> State:0..7;
+}
+
+module SBox(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf){
+   LookupTable s0;
+   LookupTable s1;
+   LookupTable s2;
+   LookupTable s3;
+   LookupTable s4;
+   LookupTable s5;
+   LookupTable s6;
+   LookupTable s7;
+#
+   x0 -> s0:0;
+   x1 -> s0:1;
+
+   x2 -> s1:0;
+   x3 -> s1:1;
+
+   x4 -> s2:0;
+   x5 -> s2:1;
+
+   x6 -> s3:0;
+   x7 -> s3:1;
+
+   x8 -> s4:0;
+   x9 -> s4:1;
+
+   xa -> s5:0;
+   xb -> s5:1;
+
+   xc -> s6:0;
+   xd -> s6:1;
+
+   xe -> s7:0;
+   xf -> s7:1;
+
+   s0:0 -> out:0;
+   s0:1 -> out:1;
+   s1:0 -> out:2;
+   s1:1 -> out:3;
+   s2:0 -> out:4;
+   s2:1 -> out:5;
+   s3:0 -> out:6;
+   s3:1 -> out:7;
+   s4:0 -> out:8;
+   s4:1 -> out:9;
+   s5:0 -> out:10;
+   s5:1 -> out:11;
+   s6:0 -> out:12;
+   s6:1 -> out:13;
+   s7:0 -> out:14;
+   s7:1 -> out:15;
+}
+
+module ShiftRows(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf){
+   #
+   // First row
+   x0 -> out:0;
+   x1 -> out:1;
+   x2 -> out:2;
+   x3 -> out:3;
+
+   // Second row
+   x4 -> out:7;
+   x5 -> out:4;
+   x6 -> out:5;
+   x7 -> out:6;
+
+   // Third row
+   x8 -> out:10;
+   x9 -> out:11;
+   xa -> out:8;
+   xb -> out:9;
+
+   // Fourth row
+   xc -> out:13;
+   xd -> out:14;
+   xe -> out:15;
+   xf -> out:12;
+}
+
+module MixProduct(mul2,mul3,x11,x12){
+#
+   res = mul2 ^ mul3 ^ x11 ^ x12;
+   res -> out;
+}
+
+module DoRow(x0,x1,x2,x3){
+   LookupTable mul2_0;
+   LookupTable mul2_1;
+   LookupTable mul3_0;
+   LookupTable mul3_1;
+   MixProduct m0;
+   MixProduct m1;
+   MixProduct m2;
+   MixProduct m3;
+#
+   x0 -> mul2_0:0;
+   x1 -> mul2_0:1;
+   x2 -> mul2_1:0;
+   x3 -> mul2_1:1;
+
+   x0 -> mul3_0:0;
+   x1 -> mul3_0:1;
+   x2 -> mul3_1:0;
+   x3 -> mul3_1:1;
+
+   mul2_0:0 -> m0:0; // mul2[x0]
+   mul3_0:1 -> m0:1; // mul3[x1]
+   x2 -> m0:2;
+   x3 -> m0:3;
+
+   x0 -> m1:0;
+   mul2_0:1 -> m1:1; // mul2[x1]
+   mul3_1:0 -> m1:2; // mul3[x2]
+   x3 -> m1:3;
+
+   x0 -> m2:0;
+   x1 -> m2:1;
+   mul2_1:0 -> m2:2; // mul2[x2]
+   mul3_1:1 -> m2:3; // mul3[x3]
+
+   mul3_0:0 -> m3:0; // mul3[x0]
+   x1 -> m3:1;
+   x2 -> m3:2;
+   mul2_1:1 -> m3:3; // mul2[x3]
+
+   m0 -> out:0;
+   m1 -> out:1;
+   m2 -> out:2;
+   m3 -> out:3;
+}
+
+module MixColumns(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf){
+   DoRow d0;
+   DoRow d1;
+   DoRow d2;
+   DoRow d3;
+#
+   x0 -> d0:0;
+   x4 -> d0:1;
+   x8 -> d0:2;
+   xc -> d0:3;
+
+   x1 -> d1:0;
+   x5 -> d1:1;
+   x9 -> d1:2;
+   xd -> d1:3;
+
+   x2 -> d2:0;
+   x6 -> d2:1;
+   xa -> d2:2;
+   xe -> d2:3;
+
+   x3 -> d3:0;
+   x7 -> d3:1;
+   xb -> d3:2;
+   xf -> d3:3;
+
+   d0:0 -> out:0;
+   d0:1 -> out:4;
+   d0:2 -> out:8;
+   d0:3 -> out:12;
+   
+   d1:0 -> out:1;
+   d1:1 -> out:5;
+   d1:2 -> out:9;
+   d1:3 -> out:13;
+
+   d2:0 -> out:2;
+   d2:1 -> out:6;
+   d2:2 -> out:10;
+   d2:3 -> out:14;
+   
+   d3:0 -> out:3;
+   d3:1 -> out:7;
+   d3:2 -> out:11;
+   d3:3 -> out:15;
+}
+
+module AddRoundKey(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,y0,y1,y2,y3,y4,y5,y6,y7,y8,y9,ya,yb,yc,yd,ye,yf){
+#
+   a0 = x0 ^ y0;
+   a1 = x1 ^ y1;
+   a2 = x2 ^ y2;
+   a3 = x3 ^ y3;
+   a4 = x4 ^ y4;
+   a5 = x5 ^ y5;
+   a6 = x6 ^ y6;
+   a7 = x7 ^ y7;
+   a8 = x8 ^ y8;
+   a9 = x9 ^ y9;
+   aa = xa ^ ya;
+   ab = xb ^ yb;
+   ac = xc ^ yc;
+   ad = xd ^ yd;
+   ae = xe ^ ye;
+   af = xf ^ yf;
+
+   a0 -> out:0;
+   a1 -> out:1;
+   a2 -> out:2;
+   a3 -> out:3;
+   a4 -> out:4;
+   a5 -> out:5;
+   a6 -> out:6;
+   a7 -> out:7;
+   a8 -> out:8;
+   a9 -> out:9;
+   aa -> out:10;
+   ab -> out:11;
+   ac -> out:12;
+   ad -> out:13;
+   ae -> out:14;
+   af -> out:15;
+}
+
+module FirstLineKey(x0,x1,x2,x3,w0,w1,w2,w3,rcon){
+   LookupTable b0;
+   LookupTable b1;
+#
+   x1 -> b0:0;
+   x2 -> b0:1;
+   x3 -> b1:0;
+   x0 -> b1:1;
+
+   d0 = b0:0 ^ w0 ^ rcon;
+   d1 = b0:1 ^ w1;
+   d2 = b1:0 ^ w2;
+   d3 = b1:1 ^ w3;
+
+   d0 -> out:0; 
+   d1 -> out:1; 
+   d2 -> out:2; 
+   d3 -> out:3; 
+}
+
+module KeySchedule(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,rcon){
+   FirstLineKey s;
+#
+   x3 -> s:0;
+   x7 -> s:1;
+   xb -> s:2;
+   xf -> s:3;
+   x0 -> s:4;
+   x4 -> s:5;
+   x8 -> s:6;
+   xc -> s:7;
+   rcon -> s:8;
+
+   a0 = s:0 ^ x1;
+   a1 = s:1 ^ x5;
+   a2 = s:2 ^ x9;
+   a3 = s:3 ^ xd;
+
+   b0 = a0 ^ x2;
+   b1 = a1 ^ x6;
+   b2 = a2 ^ xa;
+   b3 = a3 ^ xe;
+
+   c0 = b0 ^ x3;
+   c1 = b1 ^ x7;
+   c2 = b2 ^ xb;
+   c3 = b3 ^ xf;
+
+   s:0 -> out:0;
+   s:1 -> out:4;
+   s:2 -> out:8;
+   s:3 -> out:12;
+   a0 -> out:1;
+   a1 -> out:5;
+   a2 -> out:9;
+   a3 -> out:13;
+   b0 -> out:2;
+   b1 -> out:6;
+   b2 -> out:10;
+   b3 -> out:14;
+   c0 -> out:3;
+   c1 -> out:7;
+   c2 -> out:11;
+   c3 -> out:15;
+}
+
+module MainRound(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,k0,k1,k2,k3,k4,k5,k6,k7,k8,k9,ka,kb,kc,kd,ke,kf){
+   SBox subBytes;
+   ShiftRows shiftRows;
+   MixColumns mixColumns;
+   AddRoundKey addRoundKey;
+#
+   x0 -> subBytes:0;
+   x1 -> subBytes:1;
+   x2 -> subBytes:2;
+   x3 -> subBytes:3;
+   x4 -> subBytes:4;
+   x5 -> subBytes:5;
+   x6 -> subBytes:6;
+   x7 -> subBytes:7;
+   x8 -> subBytes:8;
+   x9 -> subBytes:9;
+   xa -> subBytes:10;
+   xb -> subBytes:11;
+   xc -> subBytes:12;
+   xd -> subBytes:13;
+   xe -> subBytes:14;
+   xf -> subBytes:15;
+   
+   subBytes:0..15 -> shiftRows:0..15;
+   shiftRows:0..15 -> mixColumns:0..15;
+   mixColumns:0..15 -> addRoundKey:0..15;
+
+   k0 -> addRoundKey:16;
+   k1 -> addRoundKey:17;
+   k2 -> addRoundKey:18;
+   k3 -> addRoundKey:19;
+   k4 -> addRoundKey:20;
+   k5 -> addRoundKey:21;
+   k6 -> addRoundKey:22;
+   k7 -> addRoundKey:23;
+   k8 -> addRoundKey:24;
+   k9 -> addRoundKey:25;
+   ka -> addRoundKey:26;
+   kb -> addRoundKey:27;
+   kc -> addRoundKey:28;
+   kd -> addRoundKey:29;
+   ke -> addRoundKey:30;
+   kf -> addRoundKey:31;
+
+   addRoundKey:0..15 -> out:0..15;
+}
+
+module FloatTest(x,y){
+   MyFloatAdd unit;   
+#
+   x -> unit:0;
+   y -> unit:1;
+
+   unit -> out;
+}
+
+iterative SimpleIterative(x){
+   Mul mul; // The first unit is defined as the "core" unit of the iterative 
+   Const const0;
+   Const const1;
+   Const const2;
+   Const const3;
+# 4
+   x -> mul:0;
+
+   %0 const0 -> mul:1;   
+   %1 const1 -> mul:1;
+   %2 const2 -> mul:1;
+   %3 const3 -> mul:1;
+
+   mul -> mul:0;
+
+   mul -> out;
+}
+
+/*
+iterative Iterative_SHA_F(a,b,c,d,e,f,g,h,k,w){
+   // Unidades
+   Comb_F_Stage comb;
+# 16
+   a -> comb:0;
+   b -> comb:1;
+   c -> comb:2;
+   d -> comb:3;
+   e -> comb:4;
+   f -> comb:5;
+   g -> comb:6;
+   h -> comb:7;
+   k -> comb:8;
+   w -> comb:9;
+
+   comb:0..7 -> comb:0..7;
+   comb:0..7 -> out:0..7;
+}
+*/
+
+module MainRoundAndKey(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,k0,k1,k2,k3,k4,k5,k6,k7,k8,k9,ka,kb,kc,kd,ke,kf,rcon){
+   MainRound round;
+   KeySchedule key;
+#
+   x0 -> round:0;
+   x1 -> round:1;
+   x2 -> round:2;
+   x3 -> round:3;
+   x4 -> round:4;
+   x5 -> round:5;
+   x6 -> round:6;
+   x7 -> round:7;
+   x8 -> round:8;
+   x9 -> round:9;
+   xa -> round:10;
+   xb -> round:11;
+   xc -> round:12;
+   xd -> round:13;
+   xe -> round:14;
+   xf -> round:15;
+   k0 -> key:0;
+   k1 -> key:1;
+   k2 -> key:2;
+   k3 -> key:3;
+   k4 -> key:4;
+   k5 -> key:5;
+   k6 -> key:6;
+   k7 -> key:7;
+   k8 -> key:8;
+   k9 -> key:9;
+   ka -> key:10;
+   kb -> key:11;
+   kc -> key:12;
+   kd -> key:13;
+   ke -> key:14;
+   kf -> key:15;
+   rcon -> key:16;
+   
+   key:0..15 -> round:16..31;
+
+   round:0..15 -> out:0..15;
+   key:0..15 -> out:16..31;
+}
+
+module AES(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,k0,k1,k2,k3,k4,k5,k6,k7,k8,k9,ka,kb,kc,kd,ke,kf){
+   Const rcon0;
+   Const rcon1;
+   Const rcon2;
+   Const rcon3;
+   Const rcon4;
+   Const rcon5;
+   Const rcon6;
+   Const rcon7;
+   Const rcon8;
+   Const rcon9;
+   
+   MainRoundAndKey mk0;
+   MainRoundAndKey mk1;
+   MainRoundAndKey mk2;
+   MainRoundAndKey mk3;
+   MainRoundAndKey mk4;
+   MainRoundAndKey mk5;
+   MainRoundAndKey mk6;
+   MainRoundAndKey mk7;
+   MainRoundAndKey mk8;
+
+   KeySchedule key9;
+
+   AddRoundKey firstKey;
+   SBox subBytes;
+   ShiftRows shiftRows;
+   AddRoundKey lastKey;
+#
+   x0 -> firstKey:0;
+   x1 -> firstKey:1;
+   x2 -> firstKey:2;
+   x3 -> firstKey:3;
+   x4 -> firstKey:4;
+   x5 -> firstKey:5;
+   x6 -> firstKey:6;
+   x7 -> firstKey:7;
+   x8 -> firstKey:8;
+   x9 -> firstKey:9;
+   xa -> firstKey:10;
+   xb -> firstKey:11;
+   xc -> firstKey:12;
+   xd -> firstKey:13;
+   xe -> firstKey:14;
+   xf -> firstKey:15;
+   k0 -> firstKey:16;
+   k1 -> firstKey:17;
+   k2 -> firstKey:18;
+   k3 -> firstKey:19;
+   k4 -> firstKey:20;
+   k5 -> firstKey:21;
+   k6 -> firstKey:22;
+   k7 -> firstKey:23;
+   k8 -> firstKey:24;
+   k9 -> firstKey:25;
+   ka -> firstKey:26;
+   kb -> firstKey:27;
+   kc -> firstKey:28;
+   kd -> firstKey:29;
+   ke -> firstKey:30;
+   kf -> firstKey:31;
+
+   firstKey:0..15 -> mk0:0..15;
+   k0 -> mk0:16;
+   k1 -> mk0:17;
+   k2 -> mk0:18;
+   k3 -> mk0:19;
+   k4 -> mk0:20;
+   k5 -> mk0:21;
+   k6 -> mk0:22;
+   k7 -> mk0:23;
+   k8 -> mk0:24;
+   k9 -> mk0:25;
+   ka -> mk0:26;
+   kb -> mk0:27;
+   kc -> mk0:28;
+   kd -> mk0:29;
+   ke -> mk0:30;
+   kf -> mk0:31;
+   
+   rcon0 -> mk0:32;
+   mk0:0..15 -> mk1:0..15;
+   mk0:16..31 -> mk1:16..31;
+
+   rcon1 -> mk1:32;
+   mk1:0..15 -> mk2:0..15;
+   mk1:16..31 -> mk2:16..31;
+
+   rcon2 -> mk2:32;
+   mk2:0..15 -> mk3:0..15;
+   mk2:16..31 -> mk3:16..31;
+
+   rcon3 -> mk3:32;
+   mk3:0..15 -> mk4:0..15;
+   mk3:16..31 -> mk4:16..31;
+
+   rcon4 -> mk4:32;
+   mk4:0..15 -> mk5:0..15;
+   mk4:16..31 -> mk5:16..31;
+
+   rcon5 -> mk5:32;
+   mk5:0..15 -> mk6:0..15;
+   mk5:16..31 -> mk6:16..31;
+
+   rcon6 -> mk6:32;
+   mk6:0..15 -> mk7:0..15;
+   mk6:16..31 -> mk7:16..31;
+
+   rcon7 -> mk7:32;
+   mk7:0..15 -> mk8:0..15;
+   mk7:16..31 -> mk8:16..31;
+
+   rcon8 -> mk8:32;
+   mk8:16..31 -> key9:0..15;
+
+   rcon9 -> key9:16;
+   mk8:0..15 -> subBytes:0..15;
+   subBytes:0..15 -> shiftRows:0..15;
+   shiftRows:0..15 -> lastKey:0..15;
+
+   key9:0..15 -> lastKey:16..31;
+
+   lastKey:0..15 -> out:0..15;
+}
+
+iterative AESPathExample(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,k0,k1,k2,k3,k4,k5,k6,k7,k8,k9,ka,kb,kc,kd,ke,kf,rcon0,rcon1,rcon2,rcon3,rcon4,rcon5,rcon6,rcon7,rcon8){
+   MainRoundAndKey roundAndKey;
+# 9
+   x0 -> roundAndKey:0;
+   x1 -> roundAndKey:1;
+   x2 -> roundAndKey:2;
+   x3 -> roundAndKey:3;
+   x4 -> roundAndKey:4;
+   x5 -> roundAndKey:5;
+   x6 -> roundAndKey:6;
+   x7 -> roundAndKey:7;
+   x8 -> roundAndKey:8;
+   x9 -> roundAndKey:9;
+   xa -> roundAndKey:10;
+   xb -> roundAndKey:11;
+   xc -> roundAndKey:12;
+   xd -> roundAndKey:13;
+   xe -> roundAndKey:14;
+   xf -> roundAndKey:15;
+   k0 -> roundAndKey:16;
+   k1 -> roundAndKey:17;
+   k2 -> roundAndKey:18;
+   k3 -> roundAndKey:19;
+   k4 -> roundAndKey:20;
+   k5 -> roundAndKey:21;
+   k6 -> roundAndKey:22;
+   k7 -> roundAndKey:23;
+   k8 -> roundAndKey:24;
+   k9 -> roundAndKey:25;
+   ka -> roundAndKey:26;
+   kb -> roundAndKey:27;
+   kc -> roundAndKey:28;
+   kd -> roundAndKey:29;
+   ke -> roundAndKey:30;
+   kf -> roundAndKey:31;
+
+   roundAndKey:0..31 -> roundAndKey:0..31;
+
+   %0 rcon0 -> roundAndKey:32;
+   %1 rcon1 -> roundAndKey:32;
+   %2 rcon2 -> roundAndKey:32;
+   %3 rcon3 -> roundAndKey:32;
+   %4 rcon4 -> roundAndKey:32;
+   %5 rcon5 -> roundAndKey:32;
+   %6 rcon6 -> roundAndKey:32;
+   %7 rcon7 -> roundAndKey:32;
+   %8 rcon8 -> roundAndKey:32;
+
+   roundAndKey:0..31 -> out:0..31;
+}
+
+module AESWithIterative(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,k0,k1,k2,k3,k4,k5,k6,k7,k8,k9,ka,kb,kc,kd,ke,kf){
+   Const rcon0;
+   Const rcon1;
+   Const rcon2;
+   Const rcon3;
+   Const rcon4;
+   Const rcon5;
+   Const rcon6;
+   Const rcon7;
+   Const rcon8;
+   Const rcon9;
+   
+   AESPathExample mk0;
+
+   KeySchedule key9;
+
+   AddRoundKey firstKey;
+   SBox subBytes;
+   ShiftRows shiftRows;
+   AddRoundKey lastKey;
+#
+   x0 -> firstKey:0;
+   x1 -> firstKey:1;
+   x2 -> firstKey:2;
+   x3 -> firstKey:3;
+   x4 -> firstKey:4;
+   x5 -> firstKey:5;
+   x6 -> firstKey:6;
+   x7 -> firstKey:7;
+   x8 -> firstKey:8;
+   x9 -> firstKey:9;
+   xa -> firstKey:10;
+   xb -> firstKey:11;
+   xc -> firstKey:12;
+   xd -> firstKey:13;
+   xe -> firstKey:14;
+   xf -> firstKey:15;
+   k0 -> firstKey:16;
+   k1 -> firstKey:17;
+   k2 -> firstKey:18;
+   k3 -> firstKey:19;
+   k4 -> firstKey:20;
+   k5 -> firstKey:21;
+   k6 -> firstKey:22;
+   k7 -> firstKey:23;
+   k8 -> firstKey:24;
+   k9 -> firstKey:25;
+   ka -> firstKey:26;
+   kb -> firstKey:27;
+   kc -> firstKey:28;
+   kd -> firstKey:29;
+   ke -> firstKey:30;
+   kf -> firstKey:31;
+
+   firstKey:0..15 -> mk0:0..15;
+   k0 -> mk0:16;
+   k1 -> mk0:17;
+   k2 -> mk0:18;
+   k3 -> mk0:19;
+   k4 -> mk0:20;
+   k5 -> mk0:21;
+   k6 -> mk0:22;
+   k7 -> mk0:23;
+   k8 -> mk0:24;
+   k9 -> mk0:25;
+   ka -> mk0:26;
+   kb -> mk0:27;
+   kc -> mk0:28;
+   kd -> mk0:29;
+   ke -> mk0:30;
+   kf -> mk0:31;
+   rcon0 -> mk0:32;
+   rcon1 -> mk0:33;
+   rcon2 -> mk0:34;
+   rcon3 -> mk0:35;
+   rcon4 -> mk0:36;
+   rcon5 -> mk0:37;
+   rcon6 -> mk0:38;
+   rcon7 -> mk0:39;
+   rcon8 -> mk0:40;
+   
+   mk0:0..15 -> subBytes:0..15;
+   mk0:16..31 -> key9:0..15;
+
+   rcon9 -> key9:16;
+   subBytes:0..15 -> shiftRows:0..15;
+   shiftRows:0..15 -> lastKey:0..15;
+
+   key9:0..15 -> lastKey:16..31;
+
+   lastKey:0..15 -> out:0..15;
+}
+
+module ReadWriteAES(){
+   VRead cypher;
+   VRead key;
+   VWrite results;
+   Merge merge;
+   AES aes;
+#
+   cypher[0..15] -> aes:0..15;
+   key[0..15] -> aes:16..31;
+
+   aes:0..15 -> merge:0..15;
+
+   merge -> results;
+}
+
+module FirstLineKey(x0,x1,x2,x3,w0,w1,w2,w3,rcon){
+   LookupTable b0;
+   LookupTable b1;
+#
+   x1 -> b0:0;
+   x2 -> b0:1;
+   x3 -> b1:0;
+   x0 -> b1:1;
+
+   d0 = b0:0 ^ w0 ^ rcon;
+   d1 = b0:1 ^ w1;
+   d2 = b1:0 ^ w2;
+   d3 = b1:1 ^ w3;
+
+   d0 -> out:0; 
+   d1 -> out:1; 
+   d2 -> out:2; 
+   d3 -> out:3; 
+}
+
+module FourthLineKey(x0,x1,x2,x3,w0,w1,w2,w3){
+   LookupTable b0;
+   LookupTable b1;
+#
+   x0 -> b0:0;
+   x1 -> b0:1;
+
+   x2 -> b1:0;
+   x3 -> b1:1;
+
+   d0 = b0:0 ^ w0;
+   d1 = b0:1 ^ w1;
+   d2 = b1:0 ^ w2;
+   d3 = b1:1 ^ w3;
+
+   d0 -> out:0; 
+   d1 -> out:1; 
+   d2 -> out:2; 
+   d3 -> out:3; 
+}
+
+module KeySchedule256(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,x10,x11,x12,x13,x14,x15,x16,x17,x18,x19,x1a,x1b,x1c,x1d,x1e,x1f,rcon){
+   FirstLineKey s;
+   FourthLineKey q;
+#
+   x13 -> s:0;
+   x17 -> s:1;
+   x1b -> s:2;
+   x1f -> s:3;
+   x0 -> s:4;
+   x4 -> s:5;
+   x8 -> s:6;
+   xc -> s:7;
+   rcon -> s:8;
+
+   a0 = s:0 ^ x1;
+   a1 = s:1 ^ x5;
+   a2 = s:2 ^ x9;
+   a3 = s:3 ^ xd;
+
+   b0 = a0 ^ x2;
+   b1 = a1 ^ x6;
+   b2 = a2 ^ xa;
+   b3 = a3 ^ xe;
+
+   c0 = b0 ^ x3;
+   c1 = b1 ^ x7;
+   c2 = b2 ^ xb;
+   c3 = b3 ^ xf;
+
+   c0 -> q:0;
+   c1 -> q:1;
+   c2 -> q:2;
+   c3 -> q:3;
+   x10 -> q:4;
+   x14 -> q:5;
+   x18 -> q:6;
+   x1c -> q:7;
+
+   d0 = q:0 ^ x11;
+   d1 = q:1 ^ x15;
+   d2 = q:2 ^ x19;
+   d3 = q:3 ^ x1d;
+
+   e0 = d0 ^ x12;
+   e1 = d1 ^ x16;
+   e2 = d2 ^ x1a;
+   e3 = d3 ^ x1e;
+
+   f0 = e0 ^ x13;
+   f1 = e1 ^ x17;
+   f2 = e2 ^ x1b;
+   f3 = e3 ^ x1f;
+
+   s:0 -> out:0;
+   s:1 -> out:4;
+   s:2 -> out:8;
+   s:3 -> out:12;
+   a0 -> out:1;
+   a1 -> out:5;
+   a2 -> out:9;
+   a3 -> out:13;
+   b0 -> out:2;
+   b1 -> out:6;
+   b2 -> out:10;
+   b3 -> out:14;
+   c0 -> out:3;
+   c1 -> out:7;
+   c2 -> out:11;
+   c3 -> out:15;
+   q:0 -> out:16;
+   q:1 -> out:20;
+   q:2 -> out:24;
+   q:3 -> out:28;
+   d0 -> out:17;
+   d1 -> out:21;
+   d2 -> out:25;
+   d3 -> out:29;
+   e0 -> out:18;
+   e1 -> out:22;
+   e2 -> out:26;
+   e3 -> out:30;
+   f0 -> out:19;
+   f1 -> out:23;
+   f2 -> out:27;
+   f3 -> out:31;
+}
+
+module RoundPairAndKey(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,k0,k1,k2,k3,k4,k5,k6,k7,k8,k9,ka,kb,kc,kd,ke,kf,k10,k11,k12,k13,k14,k15,k16,k17,k18,k19,k1a,k1b,k1c,k1d,k1e,k1f,rcon){
+   MainRound round1;
+   MainRound round2;
+   KeySchedule256 key;
+#
+   x0 -> round1:0;
+   x1 -> round1:1;
+   x2 -> round1:2;
+   x3 -> round1:3;
+   x4 -> round1:4;
+   x5 -> round1:5;
+   x6 -> round1:6;
+   x7 -> round1:7;
+   x8 -> round1:8;
+   x9 -> round1:9;
+   xa -> round1:10;
+   xb -> round1:11;
+   xc -> round1:12;
+   xd -> round1:13;
+   xe -> round1:14;
+   xf -> round1:15;
+
+   k0 -> key:0;
+   k1 -> key:1;
+   k2 -> key:2;
+   k3 -> key:3;
+   k4 -> key:4;
+   k5 -> key:5;
+   k6 -> key:6;
+   k7 -> key:7;
+   k8 -> key:8;
+   k9 -> key:9;
+   ka -> key:10;
+   kb -> key:11;
+   kc -> key:12;
+   kd -> key:13;
+   ke -> key:14;
+   kf -> key:15;
+   k10 -> key:16;
+   k11 -> key:17;
+   k12 -> key:18;
+   k13 -> key:19;
+   k14 -> key:20;
+   k15 -> key:21;
+   k16 -> key:22;
+   k17 -> key:23;
+   k18 -> key:24;
+   k19 -> key:25;
+   k1a -> key:26;
+   k1b -> key:27;
+   k1c -> key:28;
+   k1d -> key:29;
+   k1e -> key:30;
+   k1f -> key:31;
+   rcon -> key:32;
+   
+   key:0..15 -> round1:16..31;
+
+   round1:0..15 -> round2:0..15;
+   key:16..31 -> round2:16..31;
+
+   round2:0..15 -> out:0..15;
+   key:0..31 -> out:16..47;
+}
+
+iterative AES256Path(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,k0,k1,k2,k3,k4,k5,k6,k7,k8,k9,ka,kb,kc,kd,ke,kf,k10,k11,k12,k13,k14,k15,k16,k17,k18,k19,k1a,k1b,k1c,k1d,k1e,k1f,rcon0,rcon1,rcon2,rcon3,rcon4,rcon5){
+   RoundPairAndKey roundPairAndKey;
+# 6
+   x0 -> roundPairAndKey:0;
+   x1 -> roundPairAndKey:1;
+   x2 -> roundPairAndKey:2;
+   x3 -> roundPairAndKey:3;
+   x4 -> roundPairAndKey:4;
+   x5 -> roundPairAndKey:5;
+   x6 -> roundPairAndKey:6;
+   x7 -> roundPairAndKey:7;
+   x8 -> roundPairAndKey:8;
+   x9 -> roundPairAndKey:9;
+   xa -> roundPairAndKey:10;
+   xb -> roundPairAndKey:11;
+   xc -> roundPairAndKey:12;
+   xd -> roundPairAndKey:13;
+   xe -> roundPairAndKey:14;
+   xf -> roundPairAndKey:15;
+   k0 -> roundPairAndKey:16;
+   k1 -> roundPairAndKey:17;
+   k2 -> roundPairAndKey:18;
+   k3 -> roundPairAndKey:19;
+   k4 -> roundPairAndKey:20;
+   k5 -> roundPairAndKey:21;
+   k6 -> roundPairAndKey:22;
+   k7 -> roundPairAndKey:23;
+   k8 -> roundPairAndKey:24;
+   k9 -> roundPairAndKey:25;
+   ka -> roundPairAndKey:26;
+   kb -> roundPairAndKey:27;
+   kc -> roundPairAndKey:28;
+   kd -> roundPairAndKey:29;
+   ke -> roundPairAndKey:30;
+   kf -> roundPairAndKey:31;
+   k10 -> roundPairAndKey:32;
+   k11 -> roundPairAndKey:33;
+   k12 -> roundPairAndKey:34;
+   k13 -> roundPairAndKey:35;
+   k14 -> roundPairAndKey:36;
+   k15 -> roundPairAndKey:37;
+   k16 -> roundPairAndKey:38;
+   k17 -> roundPairAndKey:39;
+   k18 -> roundPairAndKey:40;
+   k19 -> roundPairAndKey:41;
+   k1a -> roundPairAndKey:42;
+   k1b -> roundPairAndKey:43;
+   k1c -> roundPairAndKey:44;
+   k1d -> roundPairAndKey:45;
+   k1e -> roundPairAndKey:46;
+   k1f -> roundPairAndKey:47;
+
+   roundPairAndKey:0..47 -> roundPairAndKey:0..47;
+
+   %0 rcon0 -> roundPairAndKey:48;
+   %1 rcon1 -> roundPairAndKey:48;
+   %2 rcon2 -> roundPairAndKey:48;
+   %3 rcon3 -> roundPairAndKey:48;
+   %4 rcon4 -> roundPairAndKey:48;
+   %5 rcon5 -> roundPairAndKey:48;
+
+   roundPairAndKey:0..47 -> out:0..47;
+}
+
+module AES256WithIterative(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,k0,k1,k2,k3,k4,k5,k6,k7,k8,k9,ka,kb,kc,kd,ke,kf,k10,k11,k12,k13,k14,k15,k16,k17,k18,k19,k1a,k1b,k1c,k1d,k1e,k1f){
+   Const rcon0;
+   Const rcon1;
+   Const rcon2;
+   Const rcon3;
+   Const rcon4;
+   Const rcon5;
+   Const rcon6;
+   
+   AES256Path mk0;
+
+   KeySchedule256 key6;
+
+   AddRoundKey firstKey;
+   MainRound round0;
+   SBox subBytes;
+   ShiftRows shiftRows;
+   AddRoundKey lastKey;
+#
+   x0 -> firstKey:0;
+   x1 -> firstKey:4;
+   x2 -> firstKey:8;
+   x3 -> firstKey:12;
+   x4 -> firstKey:1;
+   x5 -> firstKey:5;
+   x6 -> firstKey:9;
+   x7 -> firstKey:13;
+   x8 -> firstKey:2;
+   x9 -> firstKey:6;
+   xa -> firstKey:10;
+   xb -> firstKey:14;
+   xc -> firstKey:3;
+   xd -> firstKey:7;
+   xe -> firstKey:11;
+   xf -> firstKey:15;
+   k0 -> firstKey:16;
+   k1 -> firstKey:20;
+   k2 -> firstKey:24;
+   k3 -> firstKey:28;
+   k4 -> firstKey:17;
+   k5 -> firstKey:21;
+   k6 -> firstKey:25;
+   k7 -> firstKey:29;
+   k8 -> firstKey:18;
+   k9 -> firstKey:22;
+   ka -> firstKey:26;
+   kb -> firstKey:30;
+   kc -> firstKey:19;
+   kd -> firstKey:23;
+   ke -> firstKey:27;
+   kf -> firstKey:31;
+
+   firstKey:0..15 -> round0:0..15;
+   k10 -> round0:16;
+   k11 -> round0:20;
+   k12 -> round0:24;
+   k13 -> round0:28;
+   k14 -> round0:17;
+   k15 -> round0:21;
+   k16 -> round0:25;
+   k17 -> round0:29;
+   k18 -> round0:18;
+   k19 -> round0:22;
+   k1a -> round0:26;
+   k1b -> round0:30;
+   k1c -> round0:19;
+   k1d -> round0:23;
+   k1e -> round0:27;
+   k1f -> round0:31;
+
+   round0:0..15 -> mk0:0..15;
+   k0 -> mk0:16;
+   k1 -> mk0:20;
+   k2 -> mk0:24;
+   k3 -> mk0:28;
+   k4 -> mk0:17;
+   k5 -> mk0:21;
+   k6 -> mk0:25;
+   k7 -> mk0:29;
+   k8 -> mk0:18;
+   k9 -> mk0:22;
+   ka -> mk0:26;
+   kb -> mk0:30;
+   kc -> mk0:19;
+   kd -> mk0:23;
+   ke -> mk0:27;
+   kf -> mk0:31;
+   k10 -> mk0:32;
+   k11 -> mk0:36;
+   k12 -> mk0:40;
+   k13 -> mk0:44;
+   k14 -> mk0:33;
+   k15 -> mk0:37;
+   k16 -> mk0:41;
+   k17 -> mk0:45;
+   k18 -> mk0:34;
+   k19 -> mk0:38;
+   k1a -> mk0:42;
+   k1b -> mk0:46;
+   k1c -> mk0:35;
+   k1d -> mk0:39;
+   k1e -> mk0:43;
+   k1f -> mk0:47;
+   rcon0 -> mk0:48;
+   rcon1 -> mk0:49;
+   rcon2 -> mk0:50;
+   rcon3 -> mk0:51;
+   rcon4 -> mk0:52;
+   rcon5 -> mk0:53;
+   
+   mk0:16..47 -> key6:0..31;
+   rcon6 -> key6:32;
+
+   mk0:0..15 -> subBytes:0..15;
+   subBytes:0..15 -> shiftRows:0..15;
+
+   shiftRows:0..15 -> lastKey:0..15;
+   key6:0..15 -> lastKey:16..31;
+
+   lastKey:0 -> out:0;
+   lastKey:1 -> out:4;
+   lastKey:2 -> out:8;
+   lastKey:3 -> out:12;
+   lastKey:4 -> out:1;
+   lastKey:5 -> out:5;
+   lastKey:6 -> out:9;
+   lastKey:7 -> out:13;
+   lastKey:8 -> out:2;
+   lastKey:9 -> out:6;
+   lastKey:10 -> out:10;
+   lastKey:11 -> out:14;
+   lastKey:12 -> out:3;
+   lastKey:13 -> out:7;
+   lastKey:14 -> out:11;
+   lastKey:15 -> out:15;
+}
+
+module SimpleExample(){
+   Const c0;
+   Const c1;
+   Store output;
+#
+   add = c0 + c1;
+   add -> output;
+}
+
+module HierExample(x,y){
+#
+   add = x + y;
+   sub = x - y;
+
+   add -> out:0;
+   sub -> out:1;
+}
+
+module HierUseExample(){
+   Const c0;
+   Const c1;
+   HierExample ex;
+   Store s0;
+   Store s1;
+#
+   c0 -> ex:0;
+   c1 -> ex:1;
+
+   ex:0 -> s0;
+   ex:1 -> s1;
+}
+
+module FixedAverage(){
+   Mem mem;
+   Store output;
+#
+   sum = mem[0] + mem[1] + mem[2] + mem[3];
+   average = sum >> 2;
+
+   average -> output;
+}
+
+module TestGenerator(){
+   Generator gen;
+   Mem mem;
+#
+   gen -> mem;
+}
+
+module F2(a,b,c,d,e,f,g,h,k,w){
+   F_Stage f0;
+   F_Stage f1;
+#
+   a ->  f0:0;
+   b ->  f0:1;
+   c ->  f0:2;
+   d ->  f0:3;
+   e ->  f0:4;
+   f ->  f0:5;
+   g ->  f0:6;
+   h ->  f0:7;
+   k[0] -> f0:8;
+   w[0] -> f0:9;
+
+   f0:0..7 -> f1:0..7;
+   k[1] -> f1:8;
+   w[1] -> f1:9;
+
+   f1:0..7 -> out:0..7;
+}
+
+module M2(w){
+   M_Stage m0;
+   M_Stage m1;
+   Merge merge;
+#
+   w[0] -> m0:0;
+   w[14] -> m0:1;
+   w[9] -> m0:2;
+   w[1] -> m0:3;
+
+   w[1] -> m1:0;
+   w[15] -> m1:1;
+   w[10] -> m1:2;
+   w[2] -> m1:3;
+
+   m0 -> merge:0;
+   m1 -> merge:1;
+
+   merge -> out;
+}
+
+module Karatsuba(x1,x0,y1,y0){
+   Mul z0;
+   Mul mul;
+   Mul z2;
+#
+   x0 -> z0:0;
+   y0 -> z0:1;   
+
+   x1 -> z2:0;
+   y1 -> z2:1;
+
+   fullX = x1 + x0;
+   fullY = y1 + y0;
+
+   fullX -> mul:0;
+   fullY -> mul:1;   
+
+   a = mul - z2;
+   b = a - z0;
+
+   b -> out;
+}
+
+module M4(w){
+   M_Stage m0;
+   M_Stage m1;
+   M_Stage m2;
+   M_Stage m3;
+   Merge merge;
+#
+   w[0] -> m0:0;
+   w[14] -> m0:1;
+   w[9] -> m0:2;
+   w[1] -> m0:3;
+
+   w[1] -> m1:0;
+   w[15] -> m1:1;
+   w[10] -> m1:2;
+   w[2] -> m1:3;
+   
+   w[2] -> m2:0;
+   m0 -> m2:1;
+   w[11] -> m2:2;
+   w[3] -> m2:3;
+   
+   w[3] -> m3:0;
+   m1 -> m3:1;
+   w[12] -> m3:2;
+   w[4] -> m3:3;
+   
+   m0 -> merge:0;
+   m1 -> merge:1;
+   m2 -> merge:2;
+   m3 -> merge:3;
+
+   merge -> out;
+}
+
+module M8(w){
+   M_Stage m0;
+   M_Stage m1;
+   M_Stage m2;
+   M_Stage m3;
+   M_Stage m4;
+   M_Stage m5;
+   M_Stage m6;
+   M_Stage m7;
+   Merge merge;
+#
+   w[0] -> m0:0;
+   w[14] -> m0:1;
+   w[9] -> m0:2;
+   w[1] -> m0:3;
+
+   w[1] -> m1:0;
+   w[15] -> m1:1;
+   w[10] -> m1:2;
+   w[2] -> m1:3;
+   
+   w[2] -> m2:0;
+   m0 -> m2:1;
+   w[11] -> m2:2;
+   w[3] -> m2:3;
+   
+   w[3] -> m3:0;
+   m1 -> m3:1;
+   w[12] -> m3:2;
+   w[4] -> m3:3;
+   
+   w[4] -> m4:0;
+   m2 -> m4:1;
+   w[13] -> m4:2;
+   w[5] -> m4:3;
+   
+   w[5] -> m5:0;
+   m3 -> m5:1;
+   w[14] -> m5:2;
+   w[6] -> m5:3;
+   
+   w[6] -> m6:0;
+   m4 -> m6:1;
+   w[15] -> m6:2;
+   w[7] -> m6:3;
+   
+   w[7] -> m7:0;
+   m5 -> m7:1;
+   m0 -> m7:2;
+   w[8] -> m7:3;
+   
+   m0 -> merge:0;
+   m1 -> merge:1;
+   m2 -> merge:2;
+   m3 -> merge:3;
+   m4 -> merge:4;
+   m5 -> merge:5;
+   m6 -> merge:6;
+   m7 -> merge:7;
+
+   merge -> out;
+}
+
+module F8(a,b,c,d,e,f,g,h,k,w){
+   F_Stage f0;
+   F_Stage f1;
+   F_Stage f2;
+   F_Stage f3;
+   F_Stage f4;
+   F_Stage f5;
+   F_Stage f6;
+   F_Stage f7;
+#
+   a ->  f0:0;
+   b ->  f0:1;
+   c ->  f0:2;
+   d ->  f0:3;
+   e ->  f0:4;
+   f ->  f0:5;
+   g ->  f0:6;
+   h ->  f0:7;
+   k[0] -> f0:8;
+   w[0] -> f0:9;
+
+   f0:0..7 -> f1:0..7;
+   k[1] -> f1:8;
+   w[1] -> f1:9;
+
+   f1:0..7 -> f2:0..7;
+   k[2] -> f2:8;
+   w[2] -> f2:9;
+
+   f2:0..7 -> f3:0..7;
+   k[3] -> f3:8;
+   w[3] -> f3:9;
+
+   f3:0..7 -> f4:0..7;
+   k[4] -> f4:8;
+   w[4] -> f4:9;
+
+   f4:0..7 -> f5:0..7;
+   k[5] -> f5:8;
+   w[5] -> f5:9;
+
+   f5:0..7 -> f6:0..7;
+   k[6] -> f6:8;
+   w[6] -> f6:9;
+
+   f6:0..7 -> f7:0..7;
+   k[7] -> f7:8;
+   w[7] -> f7:9;
+
+   f7:0..7 -> out:0..7;
+}
+
+module F4(a,b,c,d,e,f,g,h,k,w){
+   F_Stage f0;
+   F_Stage f1;
+   F_Stage f2;
+   F_Stage f3;
+#
+   a ->  f0:0;
+   b ->  f0:1;
+   c ->  f0:2;
+   d ->  f0:3;
+   e ->  f0:4;
+   f ->  f0:5;
+   g ->  f0:6;
+   h ->  f0:7;
+   k[0] -> f0:8;
+   w[0] -> f0:9;
+
+   f0:0..7 -> f1:0..7;
+   k[1] -> f1:8;
+   w[1] -> f1:9;
+
+   f1:0..7 -> f2:0..7;
+   k[2] -> f2:8;
+   w[2] -> f2:9;
+
+   f2:0..7 -> f3:0..7;
+   k[3] -> f3:8;
+   w[3] -> f3:9;
+
+   f3:0..7 -> out:0..7;
+}
+
+module A(x,y,z){
+   Mul mul;
+#
+   x -> mul:0;
+   z -> mul:1;
+
+   add = mul + y;
+
+   add -> out;
+}
+
+module B(x,y){
+#
+   add = x + y;
+   add -> out;
+}
+
+module TestFPUDiv(x,y){
+   FloatDiv div;
+#
+   x -> div:0;
+   y -> div:1;
+
+   div -> out;
+}
+
+module TestInstanceLatency(x,y){
+   IntSqrt test;// Test instance
+   Generator gen;
+   Reg reg;
+#
+   // Code that exercises test instance. Set versat_latency to high value, then use VCD to find out when instance is producing valid data
+   x -> test:0;
+   //y -> div:1;
+
+   test -> out;
+
+   // When test instance produces correct value, latency can be measured by looking at output of gen inside VCD file
+   gen -> reg; // gen is only connected to something to force it to output data
+}
+
+module TestSpecificMerge(){
+   Mem input;
+   Mem output;
+   FloatSqrt sqrt1;
+   FloatSqrt sqrt2;
+#
+   input -> sqrt1;
+   sqrt1 -> sqrt2;
+   sqrt2 -> output;
+}
+
+module ComplexCalculateDelay(){
+   VRead v;
+   Mem output;
+   Mem anotherOut;
+   FloatSqrt sqrt;
+#
+   a = v + sqrt;
+
+   v -> sqrt;
+
+   a -> output;
+   v -> anotherOut;
+}
+
+module TestConfigOrder(){
+   Mem store;
+   Const a1;
+# 
+   b = 5;
+   b -> store;
+}
+
+module VectorLikeOperation(){
+   Mem mat; // mat[row]
+   VRead row; // mat[k]
+   Mem output; 
+   Const mask;
+#
+   a = row & mask;
+   b = mat ^ a;
+
+   b -> output;
+}
+
+module SimpleFFTCalc(even,odd){
+   FloatAdd adder;
+   FloatSub sub;
+#
+   even -> adder:0;
+   odd -> adder:1;
+
+   even -> sub:0;
+   odd -> sub:1;
+
+   adder -> out:0;
+   sub   -> out:1;
+}
+
+module FFTCalcIfPortion(real,img,rtwid,itwid){
+   FloatMul mul1;
+   FloatMul mul2;
+   FloatMul mul3;
+   FloatMul mul4;
+   FloatAdd adder;
+   FloatSub sub;
+#
+   rtwid -> mul1:0;
+   real -> mul1:1;
+
+   itwid -> mul2:0;
+   img -> mul2:1;
+
+   rtwid -> mul3:0;
+   img -> mul3:1;
+
+   img -> mul4:0;
+   real -> mul4:1;
+
+   mul1 -> sub:0;
+   mul2 -> sub:1;
+
+   mul3 -> adder:0;
+   mul4 -> adder:1;
+
+   sub -> out:0;
+   adder -> out:1;
+}
+
+module KeccakF1600(Aba,Abe,Abi,Abo,Abu,Aga,Age,Agi,Ago,Agu,Aka,Ake,Aki,Ako,Aku,Ama,Ame,Ami,Amo,Amu,Asa,Ase,Asi,Aso,Asu){
+   Const roundConst0;
+   Const roundConst1;
+#
+   BCa = Aba ^ Aga ^ Aka ^ Ama ^ Asa;
+   BCe = Abe ^ Age ^ Ake ^ Ame ^ Ase;
+   BCi = Abi ^ Agi ^ Aki ^ Ami ^ Asi;
+   BCo = Abo ^ Ago ^ Ako ^ Amo ^ Aso;
+   BCu = Abu ^ Agu ^ Aku ^ Amu ^ Asu;
+
+   Da = BCu ^ (BCe ><< 1);
+   De = BCa ^ (BCi ><< 1);
+   Di = BCe ^ (BCo ><< 1);
+   Do = BCi ^ (BCu ><< 1);
+   Du = BCo ^ (BCa ><< 1);
+
+   Aba ^= Da;
+   BCa = Aba;
+   Age ^= De;
+   BCe = Age ><< 44;
+   Aki ^= Di;
+   BCi = Aki ><< 43;
+   Amo ^= Do;
+   BCo = Amo ><< 21;
+   Asu ^= Du;
+   BCu = Asu ><< 14;
+   Eba = BCa ^ ((~BCe) & BCi);
+   Eba ^= roundConst0;
+   Ebe = BCe ^ ((~BCi) & BCo);
+   Ebi = BCi ^ ((~BCo) & BCu);
+   Ebo = BCo ^ ((~BCu) & BCa);
+   Ebu = BCu ^ ((~BCa) & BCe);
+
+   Abo ^= Do;
+   BCa = Abo ><< 28;
+   Agu ^= Du;
+   BCe = Agu ><< 20;
+   Aka ^= Da;
+   BCi = Aka ><< 3;
+   Ame ^= De;
+   BCo = Ame ><< 45;
+   Asi ^= Di;
+   BCu = Asi ><< 61;
+   Ega = BCa ^ ((~BCe) & BCi);
+   Ege = BCe ^ ((~BCi) & BCo);
+   Egi = BCi ^ ((~BCo) & BCu);
+   Ego = BCo ^ ((~BCu) & BCa);
+   Egu = BCu ^ ((~BCa) & BCe);
+
+   Abe ^= De;
+   BCa = Abe ><< 1;
+   Agi ^= Di;
+   BCe = Agi ><< 6;
+   Ako ^= Do;
+   BCi = Ako ><< 25;
+   Amu ^= Du;
+   BCo = Amu ><< 8;
+   Asa ^= Da;
+   BCu = Asa ><< 18;
+   Eka = BCa ^ ((~BCe) & BCi);
+   Eke = BCe ^ ((~BCi) & BCo);
+   Eki = BCi ^ ((~BCo) & BCu);
+   Eko = BCo ^ ((~BCu) & BCa);
+   Eku = BCu ^ ((~BCa) & BCe);
+
+   Abu ^= Du;
+   BCa = Abu ><< 27;
+   Aga ^= Da;
+   BCe = Aga ><< 36;
+   Ake ^= De;
+   BCi = Ake ><< 10;
+   Ami ^= Di;
+   BCo = Ami ><< 15;
+   Aso ^= Do;
+   BCu = Aso ><< 56;
+   Ema = BCa ^ ((~BCe) & BCi);
+   Eme = BCe ^ ((~BCi) & BCo);
+   Emi = BCi ^ ((~BCo) & BCu);
+   Emo = BCo ^ ((~BCu) & BCa);
+   Emu = BCu ^ ((~BCa) & BCe);
+
+   Abi ^= Di;
+   BCa = Abi ><< 62;
+   Ago ^= Do;
+   BCe = Ago ><< 55;
+   Aku ^= Du;
+   BCi = Aku ><< 39;
+   Ama ^= Da;
+   BCo = Ama ><< 41;
+   Ase ^= De;
+   BCu = Ase ><< 2;
+   Esa = BCa ^ ((~BCe) & BCi);
+   Ese = BCe ^ ((~BCi) & BCo);
+   Esi = BCi ^ ((~BCo) & BCu);
+   Eso = BCo ^ ((~BCu) & BCa);
+   Esu = BCu ^ ((~BCa) & BCe);
+
+   BCa = Eba ^ Ega ^ Eka ^ Ema ^ Esa;
+   BCe = Ebe ^ Ege ^ Eke ^ Eme ^ Ese;
+   BCi = Ebi ^ Egi ^ Eki ^ Emi ^ Esi;
+   BCo = Ebo ^ Ego ^ Eko ^ Emo ^ Eso;
+   BCu = Ebu ^ Egu ^ Eku ^ Emu ^ Esu;
+
+   Da = BCu ^ BCe ><< 1;
+   De = BCa ^ BCi ><< 1;
+   Di = BCe ^ BCo ><< 1;
+   Do = BCi ^ BCu ><< 1;
+   Du = BCo ^ BCa ><< 1;
+
+   Eba ^= Da;
+   BCa = Eba;
+   Ege ^= De;
+   BCe = Ege ><< 44;
+   Eki ^= Di;
+   BCi = Eki ><< 43;
+   Emo ^= Do;
+   BCo = Emo ><< 21;
+   Esu ^= Du;
+   BCu = Esu ><< 14;
+   Aba = BCa ^ ((~BCe) & BCi);
+   Aba ^= roundConst1;
+   Abe = BCe ^ ((~BCi) & BCo);
+   Abi = BCi ^ ((~BCo) & BCu);
+   Abo = BCo ^ ((~BCu) & BCa);
+   Abu = BCu ^ ((~BCa) & BCe);
+
+   Ebo ^= Do;
+   BCa = Ebo ><< 28;
+   Egu ^= Du;
+   BCe = Egu ><< 20;
+   Eka ^= Da;
+   BCi = Eka ><< 3;
+   Eme ^= De;
+   BCo = Eme ><< 45;
+   Esi ^= Di;
+   BCu = Esi ><< 61;
+   Aga = BCa ^ ((~BCe) & BCi);
+   Age = BCe ^ ((~BCi) & BCo);
+   Agi = BCi ^ ((~BCo) & BCu);
+   Ago = BCo ^ ((~BCu) & BCa);
+   Agu = BCu ^ ((~BCa) & BCe);
+
+   Ebe ^= De;
+   BCa = Ebe ><< 1;
+   Egi ^= Di;
+   BCe = Egi ><< 6;
+   Eko ^= Do;
+   BCi = Eko ><< 25;
+   Emu ^= Du;
+   BCo = Emu ><< 8;
+   Esa ^= Da;
+   BCu = Esa ><< 18;
+   Aka = BCa ^ ((~BCe) & BCi);
+   Ake = BCe ^ ((~BCi) & BCo);
+   Aki = BCi ^ ((~BCo) & BCu);
+   Ako = BCo ^ ((~BCu) & BCa);
+   Aku = BCu ^ ((~BCa) & BCe);
+
+   Ebu ^= Du;
+   BCa = Ebu ><< 27;
+   Ega ^= Da;
+   BCe = Ega ><< 36;
+   Eke ^= De;
+   BCi = Eke ><< 10;
+   Emi ^= Di;
+   BCo = Emi ><< 15;
+   Eso ^= Do;
+   BCu = Eso ><< 56;
+   Ama = BCa ^ ((~BCe) & BCi);
+   Ame = BCe ^ ((~BCi) & BCo);
+   Ami = BCi ^ ((~BCo) & BCu);
+   Amo = BCo ^ ((~BCu) & BCa);
+   Amu = BCu ^ ((~BCa) & BCe);
+
+   Ebi ^= Di;
+   BCa = Ebi ><< 62;
+   Ego ^= Do;
+   BCe = Ego ><< 55;
+   Eku ^= Du;
+   BCi = Eku ><< 39;
+   Ema ^= Da;
+   BCo = Ema ><< 41;
+   Ese ^= De;
+   BCu = Ese ><< 2;
+   Asa = BCa ^ ((~BCe) & BCi);
+   Ase = BCe ^ ((~BCi) & BCo);
+   Asi = BCi ^ ((~BCo) & BCu);
+   Aso = BCo ^ ((~BCu) & BCa);
+   Asu = BCu ^ ((~BCa) & BCe);
+
+   Aba -> out:0;
+   Abe -> out:1;
+   Abi -> out:2;
+   Abo -> out:3;
+   Abu -> out:4;
+   Aga -> out:5;
+   Age -> out:6;
+   Agi -> out:7;
+   Ago -> out:8;
+   Agu -> out:9;
+   Aka -> out:10;
+   Ake -> out:11;
+   Aki -> out:12;
+   Ako -> out:13;
+   Aku -> out:14;
+   Ama -> out:15;
+   Ame -> out:16;
+   Ami -> out:17;
+   Amo -> out:18;
+   Amu -> out:19;
+   Asa -> out:20;
+   Ase -> out:21;
+   Asi -> out:22;
+   Aso -> out:23;
+   Asu -> out:24;
+}
+
+module DoubleKeccak24Round(Aba,Abe,Abi,Abo,Abu,Aga,Age,Agi,Ago,Agu,Aka,Ake,Aki,Ako,Aku,Ama,Ame,Ami,Amo,Amu,Asa,Ase,Asi,Aso,Asu){
+   KeccakF1600 d0;
+   KeccakF1600 d1;
+#
+   Aba -> d0:0;
+   Abe -> d0:1;
+   Abi -> d0:2;
+   Abo -> d0:3;
+   Abu -> d0:4;
+   Aga -> d0:5;
+   Age -> d0:6;
+   Agi -> d0:7;
+   Ago -> d0:8;
+   Agu -> d0:9;
+   Aka -> d0:10;
+   Ake -> d0:11;
+   Aki -> d0:12;
+   Ako -> d0:13;
+   Aku -> d0:14;
+   Ama -> d0:15;
+   Ame -> d0:16;
+   Ami -> d0:17;
+   Amo -> d0:18;
+   Amu -> d0:19;
+   Asa -> d0:20;
+   Ase -> d0:21;
+   Asi -> d0:22;
+   Aso -> d0:23;
+   Asu -> d0:24;
+
+   d0:0..23 -> d1:0..23;
+
+   d1 -> out:0;
+   d1 -> out:1;
+   d1 -> out:2;
+   d1 -> out:3;
+   d1 -> out:4;
+   d1 -> out:5;
+   d1 -> out:6;
+   d1 -> out:7;
+   d1 -> out:8;
+   d1 -> out:9;
+   d1 -> out:10;
+   d1 -> out:11;
+   d1 -> out:12;
+   d1 -> out:13;
+   d1 -> out:14;
+   d1 -> out:15;
+   d1 -> out:16;
+   d1 -> out:17;
+   d1 -> out:18;
+   d1 -> out:19;
+   d1 -> out:20;
+   d1 -> out:21;
+   d1 -> out:22;
+   d1 -> out:23;
+   d1 -> out:24;
+}
+
+module Keccak16Rounds(Aba,Abe,Abi,Abo,Abu,Aga,Age,Agi,Ago,Agu,Aka,Ake,Aki,Ako,Aku,Ama,Ame,Ami,Amo,Amu,Asa,Ase,Asi,Aso,Asu){
+   DoubleKeccak24Round d0;
+   DoubleKeccak24Round d1;
+   DoubleKeccak24Round d2;
+   DoubleKeccak24Round d3;
+#
+   Aba -> d0:0;
+   Abe -> d0:1;
+   Abi -> d0:2;
+   Abo -> d0:3;
+   Abu -> d0:4;
+   Aga -> d0:5;
+   Age -> d0:6;
+   Agi -> d0:7;
+   Ago -> d0:8;
+   Agu -> d0:9;
+   Aka -> d0:10;
+   Ake -> d0:11;
+   Aki -> d0:12;
+   Ako -> d0:13;
+   Aku -> d0:14;
+   Ama -> d0:15;
+   Ame -> d0:16;
+   Ami -> d0:17;
+   Amo -> d0:18;
+   Amu -> d0:19;
+   Asa -> d0:20;
+   Ase -> d0:21;
+   Asi -> d0:22;
+   Aso -> d0:23;
+   Asu -> d0:24;
+
+   d0 -> d1;
+   d1 -> d2;
+   d2 -> d3;
+
+   d3 -> out:0;
+   d3 -> out:1;
+   d3 -> out:2;
+   d3 -> out:3;
+   d3 -> out:4;
+   d3 -> out:5;
+   d3 -> out:6;
+   d3 -> out:7;
+   d3 -> out:8;
+   d3 -> out:9;
+   d3 -> out:10;
+   d3 -> out:11;
+   d3 -> out:12;
+   d3 -> out:13;
+   d3 -> out:14;
+   d3 -> out:15;
+   d3 -> out:16;
+   d3 -> out:17;
+   d3 -> out:18;
+   d3 -> out:19;
+   d3 -> out:20;
+   d3 -> out:21;
+   d3 -> out:22;
+   d3 -> out:23;
+   d3 -> out:24;
+}
+
+module Keccak24Rounds(Aba,Abe,Abi,Abo,Abu,Aga,Age,Agi,Ago,Agu,Aka,Ake,Aki,Ako,Aku,Ama,Ame,Ami,Amo,Amu,Asa,Ase,Asi,Aso,Asu){
+   DoubleKeccak24Round d0;
+   DoubleKeccak24Round d1;
+   DoubleKeccak24Round d2;
+   DoubleKeccak24Round d3;
+   DoubleKeccak24Round d4;
+   DoubleKeccak24Round d5;
+#
+   Aba -> d0:0;
+   Abe -> d0:1;
+   Abi -> d0:2;
+   Abo -> d0:3;
+   Abu -> d0:4;
+   Aga -> d0:5;
+   Age -> d0:6;
+   Agi -> d0:7;
+   Ago -> d0:8;
+   Agu -> d0:9;
+   Aka -> d0:10;
+   Ake -> d0:11;
+   Aki -> d0:12;
+   Ako -> d0:13;
+   Aku -> d0:14;
+   Ama -> d0:15;
+   Ame -> d0:16;
+   Ami -> d0:17;
+   Amo -> d0:18;
+   Amu -> d0:19;
+   Asa -> d0:20;
+   Ase -> d0:21;
+   Asi -> d0:22;
+   Aso -> d0:23;
+   Asu -> d0:24;
+
+   d0 -> d1;
+   d1 -> d2;
+   d2 -> d3;
+   d3 -> d4;
+   d4 -> d5;
+
+   d5 -> out:0;
+   d5 -> out:1;
+   d5 -> out:2;
+   d5 -> out:3;
+   d5 -> out:4;
+   d5 -> out:5;
+   d5 -> out:6;
+   d5 -> out:7;
+   d5 -> out:8;
+   d5 -> out:9;
+   d5 -> out:10;
+   d5 -> out:11;
+   d5 -> out:12;
+   d5 -> out:13;
+   d5 -> out:14;
+   d5 -> out:15;
+   d5 -> out:16;
+   d5 -> out:17;
+   d5 -> out:18;
+   d5 -> out:19;
+   d5 -> out:20;
+   d5 -> out:21;
+   d5 -> out:22;
+   d5 -> out:23;
+   d5 -> out:24;
+}
+
+module Blake2G(a,b,c,d,m0,m1){
+#
+   a = a + b + m0;
+   d = (d ^ a) ><< 16;
+   c = c + d;
+   b = (b ^ c) ><< 12;
+   a = a + b + m1;
+   d = (d ^ a) ><< 8;
+   c = c + d;
+   b = (b ^ c) ><< 7;
+
+   a -> out:0;
+   b -> out:1;
+   c -> out:2;
+   d -> out:3;
+}
+
+module Blake2Round(v0,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,v11,v12,v13,v14,v15){
+   Mem m;
+   Blake2G g0;
+   Blake2G g1;
+   Blake2G g2;
+   Blake2G g3;
+   Blake2G g4;
+   Blake2G g5;
+   Blake2G g6;
+   Blake2G g7;
+#
+   v0   -> g0:0;
+   v4   -> g0:1;
+   v8   -> g0:2;
+   v12  -> g0:3;
+   m[0] -> g0:4;
+   m[1] -> g0:5;
+
+   v1   -> g1:0;
+   v5   -> g1:1;
+   v9   -> g1:2;
+   v13  -> g1:3;
+   m[2] -> g1:4;
+   m[3] -> g1:5;
+
+   v2   -> g2:0;
+   v6   -> g2:1;
+   v10  -> g2:2;
+   v14  -> g2:3;
+   m[4] -> g2:4;
+   m[5] -> g2:5;
+
+   v3   -> g3:0;
+   v7   -> g3:1;
+   v11  -> g3:2;
+   v15  -> g3:3;
+   m[6] -> g3:4;
+   m[7] -> g3:5;
+
+   g0:0 -> g4:0;
+   g1:1 -> g4:1;
+   g2:2 -> g4:2;
+   g3:3 -> g4:3;
+   m[8] -> g4:4;
+   m[9] -> g4:5;
+
+   g1:0  -> g5:0;
+   g2:1  -> g5:1;
+   g3:2  -> g5:2;
+   g0:3  -> g5:3;
+   m[10] -> g5:4;
+   m[11] -> g5:5;
+
+   g2:0  -> g6:0;
+   g3:1  -> g6:1;
+   g0:2  -> g6:2;
+   g1:3  -> g6:3;
+   m[12] -> g6:4;
+   m[13] -> g6:5;
+
+   g3:0  -> g7:0;
+   g0:1  -> g7:1;
+   g1:2  -> g7:2;
+   g2:3  -> g7:3;
+   m[14] -> g7:4;
+   m[15] -> g7:5;
+
+   g4:0 -> out:0;
+   g5:0 -> out:1;
+   g6:0 -> out:2;
+   g7:0 -> out:3;
+   g7:1 -> out:4;
+   g4:1 -> out:5;
+   g5:1 -> out:6;
+   g6:1 -> out:7;
+   g6:2 -> out:8;
+   g7:2 -> out:9;
+   g4:2 -> out:10;
+   g5:2 -> out:11;
+   g5:3 -> out:12;
+   g6:3 -> out:13;
+   g7:3 -> out:14;
+   g4:3 -> out:15;
+}
+
+module Blake(v0,v1,v2,v3,v4,v5,v6,v7,v8,v9,va,vb,vc,vd,ve,vf){
+   Blake2Round r0;
+   Blake2Round r1;
+   Blake2Round r2;
+   Blake2Round r3;
+   Blake2Round r4;
+   Blake2Round r5;
+   Blake2Round r6;
+   Blake2Round r7;
+   Blake2Round r8;
+   Blake2Round r9;
+#
+   v0 -> r0:0;
+   v1 -> r0:1;
+   v2 -> r0:2;
+   v3 -> r0:3;
+   v4 -> r0:4;
+   v5 -> r0:5;
+   v6 -> r0:6;
+   v7 -> r0:7;
+   v8 -> r0:8;
+   v9 -> r0:9;
+   va -> r0:10;
+   vb -> r0:11;
+   vc -> r0:12;
+   vd -> r0:13;
+   ve -> r0:14;
+   vf -> r0:15;
+
+   r0:0..15 -> r1:0..15;
+   r1:0..15 -> r2:0..15;
+   r2:0..15 -> r3:0..15;
+   r3:0..15 -> r4:0..15;
+   r4:0..15 -> r5:0..15;
+   r5:0..15 -> r6:0..15;
+   r6:0..15 -> r7:0..15;
+   r7:0..15 -> r8:0..15;
+   r8:0..15 -> r9:0..15;
+
+   r9:0..15 -> out:0..15;
+}
+
+module TestMemory(){
+   Mem mem;
+#
+   mem -> out;
+}
+
+module TestVRead(){
+   VRead read;
+#
+   read -> out;
+}
+
+module TestA(Aa,Ab,Ac,Ad){
+   Const Ax;
+   Const Ay;
+   Const Az;
+   Const Aw;
+#
+   Ar0 = Ax + Aa;
+   Ar1 = Ay + Ab;
+   Ar2 = Ac + Az;
+   Ar3 = Ad + Aw;
+
+   Ai0 = Ar0 + Ar1 + Ar2 + Ar3;
+   Ai0 -> out;
+}
+
+module TestB(Ba,Bb){
+   Const Bx;
+   Const By;
+   Muladd BmulA;
+   Muladd BmulB;
+#
+   Ba -> BmulA:0;
+   Bx -> BmulA:1;
+
+   Bb -> BmulB:0;
+   By -> BmulB:1;
+
+   Bi0 = BmulA + BmulB;
+
+   Bi0 -> out;
+}
+
+module TestC(Ca,Cb,Cc){
+   Const Cx;
+   Const Cy;
+   Const Cz;
+#
+   Cr0 = (Ca << Cx) + (Ca << Cy) + (Ca << Cz);
+   Cr1 = (Cb << Cx) + (Cb << Cy) + (Cb << Cz);
+   Cr2 = (Cc << Cx) + (Cc << Cy) + (Cc << Cz);
+
+   Cr0 -> out:0;
+   Cr1 -> out:1;
+   Cr2 -> out:2;
+}
+
+module TestD(Da,Db,Dc){
+   Muladd DmulA;
+   Muladd DmulB;
+   Muladd DmulC;
+   Const Dx;
+   Const Dy;
+   Const Dz;
+#
+   Da -> DmulA:0;
+   Dx -> DmulA:1;
+
+   Dr0 = DmulA + Db;
+
+   Dr0 -> DmulB:0;
+   Dy -> DmulB:1;
+
+   Dr1 = DmulB + Dc;
+
+   Dr1 -> DmulC:0;
+   Dz -> DmulC:1;
+
+   DmulA -> out:0;
+   DmulB -> out:1;
+   DmulC -> out:2;
+}
+
+module Big0(){
+   Const Xx0;
+   Const Xx1;
+   Const Xx2;
+   Const Xx3;
+
+   TestB Xb0;
+   TestB Xb1;
+   TestA Xa;
+#
+   Xx0 -> Xb0:0;
+   Xx1 -> Xb0:1;
+
+   Xx2 -> Xb1:0;
+   Xx3 -> Xb1:1;
+
+   Xb0 -> Xa:0;
+   Xb1 -> Xa:1;
+
+   Xa -> out;
+}
+
+module Big1(){
+   Const Yx0;
+   Const Yx1;
+   Const Yx2;
+
+   TestC Yc0;
+   TestC Yc1;
+   TestD Yd;
+#
+   Yx0 -> Yc0:0;
+   Yx1 -> Yc0:1;
+   Yx2 -> Yc0:2;   
+
+   Yc0:0 -> Yd:0;
+   Yc0:1 -> Yd:1;
+   Yc0:2 -> Yd:2;
+
+   Yd:0 -> Yc1:0;
+   Yd:1 -> Yc1:1;
+   Yd:2 -> Yc1:2;
+
+   Yc1:0 -> out:0;
+   Yc1:1 -> out:1;
+   Yc1:2 -> out:2;
+}
+
+/*
+iterative Iterative_State(a){
+   Reg register;  
+# 1
+   a -> register;
+   register -> out;
+#
+   register -> data;
+   data -> register;
+   data -> out;
+}
+
+iterative Iterative_Config(){
+   Const configTest;
+# 1
+   configTest -> out;
+#
+   configTest -> data;
+   data -> out;
+}
+
+iterative Iterative_Databus(){
+   VRead read;
+# 1
+   read -> out;
+#
+   read -> data;
+   data -> out;
+}
+*/
+
+module Merge0(){
+   Const m0;
+   Const m1;
+   Reg output;
+#
+   a = m0 + m1;
+   a -> output;
+}
+
+module Merge1(){
+   Const M0;
+   Const M1;
+   Reg Output;
+#
+   A = M0 - M1;
+   A -> Output;
+}
+
+merge MergeTest = Merge0:a | Merge1:b {
+   a.m0 - b.M1;
+   a.m1 - b.M0;
+}
+
+module SimpleFU(in0,in1){
+   Const constant;
+   Mul mul;
+   Mux4 sel;
+#
+   add = in0 + in1;
+   sub = in0 - in1;
+   {in0,in1} -> mul:0..1;
+
+   {add,sub,mul,constant} -> sel:0..3;
+
+   sel -> out;
+}
+
+module IOFU(in0){
+   VRead vread;
+   VWrite vwrite;
+   Mem mem;
+   Mux2 mux;
+#
+   // Circuit output
+   in0 -> vwrite;
+   in0 -> mem:0;
+
+   // Circuit input
+   vread -> mux:0;
+   mem:0 -> mux:1;
+
+   mux -> out;
+}
+
+module SelectInputFrom4(in0,in1,in2,in3){
+   Mux4 mux;
+#
+   {in0,in1,in2,in3} -> mux:0..3;
+   mux -> out:0;
+}
+
+module IOFUWithSelector(in0,in1,in2,in3){
+   SelectInputFrom4 sel;
+   IOFU FU;
+#
+   {in0,in1,in2,in3} -> sel:0..3;
+   sel -> FU;
+   FU -> out;
+}   
+
+module Select2From4(in0,in1,in2,in3){
+   SelectInputFrom4 sel0;
+   SelectInputFrom4 sel1;
+#
+   {in0,in1,in2,in3} -> sel0:0..3;
+   {in0,in1,in2,in3} -> sel1:0..3;
+
+   {sel0,sel1} -> out:0..1;
+}
+
+module FUWithSelector(in0,in1,in2,in3){
+   Select2From4 sel;
+   SimpleFU FU;
+#
+   {in0,in1,in2,in3} -> sel:0..3;
+   sel:0..1 -> FU:0..1;
+   FU -> out;
+}
+
+module LoopLayer(in0,in1,in2,in3){
+   IOFUWithSelector f0;
+   IOFUWithSelector f1;
+   IOFUWithSelector f2;
+   IOFUWithSelector f3;
+#
+   {in0,in1,in2,in3} -> f0:0..3;
+   {in0,in1,in2,in3} -> f1:0..3;
+   {in0,in1,in2,in3} -> f2:0..3;
+   {in0,in1,in2,in3} -> f3:0..3;
+
+   {f0,f1,f2,f3} -> out:0..3;
+}
+
+module Layer4(in0,in1,in2,in3){
+   FUWithSelector f0;
+   FUWithSelector f1;
+   FUWithSelector f2;
+   FUWithSelector f3;
+#
+   {in0,in1,in2,in3} -> f0:0..3;
+   {in0,in1,in2,in3} -> f1:0..3;
+   {in0,in1,in2,in3} -> f2:0..3;
+   {in0,in1,in2,in3} -> f3:0..3;
+
+   {f0,f1,f2,f3} -> out:0..3;
+}
+
+module SimpleCGRA(){
+   LoopLayer loop;
+   Layer4 l0;
+   Layer4 l1;
+   Layer4 l2;
+   Layer4 l3;
+#
+   loop:0..3 -> l0:0..3;
+   l0:0..3 -> l1:0..3;
+   l1:0..3 -> l2:0..3;
+   l2:0..3 -> l3:0..3;
+   l3:0..3 -> loop:0..3;
+}

@@ -62,6 +62,9 @@ IOB_SOC_OPENCRYPTOLINUX_FW_SRC=src/iob_soc_opencryptolinux_firmware.S
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/iob_soc_opencryptolinux_firmware.c
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/printf.c
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/iob_str.c
+IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/SHA.c
+#IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/AES256.c
+
 # PERIPHERAL SOURCES
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(wildcard src/iob-*.c)
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(filter-out %_emul.c, $(wildcard src/*swreg*.c))
