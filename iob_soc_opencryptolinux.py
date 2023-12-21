@@ -76,7 +76,9 @@ class iob_soc_opencryptolinux(iob_soc):
         """Create submodules list with dependencies of this module"""
 
         versatExtra = os.path.join(os.path.dirname(__file__), "hardware/src/units")
-        cls.versatType = CreateVersatClass(False, "versatSpec.txt", "SHA", versatExtra)
+        cls.versatType = CreateVersatClass(
+            False, "versatSpec.txt", "AES256WithIterative", versatExtra
+        )
 
         super()._create_submodules_list(
             [

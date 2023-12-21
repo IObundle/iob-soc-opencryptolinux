@@ -57,7 +57,7 @@ int compare_str(char *str1, char *str2, int str_size) {
 }
 
 void VersatSHATest();
-//void AES256Test();
+void AES256Test();
 
 int main() {
   char pass_string[] = "Test passed!";
@@ -70,8 +70,8 @@ int main() {
 
   versat_init(VERSAT0_BASE);
 
-  //AES256Test();
-  VersatSHATest();
+  AES256Test();
+  //VersatSHATest();
 
   printf("\n\n\nHello world!\n\n\n");
 

@@ -43,6 +43,11 @@ sim-run:
 	nix-shell --run "make setup INIT_MEM=$(INIT_MEM) VCD=$(VCD)"
 	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator INIT_MEM=$(INIT_MEM) VCD=$(VCD)" 
 
+sim-build:
+	nix-shell --run "make clean"
+	nix-shell --run "make setup INIT_MEM=$(INIT_MEM) VCD=$(VCD)"
+	nix-shell --run "make -C ../iob_soc_o* sim-build SIMULATOR=icarus" 
+
 fpga-run:
 	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM)'
 	nix-shell --run 'BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) make -C ../$(CORE)_V*/ fpga-fw-build'
