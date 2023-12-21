@@ -23,6 +23,17 @@ on:
 
 jobs:
 
+  uart16550:
+    runs-on: self-hosted
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: run uart16550 test
+        run: nix-shell --run "make -C submodules/UART16550/ clean build-setup && make -C submodules//iob_uart16550_V0.10/ sim-run"
+
   iverilog-baremetal:
     runs-on: self-hosted
     timeout-minutes: 30
@@ -37,7 +48,7 @@ jobs:
         run: nix-shell --run "make clean"
       - name: setup init_mem ext_mem
         run: nix-shell --run "make setup INIT_MEM=1"
-      - name: verilator test
+      - name: icarus test
         run: nix-shell --run "make -C ../iob_soc_o* sim-run"
 
   verilator-baremetal:
