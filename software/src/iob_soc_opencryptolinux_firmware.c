@@ -88,6 +88,8 @@ int main() {
   // Global interrupt disable
   csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 
+  uart16550_sendfile("test.log", 12, "Test passed!");
+
   printf("Exit...\n");
   uart16550_finish();
 
