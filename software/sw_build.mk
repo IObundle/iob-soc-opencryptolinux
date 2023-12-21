@@ -94,9 +94,6 @@ iob_soc_opencryptolinux_boot:
 #########################################
 # Local pc-emul makefile settings for custom pc emulation targets.
 
-# Include directory with iob_soc_opencryptolinux_system.h
-EMUL_INCLUDE+=-I. -Isrc
-
 # SOURCES
 EMUL_SRC+=src/iob_soc_opencryptolinux_firmware.c
 EMUL_SRC+=src/printf.c
