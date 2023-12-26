@@ -3,7 +3,6 @@
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_periphs.h"
 #include "iob_soc_opencryptolinux_system.h"
-#include "iob_str.h"
 #include "clint.h"
 #include "plic.h"
 #include "printf.h"
