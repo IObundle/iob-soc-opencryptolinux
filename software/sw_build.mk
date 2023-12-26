@@ -49,9 +49,12 @@ fw_jump.bin iob_soc.dtb Image rootfs.cpio.gz:
 ../../software/%.bin:
 	make -C ../../ fw-build
 
+
 UTARGETS+=build_iob_soc_opencryptolinux_software
 
 TEMPLATE_LDS=src/$@.lds
+
+IOB_SOC_OPENCRYPTOLINUX_CFLAGS ?=-Os -nostdlib -march=rv32imac -mabi=ilp32 --specs=nano.specs -Wcast-align=strict
 
 IOB_SOC_OPENCRYPTOLINUX_INCLUDES=-I. -Isrc 
 
@@ -75,29 +78,21 @@ IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=$(filter-out %_emul.c, $(wildcard src/iob*cach
 build_iob_soc_opencryptolinux_software: iob_soc_opencryptolinux_firmware iob_soc_opencryptolinux_boot
 
 iob_soc_opencryptolinux_firmware: check_if_run_linux
-	make $@.elf INCLUDES="$(IOB_SOC_OPENCRYPTOLINUX_INCLUDES)" LFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_LFLAGS) -Wl,-Map,$@.map" SRC="$(IOB_SOC_OPENCRYPTOLINUX_FW_SRC)" TEMPLATE_LDS="$(TEMPLATE_LDS)"
+	make $@.elf INCLUDES="$(IOB_SOC_OPENCRYPTOLINUX_INCLUDES)" LFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_LFLAGS) -Wl,-Map,$@.map" SRC="$(IOB_SOC_OPENCRYPTOLINUX_FW_SRC)" TEMPLATE_LDS="$(TEMPLATE_LDS)" CFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_CFLAGS)"
 
 check_if_run_linux:
-	python3 $(ROOT_DIR)/scripts/check_if_run_linux.py $(ROOT_DIR) $(RUN_LINUX)
+	python3 $(ROOT_DIR)/scripts/check_if_run_linux.py $(ROOT_DIR) iob_soc_opencryptolinux $(RUN_LINUX)
 
 iob_soc_opencryptolinux_boot:
-	make $@.elf INCLUDES="$(IOB_SOC_OPENCRYPTOLINUX_INCLUDES)" LFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_LFLAGS) -Wl,-Map,$@.map" SRC="$(IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC)" TEMPLATE_LDS="$(TEMPLATE_LDS)"
+	make $@.elf INCLUDES="$(IOB_SOC_OPENCRYPTOLINUX_INCLUDES)" LFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_LFLAGS) -Wl,-Map,$@.map" SRC="$(IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC)" TEMPLATE_LDS="$(TEMPLATE_LDS)" CFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_CFLAGS)"
 
 
-.PHONE: build_iob_soc_opencryptolinux_software
-
-# Include the UUT configuration if iob-soc is used as a Tester
-ifneq ($(wildcard $(ROOT_DIR)/software/uut_build_for_iob_soc_opencryptolinux.mk),)
-include $(ROOT_DIR)/software/uut_build_for_iob_soc_opencryptolinux.mk
-endif
+.PHONY: build_iob_soc_opencryptolinux_software iob_soc_opencryptolinux_firmware check_if_run_linux iob_soc_opencryptolinux_boot
 
 #########################################
 #         PC emulation targets          #
 #########################################
 # Local pc-emul makefile settings for custom pc emulation targets.
-
-# Include directory with iob_soc_opencryptolinux_system.h
-EMUL_INCLUDE+=-I. -Isrc
 
 # SOURCES
 EMUL_SRC+=src/iob_soc_opencryptolinux_firmware.c

@@ -3,21 +3,22 @@
 import sys
 
 ROOT_DIR = sys.argv[1]
-if len(sys.argv) > 2:
-    RUN_LINUX = sys.argv[2]
+SOC_NAME = sys.argv[2]
+if len(sys.argv) > 3:
+    RUN_LINUX = sys.argv[3]
 else:
     RUN_LINUX = "0"
 
 # Generate "iob_mem.config" according to which binary firmware the SoC should load to RAM
 
-iob_mem_file = f"{ROOT_DIR}/hardware/iob_mem.config"
+iob_mem_file = f"{ROOT_DIR}/hardware/{SOC_NAME}_mem.config"
 with open(iob_mem_file, "w") as file:
     if RUN_LINUX == "1":
         file.write(
             "fw_jump.bin 0\nImage 400000\niob_soc.dtb F80000\nrootfs.cpio.gz 1000000"
         )
     else:
-        file.write("iob_soc_opencryptolinux_firmware.bin 0")
+        file.write(f"{SOC_NAME}_firmware.bin 0")
 
 
 # Fixes existing bsp.h and bsp.vh for Simulation

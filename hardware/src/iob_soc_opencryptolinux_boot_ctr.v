@@ -8,7 +8,7 @@ module iob_soc_opencryptolinux_boot_ctr #(
     output wire boot,
     output wire cpu_reset,
 
-    input  wire [     1-1:0] iob_avalid_i,
+    input  wire [     1-1:0] iob_valid_i,
     input  wire [ADDR_W-1:0] iob_addr_i,
     input  wire [DATA_W-1:0] iob_wdata_i,
     input  wire [STRB_W-1:0] iob_wstrb_i,
@@ -26,8 +26,8 @@ module iob_soc_opencryptolinux_boot_ctr #(
   wire cpu_reset_req;
   wire rst_sync;
 
-  assign boot_wr = iob_avalid_i & (|iob_wstrb_i);
-  assign cpu_reset_req = (iob_avalid_i & (|iob_wstrb_i) & iob_wdata_i[1]) | rst_sync;
+  assign boot_wr = iob_valid_i & (|iob_wstrb_i);
+  assign cpu_reset_req = (iob_valid_i & (|iob_wstrb_i) & iob_wdata_i[1]) | rst_sync;
 
   // IOb-Bus
   assign iob_rvalid_o = 1'b0; // has no read registers
