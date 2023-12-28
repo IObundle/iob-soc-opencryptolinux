@@ -7,12 +7,14 @@ import math
 from mk_configuration import update_define
 from verilog_tools import inplace_change
 from iob_soc_opencryptolinux_create_periphs_tmp import create_periphs_tmp
+from mk_configuration import append_str_config_build_mk
 
 from iob_soc import iob_soc
 from iob_vexriscv import iob_vexriscv
 from iob_uart16550 import iob_uart16550
 from iob_uart import iob_uart
 from iob_spi_master import iob_spi_master
+from iob_eth import iob_eth
 from axil2iob import axil2iob
 from iob_reset_sync import iob_reset_sync
 from iob_ram_sp import iob_ram_sp
@@ -35,6 +37,20 @@ class iob_soc_opencryptolinux(iob_soc):
             cls.peripherals.append(iob_uart16550("UART0", "Default UART interface"))
         if iob_spi_master in cls.submodule_list:
             cls.peripherals.append(iob_spi_master("SPI0", "SPI master peripheral"))
+        if iob_eth in cls.submodule_list:
+            cls.peripherals.append(
+                iob_eth(
+                    "ETH0",
+                    "Ethernet interface",
+                    parameters={
+                        "AXI_ID_W": "AXI_ID_W",
+                        "AXI_LEN_W": "AXI_LEN_W",
+                        "AXI_ADDR_W": "AXI_ADDR_W",
+                        "AXI_DATA_W": "AXI_DATA_W",
+                        "MEM_ADDR_OFFSET": "MEM_ADDR_OFFSET",
+                    },
+                )
+            )
 
         # Add custom N_SLAVES and N_SLAVES_W
         cls.confs += [
@@ -85,6 +101,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_reset_sync,
                 iob_ram_sp,
                 # iob_spi_master,
+                iob_eth,
                 (iob_uart, {"purpose": "simulation"}),
             ]
             + extra_submodules
@@ -126,6 +143,28 @@ class iob_soc_opencryptolinux(iob_soc):
             cls.peripherals,
             f"{cls.build_dir}/software/{cls.name}_periphs.h",
         )
+
+        if cls.is_top_module:
+            # Set ethernet MAC address
+            append_str_config_build_mk(
+                """
+#Mac address of pc interface connected to ethernet peripheral (based on board name)
+$(if $(findstring sim,$(MAKECMDGOALS))$(SIMULATOR),$(eval BOARD=))
+ifeq ($(BOARD),AES-KU040-DB-G)
+RMAC_ADDR ?=989096c0632c
+endif
+ifeq ($(BOARD),CYCLONEV-GT-DK)
+RMAC_ADDR ?=309c231e624b
+endif
+RMAC_ADDR ?=000000000000
+export RMAC_ADDR
+#Set correct environment if running on IObundle machines
+ifneq ($(filter pudim-flan sericaia,$(shell hostname)),)
+IOB_CONSOLE_PYTHON_ENV ?= /opt/pyeth3/bin/python
+endif
+                """,
+                cls.build_dir,
+            )
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
@@ -213,6 +252,14 @@ class iob_soc_opencryptolinux(iob_soc):
                     "max": "32",
                     "descr": "Number of HARTs in the SoC.",
                 },
+                {
+                    "name": "USE_ETHERNET",
+                    "type": "M",
+                    "val": True,
+                    "min": "0",
+                    "max": "1",
+                    "descr": "Enable ethernet support.",
+                },
             ]
             + extra_confs
         )
@@ -276,6 +323,207 @@ class iob_soc_opencryptolinux(iob_soc):
                         "bits": [],
                     },
                     {"corename": "external", "if_name": "uart", "port": "", "bits": []},
+                ),
+            ]
+        if iob_eth in cls.submodule_list:
+            cls.peripheral_portmap += [
+                # ETHERNET
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "general",
+                        "port": "inta_o",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                # phy - connect to external interface
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "phy",
+                        "port": "MTxClk",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "external",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "phy",
+                        "port": "MTxD",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "external",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "phy",
+                        "port": "MTxEn",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "external",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "phy",
+                        "port": "MTxErr",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "external",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "phy",
+                        "port": "MRxClk",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "external",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "phy",
+                        "port": "MRxDv",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "external",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "phy",
+                        "port": "MRxD",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "external",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "phy",
+                        "port": "MRxErr",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "external",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "phy",
+                        "port": "MColl",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "external",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "phy",
+                        "port": "MCrS",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "external",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "phy",
+                        "port": "MDC",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "external",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "phy",
+                        "port": "MDIO",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "external",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "ETH0",
+                        "if_name": "phy",
+                        "port": "phy_rstn_o",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "external",
+                        "if_name": "ETH0",
+                        "port": "",
+                        "bits": [],
+                    },
                 ),
             ]
 

@@ -13,3 +13,6 @@
 [submodule "submodules/SPI"]
 	path = submodules/SPI
 	url = git@github.com:IObundle/iob-spi.git
+[submodule "submodules/ETHERNET"]
+	path = submodules/ETHERNET
+	url = git@github.com:IObundle/iob-eth.git
