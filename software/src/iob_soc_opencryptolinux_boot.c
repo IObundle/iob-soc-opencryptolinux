@@ -95,10 +95,8 @@ int main() {
   }
 #endif
 
-#ifdef IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX
   uart16550_sendfile("test.log", 12, "Test passed!");
   uart16550_putc((char)DC1);
-#endif
 
   // Clear CPU registers, to not pass arguments to the next
   asm volatile("li a0,0");

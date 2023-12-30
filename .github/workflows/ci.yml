@@ -23,6 +23,19 @@ on:
 
 jobs:
 
+  spi:
+    runs-on: self-hosted
+    timeout-minutes: 20
+    # run even if previous job failed
+    if: ${{ !cancelled() }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: run spi test
+        run: nix-shell --run "make -C submodules/SPI/ clean build-setup && make -C submodules/iob_spi_master_V0.10/ sim-run"
+
   uart16550:
     runs-on: self-hosted
     timeout-minutes: 5
@@ -35,7 +48,7 @@ jobs:
           submodules: 'recursive'
       - name: run uart16550 test
         run: nix-shell --run "make -C submodules/UART16550/ clean build-setup && make -C submodules/iob_uart16550_V0.10/ sim-run"
-
+      
   iverilog-baremetal:
     runs-on: self-hosted
     timeout-minutes: 30
