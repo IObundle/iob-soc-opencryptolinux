@@ -135,14 +135,6 @@ class iob_soc_opencryptolinux(iob_soc):
         super()._setup_confs(
             [
                 {
-                    "name": "RUN_LINUX",
-                    "type": "M",
-                    "val": False,
-                    "min": "0",
-                    "max": "1",
-                    "descr": "Used to select running linux.",
-                },
-                {
                     "name": "INIT_MEM",
                     "type": "M",
                     "val": False,
@@ -404,8 +396,3 @@ class iob_soc_opencryptolinux(iob_soc):
     @classmethod
     def _custom_setup(cls):
         super()._custom_setup()
-        # Add the following arguments:
-        # "RUN_LINUX": if should setup with init_mem or not
-        for arg in sys.argv[1:]:
-            if arg == "RUN_LINUX":
-                update_define(cls.confs, "RUN_LINUX", True)
