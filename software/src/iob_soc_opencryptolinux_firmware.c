@@ -7,9 +7,9 @@
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_periphs.h"
 #include "iob_soc_opencryptolinux_system.h"
-#include "iob_str.h"
 #include "plic.h"
 #include "printf.h"
+#include <string.h>
 
 #include "riscv-csr.h"
 #include "riscv-interrupts.h"
@@ -81,7 +81,7 @@ int main() {
   unsigned int reg = 0x00;
   spiflash_readStatusReg(&reg);
   printf("\nStatus reg (%x)\n", reg);
-  
+
   // Testing Fast Read in single, dual, quad
   unsigned bytes = 4, readid = 0;
   unsigned frame = 0x00000000;
@@ -191,7 +191,7 @@ int main() {
     printf("\nRead from memory address (%x) the word: (%x)\n", address + 1,
            read_mem);
   }
-  
+
   printf("Exit...\n");
   uart16550_finish();
 

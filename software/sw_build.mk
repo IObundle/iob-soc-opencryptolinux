@@ -64,7 +64,6 @@ IOB_SOC_OPENCRYPTOLINUX_LFLAGS=-Wl,-Bstatic,-T,$(TEMPLATE_LDS),--strip-debug
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC=src/iob_soc_opencryptolinux_firmware.S
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/iob_soc_opencryptolinux_firmware.c
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/printf.c
-IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/iob_str.c
 # PERIPHERAL SOURCES
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(wildcard src/iob-*.c)
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(filter-out %_emul.c, $(wildcard src/*swreg*.c))
@@ -97,7 +96,6 @@ iob_soc_opencryptolinux_boot:
 # SOURCES
 EMUL_SRC+=src/iob_soc_opencryptolinux_firmware.c
 EMUL_SRC+=src/printf.c
-EMUL_SRC+=src/iob_str.c
 
 # PERIPHERAL SOURCES
 EMUL_SRC+=$(wildcard src/iob-*.c)
