@@ -137,7 +137,6 @@ int main() {
     file_size = uart16550_recvfile(file_name_array[i], prog_start_addr);
 #endif
   }
-#endif
 
   // Check if running Linux
   for (i = 0; i < file_count; i++) {
@@ -148,6 +147,13 @@ int main() {
       break;
     }
   }
+#else
+#ifdef IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX
+    // Running Linux: setup required dependencies
+    uart16550_sendfile("test.log", 12, "Test passed!");
+    uart16550_putc((char)DC1);
+#endif
+#endif
 
   // Clear CPU registers, to not pass arguments to the next
   asm volatile("li a0,0");
