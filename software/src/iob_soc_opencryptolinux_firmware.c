@@ -37,7 +37,7 @@ void clear_cache(){
 uint32_t uart_recvfile_ethernet(char *file_name) {
 
   uart16550_puts(UART_PROGNAME);
-  uart16550_puts (": requesting to receive by ethernet file\n");
+  uart16550_puts (": requesting to receive file by ethernet\n");
 
   //send file receive by ethernet request
   uart16550_putc (0x13);

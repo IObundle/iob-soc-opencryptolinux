@@ -20,6 +20,16 @@
 #define DC1 17 // Device Control 1 (used to indicate end of bootloader)
 #define EXT_MEM 0x80000000
 
+
+// Ethernet utility functions
+//NOTE: These functions are not compatible with malloc() and free().
+//      These are specifically made for use with the current iob-eth.c drivers.
+//      (These assume that there is only one block allocated at a time)
+static void* mem_alloc(size_t size){
+  return (void *)(EXT_MEM | (1<<IOB_SOC_OPENCRYPTOLINUX_SRAM_ADDR_W)) - size;
+}
+static void mem_free(void* ptr){}
+
 void clear_cache(){
   // Delay to ensure all data is written to memory
   for ( unsigned int i = 0; i < 10; i++)asm volatile("nop");
@@ -27,11 +37,12 @@ void clear_cache(){
   asm volatile(".word 0x500F" ::: "memory");
 }
 
+
 // Send signal by uart to receive file by ethernet
 uint32_t uart_recvfile_ethernet(char *file_name) {
 
   uart16550_puts(UART_PROGNAME);
-  uart16550_puts (": requesting to receive by ethernet file\n");
+  uart16550_puts (": requesting to receive file by ethernet\n");
 
   //send file receive by ethernet request
   uart16550_putc (0x13);
@@ -80,9 +91,14 @@ int main() {
   }
 
 #ifndef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
+  // Init ethernet and printf (for ethernet)
   printf_init(&uart16550_putc);
   eth_init(ETH0_BASE, &clear_cache);
+  // Use custom memory alloc/free functions to ensure it allocates in external memory
+  eth_init_mem_alloc(&mem_alloc, &mem_free);
+  // Wait for PHY reset to finish
   eth_wait_phy_rst();
+
   file_size = uart16550_recvfile("../iob_soc_opencryptolinux_mem.config", prog_start_addr);
   // compute_mem_load_txt
   int state = 0;
