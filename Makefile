@@ -17,10 +17,6 @@ ifeq ($(INIT_MEM),1)
 SETUP_ARGS += INIT_MEM
 endif
 
-ifeq ($(RUN_LINUX),1)
-SETUP_ARGS += RUN_LINUX
-endif
-
 setup:
 	make build-setup SETUP_ARGS="$(SETUP_ARGS)"
 

@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 import os
-import sys
 import shutil
 import math
 
-from mk_configuration import update_define
-from verilog_tools import inplace_change
 from iob_soc_opencryptolinux_create_periphs_tmp import create_periphs_tmp
 from mk_configuration import append_str_config_build_mk
 
@@ -171,14 +168,6 @@ endif
         # Append confs or override them if they exist
         super()._setup_confs(
             [
-                {
-                    "name": "RUN_LINUX",
-                    "type": "M",
-                    "val": False,
-                    "min": "0",
-                    "max": "1",
-                    "descr": "Used to select running linux.",
-                },
                 {
                     "name": "INIT_MEM",
                     "type": "M",
@@ -526,12 +515,3 @@ endif
                     },
                 ),
             ]
-
-    @classmethod
-    def _custom_setup(cls):
-        super()._custom_setup()
-        # Add the following arguments:
-        # "RUN_LINUX": if should setup with init_mem or not
-        for arg in sys.argv[1:]:
-            if arg == "RUN_LINUX":
-                update_define(cls.confs, "RUN_LINUX", True)
