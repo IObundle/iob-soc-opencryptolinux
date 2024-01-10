@@ -33,7 +33,7 @@ FIRM_ADDR_W = $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,OS_ADDR_W)
 FIRMWARE := fw_jump.bin iob_soc.dtb Image rootfs.cpio.gz
 else
 FIRM_ARGS = $<
-FIRM_ADDR_W = $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,SRAM_ADDR_W)
+FIRM_ADDR_W = $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,MEM_ADDR_W)
 FIRMWARE := iob_soc_opencryptolinux_firmware.bin
 endif
 iob_soc_opencryptolinux_firmware.hex: $(FIRMWARE)

@@ -2,6 +2,7 @@
 # Creates periphs_tmp.h
 
 import os
+import math
 
 
 def create_periphs_tmp(name, addr_w, peripherals_list, out_file):
@@ -27,3 +28,26 @@ def create_periphs_tmp(name, addr_w, peripherals_list, out_file):
     periphs_tmp_file = open(out_file, "w")
     periphs_tmp_file.writelines(template_contents)
     periphs_tmp_file.close()
+
+
+def get_periphs_hardcoded_addr(name, addr_w, peripherals_list):
+    addr_w = int(addr_w)
+    n_slaves = len(peripherals_list) + 1  # +1 for boot_ctr
+    n_slaves_w = math.ceil(math.log(n_slaves + 2, 2))  # +2 for PLIC and CLINT
+
+    periphs_addr = {}
+    # Peripheral base addresses
+    for idx, instance in enumerate(peripherals_list):
+        periphs_addr[instance.name] = hex(
+            (idx << (addr_w - 4 - n_slaves_w)) | (0xF << (addr_w - 4))
+        )
+
+    # PLIC and CLINT base addresses
+    periphs_addr["CLINT0"] = hex(
+        (n_slaves << (addr_w - 4 - n_slaves_w)) | (0xF << (addr_w - 4))
+    )
+    periphs_addr["PLIC0"] = hex(
+        ((n_slaves + 1) << (addr_w - 4 - n_slaves_w)) | (0xF << (addr_w - 4))
+    )
+
+    return periphs_addr

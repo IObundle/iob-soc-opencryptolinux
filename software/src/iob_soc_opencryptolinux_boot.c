@@ -26,7 +26,7 @@
 //      These are specifically made for use with the current iob-eth.c drivers.
 //      (These assume that there is only one block allocated at a time)
 static void* mem_alloc(size_t size){
-  return (void *)(EXT_MEM | (1<<IOB_SOC_OPENCRYPTOLINUX_SRAM_ADDR_W)) - size;
+  return (void *)(EXT_MEM | (1<<IOB_SOC_OPENCRYPTOLINUX_MEM_ADDR_W)) - size;
 }
 static void mem_free(void* ptr){}
 

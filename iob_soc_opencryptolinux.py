@@ -3,7 +3,10 @@ import os
 import shutil
 import math
 
-from iob_soc_opencryptolinux_create_periphs_tmp import create_periphs_tmp
+from iob_soc_opencryptolinux_create_periphs_tmp import (
+    create_periphs_tmp,
+    get_periphs_hardcoded_addr,
+)
 from mk_configuration import append_str_config_build_mk
 
 from iob_soc import iob_soc
@@ -140,6 +143,13 @@ class iob_soc_opencryptolinux(iob_soc):
             cls.peripherals,
             f"{cls.build_dir}/software/{cls.name}_periphs.h",
         )
+        print(
+            get_periphs_hardcoded_addr(
+                cls.name,
+                next(i["val"] for i in cls.confs if i["name"] == "ADDR_W"),
+                cls.peripherals,
+            )
+        )
 
         if cls.is_top_module:
             # Set ethernet MAC address
@@ -199,14 +209,6 @@ endif
                     "min": "1",
                     "max": "32",
                     "descr": "Boot ROM address width",
-                },
-                {
-                    "name": "SRAM_ADDR_W",
-                    "type": "P",
-                    "val": "15",
-                    "min": "1",
-                    "max": "32",
-                    "descr": "SRAM address width",
                 },
                 {
                     "name": "MEM_ADDR_W",
