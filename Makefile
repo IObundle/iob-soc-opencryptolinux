@@ -48,10 +48,17 @@ fpga-test:
 	make clean setup fpga-run INIT_MEM=0
 
 fpga-linux-test:
-	cat | make fpga-connect | tee test.log & program_pid=$$! && \
-		while true; do grep --quiet login: test.log && break; done && \
-		echo -e "root\nuname -a\n" > /proc/$$program_pid/fd/0 && \
-		sleep 10 && grep --quiet "Linux buildroot" test.log && echo Test passed! || echo Test failed!; kill $$program_pid
+	# https://serverfault.com/a/1088115
+	rm -f program_pids.txt test_target_stdin test.log
+	mkfifo test_target_stdin
+	sleep infinity > test_target_stdin & echo $$! > program_pids.txt
+	(make fpga-connect < test_target_stdin & echo $$! >> program_pids.txt ) | tee test.log &
+	while true; do grep --quiet "buildroot login:" test.log && break; done
+	echo -e "root\n" > test_target_stdin && sleep 1 && echo "" > test_target_stdin && sleep 1
+	echo -e "uname -a\n" > test_target_stdin && sleep 1 && echo "" > test_target_stdin && sleep 1
+	kill `cat program_pids.txt`
+	rm program_pids.txt test_target_stdin
+	grep --quiet -e "Linux buildroot .* riscv32 GNU/Linux" test.log; returnval=$$?; rm test.log; (exit $$returnval) && echo "Test passed" || echo "Test failed" && (exit 1)
 
 test-all:
 	make sim-test
