@@ -5,7 +5,7 @@ import math
 
 from iob_soc_opencryptolinux_create_periphs_tmp import (
     create_periphs_tmp,
-    get_periphs_hardcoded_addr,
+    check_linux_build_macros,
 )
 from mk_configuration import append_str_config_build_mk
 
@@ -123,7 +123,7 @@ class iob_soc_opencryptolinux(iob_soc):
         super()._post_setup()
         dst = f"{cls.build_dir}/software/src"
         src = f"{__class__.setup_dir}/submodules/OS/software/OS_build"
-        files = os.listdir(src)
+        files = ["rootfs.cpio.gz", "Image"]
         for fname in files:
             src_file = os.path.join(src, fname)
             if os.path.isfile(src_file):
@@ -143,13 +143,7 @@ class iob_soc_opencryptolinux(iob_soc):
             cls.peripherals,
             f"{cls.build_dir}/software/{cls.name}_periphs.h",
         )
-        print(
-            get_periphs_hardcoded_addr(
-                cls.name,
-                next(i["val"] for i in cls.confs if i["name"] == "ADDR_W"),
-                cls.peripherals,
-            )
-        )
+        check_linux_build_macros(cls, f"{__class__.setup_dir}/submodules/OS")
 
         if cls.is_top_module:
             # Set ethernet MAC address

@@ -46,11 +46,11 @@ with open(bsp_file, "r") as file:
 
 if "define SIMULATION 1" in content:
     if RUN_LINUX == "1":
-        bsp_file = f"{ROOT_DIR}/hardware/simulation/src/bsp.vh"
-        replace_line(bsp_file, "`define BAUD", "`define BAUD 115200\n")
+        # bsp_file = f"{ROOT_DIR}/hardware/simulation/src/bsp.vh"
+        # replace_line(bsp_file, "`define BAUD", "`define BAUD 115200\n")
 
-        bsp_file = f"{ROOT_DIR}/software/src/bsp.h"
-        replace_line(bsp_file, "#define BAUD", "#define BAUD 115200\n")
+        # bsp_file = f"{ROOT_DIR}/software/src/bsp.h"
+        # replace_line(bsp_file, "#define BAUD", "#define BAUD 115200\n")
 
         conf_file = f"{ROOT_DIR}/hardware/src/{SOC_NAME}_conf.vh"
         replace_line(conf_file, "", "`define IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX 1\n")
@@ -62,11 +62,11 @@ if "define SIMULATION 1" in content:
             "#define H_IOB_SOC_OPENCRYPTOLINUX_CONF_H\n#define IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX 1\n",
         )
     else:
-        bsp_file = f"{ROOT_DIR}/hardware/simulation/src/bsp.vh"
-        replace_line(bsp_file, "`define BAUD", "`define BAUD 3000000\n")
+        # bsp_file = f"{ROOT_DIR}/hardware/simulation/src/bsp.vh"
+        # replace_line(bsp_file, "`define BAUD", "`define BAUD 3000000\n")
 
-        bsp_file = f"{ROOT_DIR}/software/src/bsp.h"
-        replace_line(bsp_file, "#define BAUD", "#define BAUD 3000000\n")
+        # bsp_file = f"{ROOT_DIR}/software/src/bsp.h"
+        # replace_line(bsp_file, "#define BAUD", "#define BAUD 3000000\n")
 
         conf_file = f"{ROOT_DIR}/hardware/src/{SOC_NAME}_conf.vh"
         replace_line(conf_file, "`define IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX", "")
