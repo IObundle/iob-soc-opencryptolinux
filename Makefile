@@ -17,10 +17,6 @@ ifeq ($(INIT_MEM),1)
 SETUP_ARGS += INIT_MEM
 endif
 
-ifeq ($(RUN_LINUX),1)
-SETUP_ARGS += RUN_LINUX
-endif
-
 setup:
 	make build-setup SETUP_ARGS="$(SETUP_ARGS)"
 
@@ -51,10 +47,16 @@ fpga-test:
 	# IOb-SoC-Opencryptolinux always uses external memory
 	make clean setup fpga-run INIT_MEM=0
 
+fpga-linux-test:
+	cat | make fpga-connect | tee test.log & program_pid=$$! && \
+		while true; do grep --quiet login: test.log && break; done && \
+		echo -e "root\nuname -a\n" > /proc/$$program_pid/fd/0 && \
+		sleep 10 && grep --quiet "Linux buildroot" test.log && echo Test passed! || echo Test failed!; kill $$program_pid
+
 test-all:
 	make sim-test
 	make fpga-test BOARD=CYCLONEV-GT-DK
 	make fpga-test BOARD=AES-KU040-DB-G
 	make clean && make setup && make -C ../iob_soc_opencryptolinux_V*/ doc-test
 
-.PHONY: sim-test fpga-test test-all
+.PHONY: sim-test fpga-test fpga-linux-test test-all

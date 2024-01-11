@@ -9,6 +9,23 @@ if len(sys.argv) > 3:
 else:
     RUN_LINUX = "0"
 
+
+# If line contains "line_content", replace entire line with "new_line_content"
+# If "line_content" is empty, append "new_line_content" to end of file
+def replace_line(filename, line_content, new_line_content):
+    with open(filename, "r") as file:
+        lines = file.readlines()
+    if line_content:
+        for i in range(len(lines)):
+            if line_content in lines[i]:
+                lines[i] = new_line_content
+    else:
+        lines.append(new_line_content)
+
+    with open(filename, "w") as file:
+        file.writelines(lines)
+
+
 # Generate "iob_mem.config" according to which binary firmware the SoC should load to RAM
 
 iob_mem_file = f"{ROOT_DIR}/hardware/{SOC_NAME}_mem.config"
@@ -29,26 +46,30 @@ with open(bsp_file, "r") as file:
 
 if "define SIMULATION 1" in content:
     if RUN_LINUX == "1":
-        bsp_file = f"{ROOT_DIR}/hardware/simulation/src/bsp.vh"
-        with open(bsp_file, "w") as file:
-            file.write(
-                "`define BAUD 115200\n`define FREQ 100000000\n`define DDR_DATA_W 32\n`define DDR_ADDR_W 26\n`define SIMULATION 1"
-            )
+        # bsp_file = f"{ROOT_DIR}/hardware/simulation/src/bsp.vh"
+        # replace_line(bsp_file, "`define BAUD", "`define BAUD 115200\n")
 
-        bsp_file = f"{ROOT_DIR}/software/src/bsp.h"
-        with open(bsp_file, "w") as file:
-            file.write(
-                "#define BAUD 115200\n#define FREQ 100000000\n#define DDR_DATA_W 32\n#define DDR_ADDR_W 26\n#define SIMULATION 1"
-            )
+        # bsp_file = f"{ROOT_DIR}/software/src/bsp.h"
+        # replace_line(bsp_file, "#define BAUD", "#define BAUD 115200\n")
+
+        conf_file = f"{ROOT_DIR}/hardware/src/{SOC_NAME}_conf.vh"
+        replace_line(conf_file, "", "`define IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX 1\n")
+
+        conf_file = f"{ROOT_DIR}/software/src/{SOC_NAME}_conf.h"
+        replace_line(
+            conf_file,
+            "#define H_IOB_SOC_OPENCRYPTOLINUX_CONF_H",
+            "#define H_IOB_SOC_OPENCRYPTOLINUX_CONF_H\n#define IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX 1\n",
+        )
     else:
-        bsp_file = f"{ROOT_DIR}/hardware/simulation/src/bsp.vh"
-        with open(bsp_file, "w") as file:
-            file.write(
-                "`define BAUD 3000000\n`define FREQ 100000000\n`define DDR_DATA_W 32\n`define DDR_ADDR_W 26\n`define SIMULATION 1"
-            )
+        # bsp_file = f"{ROOT_DIR}/hardware/simulation/src/bsp.vh"
+        # replace_line(bsp_file, "`define BAUD", "`define BAUD 3000000\n")
 
-        bsp_file = f"{ROOT_DIR}/software/src/bsp.h"
-        with open(bsp_file, "w") as file:
-            file.write(
-                "#define BAUD 3000000\n#define FREQ 100000000\n#define DDR_DATA_W 32\n#define DDR_ADDR_W 26\n#define SIMULATION 1"
-            )
+        # bsp_file = f"{ROOT_DIR}/software/src/bsp.h"
+        # replace_line(bsp_file, "#define BAUD", "#define BAUD 3000000\n")
+
+        conf_file = f"{ROOT_DIR}/hardware/src/{SOC_NAME}_conf.vh"
+        replace_line(conf_file, "`define IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX", "")
+
+        conf_file = f"{ROOT_DIR}/software/src/{SOC_NAME}_conf.h"
+        replace_line(conf_file, "#define IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX", "")

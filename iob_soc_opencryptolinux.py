@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import os
-import sys
 import shutil
 import math
 
-from mk_configuration import update_define
-from verilog_tools import inplace_change
-from iob_soc_opencryptolinux_create_periphs_tmp import create_periphs_tmp
+from iob_soc_opencryptolinux_create_periphs_tmp import (
+    create_periphs_tmp,
+    check_linux_build_macros,
+)
 from mk_configuration import append_str_config_build_mk
 
 from iob_soc import iob_soc
@@ -123,7 +123,7 @@ class iob_soc_opencryptolinux(iob_soc):
         super()._post_setup()
         dst = f"{cls.build_dir}/software/src"
         src = f"{__class__.setup_dir}/submodules/OS/software/OS_build"
-        files = os.listdir(src)
+        files = ["rootfs.cpio.gz", "Image"]
         for fname in files:
             src_file = os.path.join(src, fname)
             if os.path.isfile(src_file):
@@ -143,6 +143,7 @@ class iob_soc_opencryptolinux(iob_soc):
             cls.peripherals,
             f"{cls.build_dir}/software/{cls.name}_periphs.h",
         )
+        check_linux_build_macros(cls, f"{__class__.setup_dir}/submodules/OS")
 
         if cls.is_top_module:
             # Set ethernet MAC address
@@ -171,14 +172,6 @@ endif
         # Append confs or override them if they exist
         super()._setup_confs(
             [
-                {
-                    "name": "RUN_LINUX",
-                    "type": "M",
-                    "val": False,
-                    "min": "0",
-                    "max": "1",
-                    "descr": "Used to select running linux.",
-                },
                 {
                     "name": "INIT_MEM",
                     "type": "M",
@@ -210,14 +203,6 @@ endif
                     "min": "1",
                     "max": "32",
                     "descr": "Boot ROM address width",
-                },
-                {
-                    "name": "SRAM_ADDR_W",
-                    "type": "P",
-                    "val": "15",
-                    "min": "1",
-                    "max": "32",
-                    "descr": "SRAM address width",
                 },
                 {
                     "name": "MEM_ADDR_W",
@@ -526,12 +511,3 @@ endif
                     },
                 ),
             ]
-
-    @classmethod
-    def _custom_setup(cls):
-        super()._custom_setup()
-        # Add the following arguments:
-        # "RUN_LINUX": if should setup with init_mem or not
-        for arg in sys.argv[1:]:
-            if arg == "RUN_LINUX":
-                update_define(cls.confs, "RUN_LINUX", True)

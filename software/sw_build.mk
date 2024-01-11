@@ -33,7 +33,7 @@ FIRM_ADDR_W = $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,OS_ADDR_W)
 FIRMWARE := fw_jump.bin iob_soc.dtb Image rootfs.cpio.gz
 else
 FIRM_ARGS = $<
-FIRM_ADDR_W = $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,SRAM_ADDR_W)
+FIRM_ADDR_W = $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,MEM_ADDR_W)
 FIRMWARE := iob_soc_opencryptolinux_firmware.bin
 endif
 iob_soc_opencryptolinux_firmware.hex: $(FIRMWARE)
@@ -43,8 +43,15 @@ iob_soc_opencryptolinux_firmware.hex: $(FIRMWARE)
 iob_soc_opencryptolinux_firmware.bin: ../../software/iob_soc_opencryptolinux_firmware.bin
 	cp $< $@
 
-fw_jump.bin iob_soc.dtb Image rootfs.cpio.gz:
+Image rootfs.cpio.gz:
 	cp $(OS_DIR)/$@ .
+
+ifeq ($(IS_FPGA),1)
+fw_jump.bin iob_soc.dtb:
+	cp $(FPGA_TOOL)/$(BOARD)/$@ .
+# Set targets as PHONY to ensure that they are copied even if $(BOARD) is changed
+.PHONY: fw_jump.bin iob_soc.dtb
+endif
 
 ../../software/%.bin:
 	make -C ../../ fw-build

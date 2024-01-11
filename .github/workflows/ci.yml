@@ -71,7 +71,7 @@ jobs:
         run: nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
 
   
-  cyclonev-baremetal:
+  cyclonev:
     runs-on: self-hosted
     timeout-minutes: 60
     # run even if previous job failed
@@ -83,10 +83,12 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
-      - name: cyclonev test
-        run: make fpga-run RUN_LINUX=0 INIT_MEM=0 BOARD=CYCLONEV-GT-DK
+      - name: test baremetal
+        run: make fpga-run RUN_LINUX=0 BOARD=CYCLONEV-GT-DK
+          #      - name: test linux
+          #        run: make fpga-linux-test RUN_LINUX=1 BOARD=CYCLONEV-GT-DK
   
-  aes-ku040-baremetal:
+  aes-ku040:
     runs-on: self-hosted
     timeout-minutes: 90
     # run even if previous job failed
@@ -98,14 +100,16 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
-      - name: ku040 test
-        run: make fpga-run RUN_LINUX=0 INIT_MEM=0 BOARD=AES-KU040-DB-G
+      - name: test baremetal
+        run: make fpga-run RUN_LINUX=0 BOARD=AES-KU040-DB-G
+          #      - name: test linux
+          #        run: make fpga-linux-test RUN_LINUX=1 BOARD=AES-KU040-DB-G
 
 ##  doc:
 ##    runs-on: self-hosted
 ##    timeout-minutes: 60
 ##    if: ${{ !cancelled() }}
-##    needs: [ cyclonev-baremetal, aes-ku040-baremetal ]
+##    needs: [ cyclonev, aes-ku040 ]
 ##  
 ##    steps:
 ##      - uses: actions/checkout@v3
