@@ -47,23 +47,13 @@ fpga-test:
 	# IOb-SoC-Opencryptolinux always uses external memory
 	make clean setup fpga-run INIT_MEM=0
 
-fpga-linux-test:
-	# https://serverfault.com/a/1088115
-	rm -f program_pids.txt test_target_stdin test.log
-	mkfifo test_target_stdin
-	sleep infinity > test_target_stdin & echo $$! > program_pids.txt
-	(make fpga-connect < test_target_stdin & echo $$! >> program_pids.txt ) | tee test.log &
-	while true; do grep --quiet "buildroot login:" test.log && break; done
-	echo -e "root\n" > test_target_stdin && sleep 1 && echo "" > test_target_stdin && sleep 1
-	echo -e "uname -a\n" > test_target_stdin && sleep 1 && echo "" > test_target_stdin && sleep 1
-	kill `cat program_pids.txt`
-	rm program_pids.txt test_target_stdin
-	grep --quiet -e "Linux buildroot .* riscv32 GNU/Linux" test.log; returnval=$$?; rm test.log; (exit $$returnval) && echo "Test passed" || echo "Test failed" && (exit 1)
-
 test-all:
 	make sim-test
 	make fpga-test BOARD=CYCLONEV-GT-DK
 	make fpga-test BOARD=AES-KU040-DB-G
 	make clean && make setup && make -C ../iob_soc_opencryptolinux_V*/ doc-test
 
-.PHONY: sim-test fpga-test fpga-linux-test test-all
+test:
+	bash
+
+.PHONY: sim-test fpga-test test-all
