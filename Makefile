@@ -39,11 +39,10 @@ fpga-run:
 
 fpga-connect:
 	nix-shell --run 'make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX)'
-#   Should run under 'bash', running with 'fish' as a shell gives an error
+	# Should run under 'bash', running with 'fish' as a shell gives an error
 	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
 
 fpga-test:
-	# IOb-SoC-Opencryptolinux always uses external memory
 	make clean setup fpga-run INIT_MEM=0
 
 test-all:
