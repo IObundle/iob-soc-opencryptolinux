@@ -1,0 +1,18 @@
+# Script for "runscript" program of minicom, to test linux functionality
+
+print "\n[minicom] Waiting to receive test.log..."
+expect {
+    "B00000000000000"
+}
+! rz
+
+# Wait for the "buildroot login:" message
+print "\n[minicom] Waiting for buildroot login..."
+expect {
+    "buildroot login:"
+}
+
+print "\n[minicom] Done"
+
+# Exit minicom
+! kill `cut -f4 -d' ' /proc/$PPID/stat`

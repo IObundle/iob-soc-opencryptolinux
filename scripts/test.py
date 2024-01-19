@@ -8,9 +8,12 @@ import time
 
 ### Utility functions
 
+
 def launch_process(command):
     # Launch the process with stdout and stdin pipes
-    process = subprocess.Popen(command, bufsize=1, stdout=subprocess.PIPE, stdin=subprocess.PIPE, text=True)
+    process = subprocess.Popen(
+        command, bufsize=1, stdout=subprocess.PIPE, stdin=subprocess.PIPE, text=True
+    )
 
     return process
 
@@ -32,13 +35,17 @@ def send_message_to_stdin(process, message):
     process.stdin.flush()
 
 
-
 ### Process manipulation functions
 
+
 def test_example():
-    '''Example function to demonstrate how to use this script.'''
+    """Example function to demonstrate how to use this script."""
     # Replace 'your_command_here' with the actual command you want to execute
-    command = ["bash", "-c", "for i in {1..3}; do echo $i; sleep 1; done; read -p input: var1; echo received: $var1"]
+    command = [
+        "bash",
+        "-c",
+        "for i in {1..3}; do echo $i; sleep 1; done; read -p input: var1; echo received: $var1",
+    ]
 
     # Launch the process
     my_process = launch_process(command)
@@ -58,8 +65,9 @@ def test_example():
     # Close stdin to indicate no more input will be sent
     my_process.stdin.close()
 
+
 def test_2():
-    '''Example function to demonstrate how to use this script.'''
+    """Example function to demonstrate how to use this script."""
     # Replace 'your_command_here' with the actual command you want to execute
     command = ["make", "test"]
 
@@ -83,7 +91,7 @@ def test_2():
 
 
 def test_linux(args=[]):
-    '''Function to test if the Linux OS runs correctly on the FPGA.'''
+    """Function to test if the Linux OS runs correctly on the FPGA."""
     # Command to launch Linux system on FPGA
     command = ["make", "fpga-connect"] + args
 
