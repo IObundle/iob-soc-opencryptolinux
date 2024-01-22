@@ -12,8 +12,8 @@ _start:
 .option pop
 
     //set stack pointer
-    lui sp, %hi(1<<IOB_SOC_OPENCRYPTOLINUX_SRAM_ADDR_W)
-    addi sp, sp, %lo(1<<IOB_SOC_OPENCRYPTOLINUX_SRAM_ADDR_W)
+    lui sp, %hi(1<<IOB_SOC_OPENCRYPTOLINUX_MEM_ADDR_W)
+    addi sp, sp, %lo(1<<IOB_SOC_OPENCRYPTOLINUX_MEM_ADDR_W)
 
     //call main
     call main

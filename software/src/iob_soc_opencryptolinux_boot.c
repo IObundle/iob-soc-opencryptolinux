@@ -3,6 +3,9 @@
 #include "iob-uart16550.h"
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_system.h"
+#include "printf.h"
+#include "iob-eth.h"
+#include <string.h>
 
 // defined here (and not in periphs.h) because it is the only peripheral used
 // by the bootloader
@@ -10,13 +13,56 @@
   ((IOB_SOC_OPENCRYPTOLINUX_UART0 << (IOB_SOC_OPENCRYPTOLINUX_ADDR_W - 4 -     \
                                       IOB_SOC_OPENCRYPTOLINUX_N_SLAVES_W)) |   \
    (0xf << (IOB_SOC_OPENCRYPTOLINUX_ADDR_W - 4)))
+#define ETH0_BASE ((IOB_SOC_OPENCRYPTOLINUX_ETH0<<(IOB_SOC_OPENCRYPTOLINUX_ADDR_W-4-IOB_SOC_OPENCRYPTOLINUX_N_SLAVES_W))|(0xf<<(IOB_SOC_OPENCRYPTOLINUX_ADDR_W-4)))
 
 #define PROGNAME "IOb-Bootloader"
 
 #define DC1 17 // Device Control 1 (used to indicate end of bootloader)
 #define EXT_MEM 0x80000000
 
+
+// Ethernet utility functions
+//NOTE: These functions are not compatible with malloc() and free().
+//      These are specifically made for use with the current iob-eth.c drivers.
+//      (These assume that there is only one block allocated at a time)
+static void* mem_alloc(size_t size){
+  return (void *)(EXT_MEM | (1<<IOB_SOC_OPENCRYPTOLINUX_MEM_ADDR_W)) - size;
+}
+static void mem_free(void* ptr){}
+
+void clear_cache(){
+  // Delay to ensure all data is written to memory
+  for ( unsigned int i = 0; i < 10; i++)asm volatile("nop");
+  // Flush VexRiscv CPU internal cache
+  asm volatile(".word 0x500F" ::: "memory");
+}
+
+
+// Send signal by uart to receive file by ethernet
+uint32_t uart_recvfile_ethernet(char *file_name) {
+  uart16550_puts(UART_PROGNAME);
+  uart16550_puts (": requesting to receive file by ethernet\n");
+
+  //send file receive by ethernet request
+  uart16550_putc (0x13);
+
+  //send file name (including end of string)
+  uart16550_puts(file_name); uart16550_putc(0);
+
+  // receive file size
+  uint32_t file_size = uart16550_getc();
+  file_size |= ((uint32_t)uart16550_getc()) << 8;
+  file_size |= ((uint32_t)uart16550_getc()) << 16;
+  file_size |= ((uint32_t)uart16550_getc()) << 24;
+
+  // send ACK before receiving file
+  uart16550_putc(ACK);
+
+  return file_size;
+}
+
 int main() {
+  int run_linux = 0;
   int file_size;
   char *prog_start_addr;
 
@@ -45,7 +91,15 @@ int main() {
   }
 
 #ifndef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
-  file_size = uart16550_recvfile("../iob_mem.config", prog_start_addr);
+  // Init ethernet and printf (for ethernet)
+  printf_init(&uart16550_putc);
+  eth_init(ETH0_BASE, &clear_cache);
+  // Use custom memory alloc/free functions to ensure it allocates in external memory
+  eth_init_mem_alloc(&mem_alloc, &mem_free);
+  // Wait for PHY reset to finish
+  eth_wait_phy_rst();
+
+  file_size = uart16550_recvfile("../iob_soc_opencryptolinux_mem.config", prog_start_addr);
   // compute_mem_load_txt
   int state = 0;
   int file_name_count = 0;
@@ -91,12 +145,34 @@ int main() {
 
   for (i = 0; i < file_count; i++) {
     prog_start_addr = (char *)(EXT_MEM + file_address_array[i]);
+    // Receive data from console via Ethernet
+#ifndef SIMULATION
+    file_size = uart_recvfile_ethernet(file_name_array[i]);
+    eth_rcv_file(prog_start_addr,file_size);
+#else
     file_size = uart16550_recvfile(file_name_array[i], prog_start_addr);
-  }
 #endif
+  }
 
-  uart16550_sendfile("test.log", 12, "Test passed!");
-  uart16550_putc((char)DC1);
+  // Check if running Linux
+  for (i = 0; i < file_count; i++) {
+    if (!strcmp(file_name_array[i], "rootfs.cpio.gz")){
+#ifdef SIMULATION
+      // Running Linux: setup required dependencies
+      uart16550_sendfile("test.log", 12, "Test passed!");
+      uart16550_putc((char)DC1);
+#endif
+      run_linux=1;
+      break;
+    }
+  }
+#else // INIT_MEM = 1
+#ifdef IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX
+    // Running Linux: setup required dependencies
+    uart16550_sendfile("test.log", 12, "Test passed!");
+    uart16550_putc((char)DC1);
+#endif
+#endif
 
   // Clear CPU registers, to not pass arguments to the next
   asm volatile("li a0,0");
@@ -112,4 +188,10 @@ int main() {
   uart16550_puts(PROGNAME);
   uart16550_puts(": Restart CPU to run user program...\n");
   uart16550_txwait();
+
+#ifndef SIMULATION
+  // Terminate console if running Linux on FPGA
+  if (run_linux)
+    uart16550_finish();
+#endif
 }

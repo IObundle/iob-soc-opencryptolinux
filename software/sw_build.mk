@@ -33,7 +33,7 @@ FIRM_ADDR_W = $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,OS_ADDR_W)
 FIRMWARE := fw_jump.bin iob_soc.dtb Image rootfs.cpio.gz
 else
 FIRM_ARGS = $<
-FIRM_ADDR_W = $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,SRAM_ADDR_W)
+FIRM_ADDR_W = $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,MEM_ADDR_W)
 FIRMWARE := iob_soc_opencryptolinux_firmware.bin
 endif
 iob_soc_opencryptolinux_firmware.hex: $(FIRMWARE)
@@ -43,15 +43,25 @@ iob_soc_opencryptolinux_firmware.hex: $(FIRMWARE)
 iob_soc_opencryptolinux_firmware.bin: ../../software/iob_soc_opencryptolinux_firmware.bin
 	cp $< $@
 
-fw_jump.bin iob_soc.dtb Image rootfs.cpio.gz:
+Image rootfs.cpio.gz:
 	cp $(OS_DIR)/$@ .
+
+ifeq ($(IS_FPGA),1)
+fw_jump.bin iob_soc.dtb:
+	cp $(FPGA_TOOL)/$(BOARD)/$@ .
+# Set targets as PHONY to ensure that they are copied even if $(BOARD) is changed
+.PHONY: fw_jump.bin iob_soc.dtb
+endif
 
 ../../software/%.bin:
 	make -C ../../ fw-build
 
+
 UTARGETS+=build_iob_soc_opencryptolinux_software
 
 TEMPLATE_LDS=src/$@.lds
+
+IOB_SOC_OPENCRYPTOLINUX_CFLAGS ?=-Os -nostdlib -march=rv32imac -mabi=ilp32 --specs=nano.specs -Wcast-align=strict
 
 IOB_SOC_OPENCRYPTOLINUX_INCLUDES=-I. -Isrc 
 
@@ -74,38 +84,31 @@ IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=src/iob_soc_opencryptolinux_boot.S
 IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=src/iob_soc_opencryptolinux_boot.c
 IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=$(filter-out %_emul.c, $(wildcard src/iob*uart*.c))
 IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=$(filter-out %_emul.c, $(wildcard src/iob*cache*.c))
+IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=$(filter-out %_emul.c, $(wildcard src/iob*eth*.c))
+IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=src/printf.c
 
 build_iob_soc_opencryptolinux_software: iob_soc_opencryptolinux_firmware iob_soc_opencryptolinux_boot
 
 iob_soc_opencryptolinux_firmware: check_if_run_linux
-	make $@.elf INCLUDES="$(IOB_SOC_OPENCRYPTOLINUX_INCLUDES)" LFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_LFLAGS) -Wl,-Map,$@.map" SRC="$(IOB_SOC_OPENCRYPTOLINUX_FW_SRC)" TEMPLATE_LDS="$(TEMPLATE_LDS)"
+	make $@.elf INCLUDES="$(IOB_SOC_OPENCRYPTOLINUX_INCLUDES)" LFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_LFLAGS) -Wl,-Map,$@.map" SRC="$(IOB_SOC_OPENCRYPTOLINUX_FW_SRC)" TEMPLATE_LDS="$(TEMPLATE_LDS)" CFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_CFLAGS)"
 
 check_if_run_linux:
-	python3 $(ROOT_DIR)/scripts/check_if_run_linux.py $(ROOT_DIR) $(RUN_LINUX)
+	python3 $(ROOT_DIR)/scripts/check_if_run_linux.py $(ROOT_DIR) iob_soc_opencryptolinux $(RUN_LINUX)
 
 iob_soc_opencryptolinux_boot:
-	make $@.elf INCLUDES="$(IOB_SOC_OPENCRYPTOLINUX_INCLUDES)" LFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_LFLAGS) -Wl,-Map,$@.map" SRC="$(IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC)" TEMPLATE_LDS="$(TEMPLATE_LDS)"
+	make $@.elf INCLUDES="$(IOB_SOC_OPENCRYPTOLINUX_INCLUDES)" LFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_LFLAGS) -Wl,-Map,$@.map" SRC="$(IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC)" TEMPLATE_LDS="$(TEMPLATE_LDS)" CFLAGS="$(IOB_SOC_OPENCRYPTOLINUX_CFLAGS)"
 
 
-.PHONE: build_iob_soc_opencryptolinux_software
-
-# Include the UUT configuration if iob-soc is used as a Tester
-ifneq ($(wildcard $(ROOT_DIR)/software/uut_build_for_iob_soc_opencryptolinux.mk),)
-include $(ROOT_DIR)/software/uut_build_for_iob_soc_opencryptolinux.mk
-endif
+.PHONY: build_iob_soc_opencryptolinux_software iob_soc_opencryptolinux_firmware check_if_run_linux iob_soc_opencryptolinux_boot
 
 #########################################
 #         PC emulation targets          #
 #########################################
 # Local pc-emul makefile settings for custom pc emulation targets.
 
-# Include directory with iob_soc_opencryptolinux_system.h
-EMUL_INCLUDE+=-I. -Isrc
-
 # SOURCES
 EMUL_SRC+=src/iob_soc_opencryptolinux_firmware.c
 EMUL_SRC+=src/printf.c
-EMUL_SRC+=src/iob_str.c
 
 # PERIPHERAL SOURCES
 EMUL_SRC+=$(wildcard src/iob-*.c)

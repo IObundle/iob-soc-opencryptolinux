@@ -16,3 +16,6 @@
 [submodule "submodules/VERSAT"]
 	path = submodules/VERSAT
 	url = git@github.com:IObundle/iob-versat.git
+[submodule "submodules/ETHERNET"]
+	path = submodules/ETHERNET
+	url = git@github.com:IObundle/iob-eth.git

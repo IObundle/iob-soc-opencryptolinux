@@ -39,7 +39,7 @@ module iob_soc_opencryptolinux #(
   `include "iob_soc_opencryptolinux_pwires.vs"
 
 
-  wire peripheral_iob_avalid;
+  wire peripheral_iob_valid;
   wire [ADDR_W-1:0] peripheral_iob_addr;
   wire [DATA_W-1:0] peripheral_iob_wdata;
   wire [DATA_W/8-1:0] peripheral_iob_wstrb;
@@ -74,8 +74,8 @@ module iob_soc_opencryptolinux #(
 
   assign axi_awlock_o[1] = 1'b0;
   assign axi_arlock_o[1] = 1'b0;
-  assign axi_awlen_o = extmem_axi_awlen[AXI_LEN_W-1:0];
-  assign axi_arlen_o = extmem_axi_arlen[AXI_LEN_W-1:0];
+  assign axi_awlen_o[AXI_LEN_W-1:0] = extmem_axi_awlen[AXI_LEN_W-1:0];
+  assign axi_arlen_o[AXI_LEN_W-1:0] = extmem_axi_arlen[AXI_LEN_W-1:0];
   generate
     if (AXI_ID_W != 1) begin : g_fill_ID_signal
       assign axi_awid_o[AXI_ID_W-1:1] = {(AXI_ID_W - 1) {1'b0}};
@@ -222,7 +222,7 @@ module iob_soc_opencryptolinux #(
       .DATA_WIDTH(DATA_W),
       .ADDR_WIDTH(BOOTROM_ADDR_W),
       .ID_WIDTH(INTMEM_AXI_ID_W),
-`ifdef MEM_NO_READ_ON_WRITE
+`ifdef IOB_MEM_NO_READ_ON_WRITE
       .READ_ON_WRITE(0),
 `else
       .READ_ON_WRITE(1),
@@ -303,7 +303,7 @@ module iob_soc_opencryptolinux #(
       .axil_rvalid_o(peripheral_axi_rvalid),
       .axil_rready_i(peripheral_axi_rready),
       // IOb-bus signals
-      .iob_avalid_o(peripheral_iob_avalid),
+      .iob_valid_o(peripheral_iob_valid),
       .iob_addr_o(peripheral_iob_addr),
       .iob_wdata_o(peripheral_iob_wdata),
       .iob_wstrb_o(peripheral_iob_wstrb),
@@ -322,7 +322,7 @@ module iob_soc_opencryptolinux #(
       .arst_i(arst_i),
       // master interface
       .m_req_i({
-        peripheral_iob_avalid, peripheral_iob_addr, peripheral_iob_wdata, peripheral_iob_wstrb
+        peripheral_iob_valid, peripheral_iob_addr, peripheral_iob_wdata, peripheral_iob_wstrb
       }),
       .m_resp_o({peripheral_iob_rdata, peripheral_iob_rvalid, peripheral_iob_ready}),
       // slaves interface
@@ -338,7 +338,7 @@ module iob_soc_opencryptolinux #(
   ) boot_ctr (
       .boot(boot),
       .cpu_reset(cpu_reset),
-      .iob_avalid_i(slaves_req[`AVALID(0)]),
+      .iob_valid_i(slaves_req[`VALID(0)]),
       .iob_addr_i(slaves_req[`ADDRESS(0, `IOB_UART16550_SWREG_ADDR_W)]),
       .iob_wdata_i(slaves_req[`WDATA(0)]),
       .iob_wstrb_i(slaves_req[`WSTRB(0)]),

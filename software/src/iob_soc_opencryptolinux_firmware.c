@@ -3,10 +3,10 @@
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_periphs.h"
 #include "iob_soc_opencryptolinux_system.h"
-#include "iob_str.h"
 #include "clint.h"
 #include "plic.h"
 #include "printf.h"
+#include "iob-eth.h"
 
 #include "versat_accel.h"
 
@@ -27,6 +27,38 @@ static void irq_entry(void) __attribute__((interrupt("machine")));
 
 // Global to hold current timestamp
 static volatile uint64_t timestamp = 0;
+
+void clear_cache(){
+  // Delay to ensure all data is written to memory
+  for ( unsigned int i = 0; i < 10; i++)asm volatile("nop");
+  // Flush VexRiscv CPU internal cache
+  asm volatile(".word 0x500F" ::: "memory");
+}
+
+// Send signal by uart to receive file by ethernet
+uint32_t uart_recvfile_ethernet(char *file_name) {
+
+  uart16550_puts(UART_PROGNAME);
+  uart16550_puts (": requesting to receive file by ethernet\n");
+
+  //send file receive by ethernet request
+  uart16550_putc (0x13);
+
+  //send file name (including end of string)
+  uart16550_puts(file_name); uart16550_putc(0);
+
+  // receive file size
+  uint32_t file_size = uart16550_getc();
+  file_size |= ((uint32_t)uart16550_getc()) << 8;
+  file_size |= ((uint32_t)uart16550_getc()) << 16;
+  file_size |= ((uint32_t)uart16550_getc()) << 24;
+
+  // send ACK before receiving file
+  uart16550_putc(ACK);
+
+  return file_size;
+}
+
 
 // copy src to dst
 // return number of copied chars (excluding '\0')
@@ -62,11 +94,25 @@ void AES256Test();
 int main() {
   char pass_string[] = "Test passed!";
   uint_xlen_t irq_entry_copy;
+  int i;
 
   // init uart
   uart16550_init(UART0_BASE, FREQ / (16 * BAUD));
   clint_setCmp(CLINT0_BASE, 0xffffffffffffffff, 0);
   printf_init(&uart16550_putc);
+  // init eth
+  eth_init(ETH0_BASE, &clear_cache);
+  eth_wait_phy_rst();
+
+#ifndef SIMULATION
+  char buffer[5096];
+  // Receive data from console via Ethernet
+  uint32_t file_size = uart_recvfile_ethernet("../src/eth_example.txt");
+  eth_rcv_file(buffer,file_size);
+  uart16550_puts("\nFile received from console via ethernet:\n");
+  for(i=0; i<file_size; i++)
+    uart16550_putc(buffer[i]);
+#endif
 
   versat_init(VERSAT0_BASE);
 
@@ -97,6 +143,8 @@ int main() {
 
   // Global interrupt disable
   csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
+
+  uart16550_sendfile("test.log", 12, "Test passed!");
 
   printf("Exit...\n");
   uart16550_finish();
