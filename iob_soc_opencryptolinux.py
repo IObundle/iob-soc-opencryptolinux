@@ -154,13 +154,19 @@ class iob_soc_opencryptolinux(iob_soc):
         # Set custom ethernet CONSOLE_CMD
         contents.append(
             """
+### Launch minicom if running Linux
 ifeq ($(shell grep -o rootfs.cpio.gz ../iob_soc_opencryptolinux_mem.config),rootfs.cpio.gz)
-CONSOLE_CMD += && (HOME=$$(pwd) minicom iobundle.dfl
 ifneq ($(wildcard minicom_linux_script.txt),)
-CONSOLE_CMD += -S minicom_linux_script.txt
+SCRIPT_STR:=-S minicom_linux_script.txt
+# Set TERM variable to linux-c-nc (needed to run in non-interactive mode https://stackoverflow.com/a/49077622)
+TERM_STR:=TERM=linux-c-nc
+# Set a capture file and print its contents (to work around minicom clearing the screen)
+LOG_STR:=-C minicom_out.log || cat minicom_out.log
 endif
+# Set HOME to current (fpga) directory (needed because minicom always reads the '.minirc.*' config file from HOME)
+HOME_STR:=HOME=$$(pwd)
 # Always exit with code 0 (since linux is terminated with CTRL-C)
-CONSOLE_CMD += || (exit 0))
+CONSOLE_CMD += && ($(HOME_STR) $(TERM_STR) minicom iobundle.dfl $(SCRIPT_STR) $(LOG_STR) || (exit 0))
 endif
         """
         )
@@ -171,6 +177,7 @@ endif
             # Set ethernet MAC address
             append_str_config_build_mk(
                 """
+### Set Ethernet environment variables
 #Mac address of pc interface connected to ethernet peripheral (based on board name)
 $(if $(findstring sim,$(MAKECMDGOALS))$(SIMULATOR),$(eval BOARD=))
 ifeq ($(BOARD),AES-KU040-DB-G)
