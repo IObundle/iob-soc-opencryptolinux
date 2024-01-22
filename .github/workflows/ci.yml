@@ -85,8 +85,8 @@ jobs:
           submodules: 'recursive'
       - name: test baremetal
         run: make fpga-run RUN_LINUX=0 BOARD=CYCLONEV-GT-DK
-          #      - name: test linux
-          #        run: make fpga-linux-test RUN_LINUX=1 BOARD=CYCLONEV-GT-DK
+      - name: test linux
+        run: make test-linux-fpga-connect BOARD=CYCLONEV-GT-DK
   
   aes-ku040:
     runs-on: self-hosted
@@ -102,8 +102,8 @@ jobs:
           submodules: 'recursive'
       - name: test baremetal
         run: make fpga-run RUN_LINUX=0 BOARD=AES-KU040-DB-G
-          #      - name: test linux
-          #        run: make fpga-linux-test RUN_LINUX=1 BOARD=AES-KU040-DB-G
+      - name: test linux
+        run: make test-linux-fpga-connect BOARD=AES-KU040-DB-G
 
 ##  doc:
 ##    runs-on: self-hosted

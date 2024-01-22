@@ -40,7 +40,6 @@ void clear_cache(){
 
 // Send signal by uart to receive file by ethernet
 uint32_t uart_recvfile_ethernet(char *file_name) {
-
   uart16550_puts(UART_PROGNAME);
   uart16550_puts (": requesting to receive file by ethernet\n");
 
@@ -63,6 +62,7 @@ uint32_t uart_recvfile_ethernet(char *file_name) {
 }
 
 int main() {
+  int run_linux = 0;
   int file_size;
   char *prog_start_addr;
 
@@ -157,13 +157,16 @@ int main() {
   // Check if running Linux
   for (i = 0; i < file_count; i++) {
     if (!strcmp(file_name_array[i], "rootfs.cpio.gz")){
+#ifdef SIMULATION
       // Running Linux: setup required dependencies
       uart16550_sendfile("test.log", 12, "Test passed!");
       uart16550_putc((char)DC1);
+#endif
+      run_linux=1;
       break;
     }
   }
-#else
+#else // INIT_MEM = 1
 #ifdef IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX
     // Running Linux: setup required dependencies
     uart16550_sendfile("test.log", 12, "Test passed!");
@@ -185,4 +188,10 @@ int main() {
   uart16550_puts(PROGNAME);
   uart16550_puts(": Restart CPU to run user program...\n");
   uart16550_txwait();
+
+#ifndef SIMULATION
+  // Terminate console if running Linux on FPGA
+  if (run_linux)
+    uart16550_finish();
+#endif
 }

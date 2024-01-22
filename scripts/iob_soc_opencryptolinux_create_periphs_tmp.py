@@ -88,6 +88,14 @@ def check_linux_build_macros(python_module, iob_linux_setup_dir):
     # Update Linux build macros
     def update_build_macros():
         lib_dir = build_srcs.LIB_DIR
+
+        # Delete dtb and openSBI files to ensure user create new ones
+        for path in board_paths_with_prefix:
+            if os.path.exists(f"{path}/iob_soc.dtb"):
+                os.remove(f"{path}/iob_soc.dtb")
+            if os.path.exists(f"{path}/fw_jump.bin"):
+                os.remove(f"{path}/fw_jump.bin")
+
         for path in board_paths:
             os.makedirs(f"{setup_dir}/{path}", exist_ok=True)
             with open(f"{setup_dir}/{path}/{macros_filename}", "w") as f:
@@ -150,16 +158,10 @@ def check_linux_build_macros(python_module, iob_linux_setup_dir):
         exit(1)
     for idx, address in enumerate(peripheral_addresses.items()):
         if macro_lines[idx] != f"{address[0]}_ADDR {address[1]}\n":
-            # Delete dtb and openSBI files to ensure user create new ones
-            for path in board_paths_with_prefix:
-                if os.path.exists(f"{path}/iob_soc.dtb"):
-                    os.remove(f"{path}/iob_soc.dtb")
-                if os.path.exists(f"{path}/fw_jump.bin"):
-                    os.remove(f"{path}/fw_jump.bin")
+            update_build_macros()
             print(
                 f"{iob_colors.FAIL}Peripheral addresses changed since last Linux build!{iob_colors.ENDC}"
             )
-            update_build_macros()
             print_build_info()
             exit(1)
 
