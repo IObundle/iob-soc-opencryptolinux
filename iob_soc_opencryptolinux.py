@@ -153,9 +153,9 @@ class iob_soc_opencryptolinux(iob_soc):
         )
         # Set custom ethernet CONSOLE_CMD
         contents.append(
-            """
+            f"""
 ### Launch minicom if running Linux
-ifeq ($(shell grep -o rootfs.cpio.gz ../iob_soc_opencryptolinux_mem.config),rootfs.cpio.gz)
+ifeq ($(shell grep -o rootfs.cpio.gz ../{cls.name}_mem.config),rootfs.cpio.gz)
 ifneq ($(wildcard minicom_linux_script.txt),)
 SCRIPT_STR:=-S minicom_linux_script.txt
 # Set TERM variable to linux-c-nc (needed to run in non-interactive mode https://stackoverflow.com/a/49077622)
