@@ -153,16 +153,16 @@ class iob_soc_opencryptolinux(iob_soc):
         )
         # Set custom ethernet CONSOLE_CMD
         contents.append(
-            """
+            f"""
 ### Launch minicom if running Linux
-ifeq ($(shell grep -o rootfs.cpio.gz ../iob_soc_opencryptolinux_mem.config),rootfs.cpio.gz)
+ifeq ($(shell grep -o rootfs.cpio.gz ../{cls.name}_mem.config),rootfs.cpio.gz)
 ifneq ($(wildcard minicom_linux_script.txt),)
 SCRIPT_STR:=-S minicom_linux_script.txt
 # Set TERM variable to linux-c-nc (needed to run in non-interactive mode https://stackoverflow.com/a/49077622)
 TERM_STR:=TERM=linux-c-nc
+endif
 # Set a capture file and print its contents (to work around minicom clearing the screen)
 LOG_STR:=-C minicom_out.log || cat minicom_out.log
-endif
 # Set HOME to current (fpga) directory (needed because minicom always reads the '.minirc.*' config file from HOME)
 HOME_STR:=HOME=$$(pwd)
 # Always exit with code 0 (since linux is terminated with CTRL-C)
