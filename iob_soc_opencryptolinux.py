@@ -120,7 +120,6 @@ class iob_soc_opencryptolinux(iob_soc):
 
     @classmethod
     def _post_setup(cls):
-        super()._post_setup()
         dst = f"{cls.build_dir}/software/src"
         src = f"{__class__.setup_dir}/submodules/OS/software/OS_build"
         files = ["rootfs.cpio.gz", "Image"]
@@ -128,6 +127,8 @@ class iob_soc_opencryptolinux(iob_soc):
             src_file = os.path.join(src, fname)
             if os.path.isfile(src_file):
                 shutil.copy2(src_file, dst)
+
+        super()._post_setup()
 
         # Copy terminalMode script to scripts build directory
         dst = f"{cls.build_dir}/scripts"
