@@ -116,7 +116,7 @@ int main() {
 
   versat_init(VERSAT0_BASE);
 
-  AES256Test();
+  //AES256Test();
   //VersatSHATest();
 
   printf("\n\n\nHello world!\n\n\n");

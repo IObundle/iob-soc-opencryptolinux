@@ -1,3 +1,6 @@
+module Nothing(){
+#
+}
 
 module FloatTest(x,y,z){
    FloatAdd add;
@@ -359,20 +362,13 @@ module SimpleShareConfig(){
       b1;
       b2;
    }
-   Reg out0;
-   Reg out1;
-   Reg out2;
-   Reg out3;
-   Const extra;
 #
    a = a1 + a2;
    b = b1 + b2;
    c = a1 + b1;
+   d = a2 + b2;
 
-   a -> out0;
-   b -> out1;
-   c -> out2;
-   extra -> out3;
+   {a,b,c,d} -> out:0..3;
 }
 
 module StaticConst(){
@@ -555,8 +551,8 @@ module Maj(x,y,z){
 }
 
 module sigma_stage(x,y){
-   sigma sigma0(7,18,3);
-   sigma sigma1(17,19,10);
+   sigma sigma0;
+   sigma sigma1;
 #
    x -> sigma0;
    y -> sigma1;
@@ -566,7 +562,7 @@ module sigma_stage(x,y){
 }
 
 module Comb_M_Stage(w0,w14,w9,w1){
-   static sigma_stage sigma(7,18,3,17,19,10);
+   static sigma_stage sigma;
 #
    w1 -> sigma:0;
    w14 -> sigma:1;
@@ -710,7 +706,7 @@ module M(w){
 
 module T1(e,f,g,h,k,w){
    CH ch;
-   Sigma s(6,11,25);
+   Sigma s;
 #   
    e -> s;
 
@@ -728,7 +724,7 @@ module T1(e,f,g,h,k,w){
 }
 
 module T2(a,b,c){
-   Sigma s(2,13,22);
+   Sigma s;
    Maj m;
 #
    a -> s;
@@ -743,8 +739,8 @@ module T2(a,b,c){
 }
 
 module T_Stage(a,b,c,e,f,g,h,k,w){
-   T1 t1(6,11,25);
-   T2 t2(2,13,22);
+   T1 t1;
+   T2 t2;
 #
    a -> t2:0;
    b -> t2:1;
@@ -997,14 +993,14 @@ module SHA(){
 }
 
 module SBox(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf){
-   LookupTable s0;
-   LookupTable s1;
-   LookupTable s2;
-   LookupTable s3;
-   LookupTable s4;
-   LookupTable s5;
-   LookupTable s6;
-   LookupTable s7;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) s0;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) s1;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) s2;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) s3;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) s4;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) s5;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) s6;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) s7;
 #
    x0 -> s0:0;
    x1 -> s0:1;
@@ -1082,10 +1078,10 @@ module MixProduct(mul2,mul3,x11,x12){
 }
 
 module DoRow(x0,x1,x2,x3){
-   LookupTable mul2_0;
-   LookupTable mul2_1;
-   LookupTable mul3_0;
-   LookupTable mul3_1;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) mul2_0;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) mul2_1;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) mul3_0;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) mul3_1;
    MixProduct m0;
    MixProduct m1;
    MixProduct m2;
@@ -1212,8 +1208,8 @@ module AddRoundKey(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,y0,y1,y2,y3,y
 }
 
 module FirstLineKey(x0,x1,x2,x3,w0,w1,w2,w3,rcon){
-   LookupTable b0;
-   LookupTable b1;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) b0;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) b1;
 #
    x1 -> b0:0;
    x2 -> b0:1;
@@ -1702,8 +1698,8 @@ module ReadWriteAES(){
 }
 
 module FirstLineKey(x0,x1,x2,x3,w0,w1,w2,w3,rcon){
-   LookupTable b0;
-   LookupTable b1;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) b0;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) b1;
 #
    x1 -> b0:0;
    x2 -> b0:1;
@@ -1722,8 +1718,8 @@ module FirstLineKey(x0,x1,x2,x3,w0,w1,w2,w3,rcon){
 }
 
 module FourthLineKey(x0,x1,x2,x3,w0,w1,w2,w3){
-   LookupTable b0;
-   LookupTable b1;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) b0;
+   LookupTable #(.ADDR_W(8),.SIZE_W(8)) b1;
 #
    x0 -> b0:0;
    x1 -> b0:1;
@@ -3253,11 +3249,6 @@ module Merge1(){
    A -> Output;
 }
 
-merge MergeTest = Merge0:a | Merge1:b {
-   a.m0 - b.M1;
-   a.m1 - b.M0;
-}
-
 module SimpleFU(in0,in1){
    Const constant;
    Mul mul;
@@ -3365,3 +3356,36 @@ module SimpleCGRA(){
    l2:0..3 -> l3:0..3;
    l3:0..3 -> loop:0..3;
 }
+
+// Some bug in which the Simple version delay is not matching the actual positions.
+// Maybe due to the way we implement the Simple version 
+module Variety1(x,y){
+   VRead read;
+   Mem mem;
+   Const constant;
+   Reg reg;
+#
+   c = x + y + read + mem + constant;
+
+   c -> reg;
+   c -> out;
+}
+
+module Variety2(x,y,z){
+   VRead read; // Same name as variety1
+   Mem memButDiffName;
+   VWrite write;
+#
+   total = x + y + z + read + memButDiffName;
+   total -> write;
+}
+
+//merge MergeTest = Merge0:a | Merge1:b {
+//   a.m0 - b.M1;
+//   a.m1 - b.M0;
+//}
+
+// merge VarietyMerge = Variety1 | Variety2;
+
+merge SHA_AES = SHA | AES256WithIterative | VectorLikeOperation;
+

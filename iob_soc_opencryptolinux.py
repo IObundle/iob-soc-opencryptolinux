@@ -20,6 +20,11 @@ from iob_reset_sync import iob_reset_sync
 from iob_ram_sp import iob_ram_sp
 from iob_versat import CreateVersatClass
 
+VERSAT_SPEC = "versatSpec.txt"
+VERSAT_EXTRA_UNITS = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), "hardware/src/units")
+)
+
 
 class iob_soc_opencryptolinux(iob_soc):
     name = "iob_soc_opencryptolinux"
@@ -40,7 +45,7 @@ class iob_soc_opencryptolinux(iob_soc):
             cls.peripherals.append(iob_spi_master("SPI0", "SPI master peripheral"))
         # Instantiate versat
         if cls.versatType in cls.submodule_list:
-            cls.versat = cls.versatType("VERSAT0")
+            cls.versat = cls.versatType("VERSAT0", "Versat accelerator")
             cls.peripherals.append(cls.versat)
         if iob_eth in cls.submodule_list:
             cls.peripherals.append(
@@ -91,9 +96,8 @@ class iob_soc_opencryptolinux(iob_soc):
     def _create_submodules_list(cls, extra_submodules=[]):
         """Create submodules list with dependencies of this module"""
 
-        versatExtra = os.path.join(os.path.dirname(__file__), "hardware/src/units")
         cls.versatType = CreateVersatClass(
-            False, "versatSpec.txt", "AES256WithIterative", versatExtra
+            False, VERSAT_SPEC, "SHA_AES", VERSAT_EXTRA_UNITS, cls.build_dir
         )
 
         super()._create_submodules_list(
