@@ -8,8 +8,6 @@
 #include "printf.h"
 #include "iob-eth.h"
 
-#include "versat_accel.h"
-
 #include "riscv-csr.h"
 #include "riscv-interrupts.h"
 
@@ -88,8 +86,7 @@ int compare_str(char *str1, char *str2, int str_size) {
   return 0;
 }
 
-void VersatSHATest();
-void AES256Test();
+void SingleTest();
 
 int main() {
   char pass_string[] = "Test passed!";
@@ -116,8 +113,7 @@ int main() {
 
   versat_init(VERSAT0_BASE);
 
-  //AES256Test();
-  //VersatSHATest();
+  SingleTest();
 
   printf("\n\n\nHello world!\n\n\n");
 
