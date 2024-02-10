@@ -11,6 +11,10 @@
 #include "riscv-csr.h"
 #include "riscv-interrupts.h"
 
+#include "SHA_AES.h"
+#include "crypto/aes.h"
+#include "crypto/sha2.h"
+
 #ifdef SIMULATION
 #define WAIT_TIME 0.001
 #else
@@ -86,7 +90,12 @@ int compare_str(char *str1, char *str2, int str_size) {
   return 0;
 }
 
-void SingleTest();
+void versat_init(int);
+
+// McEliece
+#include "api.h"
+#include "nistkatrng.h"
+#include "arena.h"
 
 int main() {
   char pass_string[] = "Test passed!";
@@ -113,9 +122,89 @@ int main() {
 
   versat_init(VERSAT0_BASE);
 
-  SingleTest();
-
   printf("\n\n\nHello world!\n\n\n");
+
+  // SHA test
+  {
+    unsigned char msg_64[] = { 0x5a, 0x86, 0xb7, 0x37, 0xea, 0xea, 0x8e, 0xe9, 0x76, 0xa0, 0xa2, 0x4d, 0xa6, 0x3e, 0x7e, 0xd7, 0xee, 0xfa, 0xd1, 0x8a, 0x10, 0x1c, 0x12, 0x11, 0xe2, 0xb3, 0x65, 0x0c, 0x51, 0x87, 0xc2, 0xa8, 0xa6, 0x50, 0x54, 0x72, 0x08, 0x25, 0x1f, 0x6d, 0x42, 0x37, 0xe6, 0x61, 0xc7, 0xbf, 0x4c, 0x77, 0xf3, 0x35, 0x39, 0x03, 0x94, 0xc3, 0x7f, 0xa1, 0xa9, 0xf9, 0xbe, 0x83, 0x6a, 0xc2, 0x85, 0x09 };
+    static const int HASH_SIZE = (256/8);
+
+    InitVersatSHA();
+
+    unsigned char versat_digest[256];
+    unsigned char software_digest[256];
+    for(int i = 0; i < 256; i++){
+      versat_digest[i] = 0;
+      software_digest[i] = 0;
+    }
+
+    VersatSHA(versat_digest,msg_64,64);
+    sha256(software_digest,msg_64,64);
+
+    char versat_buffer[2048];
+    char software_buffer[2048];
+    GetHexadecimal((char*) versat_digest,versat_buffer, HASH_SIZE);
+    GetHexadecimal((char*) software_digest,software_buffer, HASH_SIZE);
+
+    printf("Good:     %s\n","42e61e174fbb3897d6dd6cef3dd2802fe67b331953b06114a65c772859dfc1aa"); 
+    printf("Versat:   %s\n",versat_buffer);
+    printf("Software: %s\n",software_buffer);
+  }
+
+  {
+    uint8_t key[128] = {};
+    uint8_t plain[128] = {};
+
+    int keyIndex = HexStringToHex((char*) key,"cc22da787f375711c76302bef0979d8eddf842829c2b99ef3dd04e23e54cc24b");
+    int plainIndex = HexStringToHex((char*) plain,"ccc62c6b0a09a671d64456818db29a4d");
+
+    uint8_t versat_result[AES_BLK_SIZE] = {};
+    uint8_t software_result[AES_BLK_SIZE] = {};
+
+    InitVersatAES();
+
+    VersatAES(versat_result,plain,key);
+    VersatAES(software_result,plain,key);
+
+    char versat_buffer[2048];
+    char software_buffer[2048];
+    GetHexadecimal((char*) versat_result,versat_buffer, AES_BLK_SIZE);
+    GetHexadecimal((char*) software_result,software_buffer, AES_BLK_SIZE);
+    printf("Good:     %s\n","df8634ca02b13a125b786e1dce90658b");
+    printf("Versat:   %s\n",versat_buffer);
+    printf("Software: %s\n",software_buffer);
+  }  
+
+  // McEliece
+  {
+    unsigned char public_key[PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES];
+    unsigned char secret_key[PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES];
+
+    unsigned char seed[48];
+
+    HexStringToHex(seed,"061550234D158C5EC95595FE04EF7A25767F2E24CC2BC479D09D86DC9ABCFDE7056A8C266F9EF97ED08541DBD2E1FFA1");
+
+    InitArena(4*1024*1024); // 4 megabytes should suffice
+
+    nist_kat_init(seed, NULL, 256);
+        
+    // McEliece Key Pair
+    PQCLEAN_MCELIECE348864_CLEAN_crypto_kem_keypair(public_key, secret_key);
+
+    unsigned char public_key_buffer[PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES * 2 + 1];
+    unsigned char secret_key_buffer[PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES * 2 + 1];
+
+    GetHexadecimal(public_key,public_key_buffer,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES);
+    GetHexadecimal(secret_key,secret_key_buffer,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES);
+
+    public_key_buffer[100] = '\0';
+    secret_key_buffer[100] = '\0';
+
+    printf("%s\n",public_key_buffer);
+    printf("%s\n","0707214775B5EB3E7CCE7AF7804A06146FB1F74DCD6FAA9635128E317A6870E8F5385434299BB88884959DE74D8E46DBE5EE\n");
+    printf("%s\n",secret_key_buffer);
+    printf("%s\n","1E676D1BD2AC9A8407C0E1B06BD742EA37ACA869C6BC51FF23B426C4B95FC1A24FCA61811CF733C3626C425031E91FFA0267\n");
+  }
 
   // Global interrupt disable
   csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);

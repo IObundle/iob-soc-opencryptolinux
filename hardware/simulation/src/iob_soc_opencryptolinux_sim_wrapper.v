@@ -54,8 +54,6 @@ module iob_soc_opencryptolinux_sim_wrapper (
 `endif
    end
 
-   `include "versat_external_memory_inst.vh"
-
    //
    // INSTANTIATE COMPONENTS
    //
@@ -75,6 +73,7 @@ module iob_soc_opencryptolinux_sim_wrapper (
       .arst_i(arst_i),
       .trap_o(trap_o)
    );
+
 
     // interconnect clk and arst
     wire clk_interconnect;

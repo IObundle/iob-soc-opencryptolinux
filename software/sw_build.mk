@@ -63,7 +63,7 @@ TEMPLATE_LDS=src/$@.lds
 
 IOB_SOC_OPENCRYPTOLINUX_CFLAGS ?=-Os -nostdlib -march=rv32imac -mabi=ilp32 --specs=nano.specs -Wcast-align=strict
 
-IOB_SOC_OPENCRYPTOLINUX_INCLUDES=-I. -Isrc 
+IOB_SOC_OPENCRYPTOLINUX_INCLUDES=-I. -Isrc -Isrc/crypto/McEliece -Isrc/crypto/McEliece/common
 
 IOB_SOC_OPENCRYPTOLINUX_LFLAGS=-Wl,-Bstatic,-T,$(TEMPLATE_LDS),--strip-debug
 
@@ -72,6 +72,10 @@ IOB_SOC_OPENCRYPTOLINUX_FW_SRC=src/iob_soc_opencryptolinux_firmware.S
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/iob_soc_opencryptolinux_firmware.c
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/printf.c
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/SHA_AES.c
+#IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/crypto/sha2.c
+IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/crypto/aes.c
+IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(wildcard src/crypto/McEliece/*.c)
+IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(wildcard src/crypto/McEliece/common/*.c)
 
 # PERIPHERAL SOURCES
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(wildcard src/iob-*.c)

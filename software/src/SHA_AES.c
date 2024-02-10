@@ -1,9 +1,10 @@
+#include "SHA_AES.h"
+
 #include "versat_accel.h"
 
-#include "unitConfiguration.h"
+#include <string.h>
 
-#include "stdint.h"
-#include "stddef.h"
+#include "unitConfiguration.h"
 
 #include "iob-uart16550.h"
 #include "printf.h"
@@ -12,10 +13,6 @@
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
 #define nullptr 0
-
-// AES Sizes (bytes)
-#define AES_BLK_SIZE (16)
-#define AES_KEY_SIZE (32)
 
 const uint8_t sbox[256] = {
    0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
@@ -74,11 +71,11 @@ const uint8_t mul3[] = {
 };
 
 void FillLookupTable(LookupTableAddr addr){
-   VersatMemoryCopy(addr.addr,sbox,256 * sizeof(uint8_t));
+   VersatMemoryCopy(addr.addr,(void*) sbox,256 * sizeof(uint8_t));
 }
 
 void FillMul(LookupTableAddr addr,const uint8_t* mem,int size){
-   VersatMemoryCopy(addr.addr,mem,size * sizeof(uint8_t)); // (int*) 
+   VersatMemoryCopy(addr.addr,(void*) mem,size * sizeof(uint8_t)); // (int*) 
 }
 
 void FillRow(DoRowAddr addr){
@@ -148,7 +145,10 @@ void int_to_byte(int *in, uint8_t *out, int size) {
    return;
 }
 
-void Versat_init_AES(AES256WithIterativeConfig* aes) {
+void InitVersatAES() {
+   SHA_AES_SimpleConfig* config = (SHA_AES_SimpleConfig*) accelConfig;
+   AES256WithIterativeConfig* aes = &config->simple.AES256WithIterative;
+
    SHA_AES_SimpleAddr addr = ACCELERATOR_TOP_ADDR_INIT;
 
    FillRoundPairAndKey(addr.simple.mk0.roundPairAndKey);
@@ -326,7 +326,10 @@ void VersatSHA(uint8_t *out, const uint8_t *in, size_t inlen) {
    initVersat = false; // At the end of each run, reset
 }
 
-void InitVersatSHA(SHAConfig* sha){
+void InitVersatSHA(){
+   SHA_AES_SimpleConfig* config = (SHA_AES_SimpleConfig*) accelConfig;
+   SHAConfig* sha = &config->simple.SHA;
+
    ConfigureSimpleVRead(&sha->MemRead,16,nullptr);
 
    ACCEL_Constants_mem_iterA = 1;
@@ -373,15 +376,217 @@ char* GetHexadecimal(const char* text,char* buffer,int str_size){
   return buffer;
 }
 
-void SingleTest(){
-   SHA_AES_SimpleConfig* config = (SHA_AES_SimpleConfig*) accelConfig;
+/*
+  This file is for public-key generation
+*/
 
+#include "benes.h"
+#include "controlbits.h"
+#include "gf.h"
+#include "params.h"
+#include "pk_gen.h"
+#include "root.h"
+#include "util.h"
+#include "arena.h"
+
+#define VERSAT
+//#define SIMULATED_VERSAT
+
+void VersatLineXOR(uint8_t* out, uint8_t *mat, uint8_t *row, int n_cols, uint8_t mask) {
+   static bool once = true;
+   if(once){
+      once = false;
+#ifdef SIMULATED_VERSAT
+       printf("Simulating versat\n");
+#else
+       printf("Using versat\n");
+#endif
+   }
+
+   uint32_t mask_int = (mask) | (mask << 8) | (mask << 8*2) | (mask << 8*3);
+   uint32_t *mat_int = (uint32_t*) mat;
+   uint32_t *out_int = (uint32_t*) out;
+   uint32_t *row_int = (uint32_t*) row;
+   int n_cols_int = (n_cols >> 2);
+
+#ifdef SIMULATED_VERSAT
+   for(int i = 0; i < n_cols_int; i++){
+        uint32_t a = row_int[i] & mask_int;
+        uint32_t b = mat_int[i] ^ a;
+        out_int[i] = b;
+   }
+#else
+   SHA_AES_SimpleConfig* config = (SHA_AES_SimpleConfig*) accelConfig;
+   SHA_AES_SimpleAddr addr = ACCELERATOR_TOP_ADDR_INIT;
+   VectorLikeOperationConfig* vec = &config->simple.VectorLikeOperation;
+
+   ConfigureSimpleVRead(&vec->row, n_cols_int, (int*) row_int);
+   ConfigureSimpleMemoryAndCopyData(&vec->mat,n_cols_int,0,addr.simple.mat,(int*) mat_int);
+
+   vec->mask.constant = mask_int;
+   ConfigureMemoryReceive(&vec->output, n_cols_int);
+
+   RunAccelerator(2);
+
+   for (int i = 0; i < n_cols_int; i++){
+        out_int[i] = VersatUnitRead((iptr) addr.simple.output.addr,i);
+   }
+#endif
+}
+
+/* input: secret key sk */
+/* output: public key pk */
+int PQCLEAN_MCELIECE348864_CLEAN_pk_gen(uint8_t *pk, uint32_t *perm, const uint8_t *sk) {
+    int i, j, k;
+    int row, c;
+
+    int mark = MarkArena();
+    uint64_t *buf = (uint64_t*) PushBytes((1 << GFBITS)*sizeof(uint64_t));
+
+    uint8_t *mat = (uint8_t*) PushBytes(( GFBITS * SYS_T )*( SYS_N / 8 )*sizeof(uint8_t));
+    uint8_t mask;
+    uint8_t b;
+
+    gf *g = (gf*) PushBytes((SYS_T + 1)*sizeof(gf)); // Goppa polynomial
+    gf *L = (gf*) PushBytes((SYS_N)*sizeof(gf)); // support
+    gf *inv = (gf*) PushBytes((SYS_N)*sizeof(gf));
+
+    //
+
+    g[ SYS_T ] = 1;
+
+    for (i = 0; i < SYS_T; i++) {
+        g[i] = PQCLEAN_MCELIECE348864_CLEAN_load2(sk);
+        g[i] &= GFMASK;
+        sk += 2;
+    }
+
+    for (i = 0; i < (1 << GFBITS); i++) {
+        buf[i] = perm[i];
+        buf[i] <<= 31;
+        buf[i] |= i;
+    }
+
+    PQCLEAN_MCELIECE348864_CLEAN_sort_63b(1 << GFBITS, buf);
+
+    for (i = 0; i < (1 << GFBITS); i++) {
+        perm[i] = buf[i] & GFMASK;
+    }
+
+    for (i = 0; i < SYS_N;         i++) {
+        L[i] = PQCLEAN_MCELIECE348864_CLEAN_bitrev((gf)perm[i]);
+    }
+
+    // filling the matrix
+
+    PQCLEAN_MCELIECE348864_CLEAN_root(inv, g, L);
+
+    for (i = 0; i < SYS_N; i++) {
+        inv[i] = PQCLEAN_MCELIECE348864_CLEAN_gf_inv(inv[i]);
+    }
+
+    for (i = 0; i < PK_NROWS; i++) {
+        for (j = 0; j < SYS_N / 8; j++) {
+            // mat[i][j] = 0;
+            mat[i*(SYS_N/8)+j] = 0;
+        }
+    }
+
+    for (i = 0; i < SYS_T; i++) {
+        for (j = 0; j < SYS_N; j += 8) {
+            for (k = 0; k < GFBITS;  k++) {
+                b  = (inv[j + 7] >> k) & 1;
+                b <<= 1;
+                b |= (inv[j + 6] >> k) & 1;
+                b <<= 1;
+                b |= (inv[j + 5] >> k) & 1;
+                b <<= 1;
+                b |= (inv[j + 4] >> k) & 1;
+                b <<= 1;
+                b |= (inv[j + 3] >> k) & 1;
+                b <<= 1;
+                b |= (inv[j + 2] >> k) & 1;
+                b <<= 1;
+                b |= (inv[j + 1] >> k) & 1;
+                b <<= 1;
+                b |= (inv[j + 0] >> k) & 1;
+
+                mat[( i * GFBITS + k)*(SYS_N/8) + (j / 8) ] = b;
+            }
+        }
+
+        for (j = 0; j < SYS_N; j++) {
+            inv[j] = PQCLEAN_MCELIECE348864_CLEAN_gf_mul(inv[j], L[j]);
+        }
+
+    }
+
+    // gaussian elimination
+    for (i = 0; i < (GFBITS * SYS_T + 7) / 8; i++) {
+        for (j = 0; j < 8; j++) {
+            row = i * 8 + j;
+
+            if (row >= GFBITS * SYS_T) {
+                break;
+            }
+
+            for (k = row + 1; k < GFBITS * SYS_T; k++) {
+                mask = mat[ row*(SYS_N/8) + i ] ^ mat[ k*(SYS_N/8) + i ];
+                mask >>= j;
+                mask &= 1;
+                mask = -mask;
+
+#ifdef VERSAT
+                if (mask != 0){
+                    VersatLineXOR(&(mat[row*(SYS_N/8)+0]), &(mat[row*(SYS_N/8)+0]), &(mat[k*(SYS_N/8)+0]), SYS_N / 8, mask);
+                }
+#else
+                for (c = 0; c < SYS_N / 8; c++) {
+                    mat[  row*(SYS_N/8) + c ] ^= mat[ k*(SYS_N/8) + c ] & mask;
+                }
+#endif
+            }
+
+            if ( ((mat[ row*(SYS_N/8) + i ] >> j) & 1) == 0 ) { // return if not systematic
+                PopArena(mark);
+                return -1;
+            }
+
+            for (k = 0; k < GFBITS * SYS_T; k++) {
+                if (k != row) {
+                    mask = mat[ k*(SYS_N/8) + i ] >> j;
+                    mask &= 1;
+                    mask = -mask;
+
+#ifdef VERSAT
+                    if (mask != 0){
+                        VersatLineXOR(&(mat[k*(SYS_N/8)+0]), &(mat[k*(SYS_N/8)+0]), &(mat[row*(SYS_N/8)+0]), SYS_N / 8, mask);
+                    }
+#else                    
+                    for (c = 0; c < SYS_N / 8; c++) {
+                       mat[ k*(SYS_N/8) + c ] ^= mat[ row*(SYS_N/8) + c ] & mask;
+                    }
+#endif
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < PK_NROWS; i++) {
+        memcpy(pk + i * PK_ROW_BYTES, &(mat[i*(SYS_N/8)]) + PK_NROWS / 8, PK_ROW_BYTES);
+    }
+
+    PopArena(mark);
+    return 0;
+}
+
+void SingleTest(){
    // SHA
    {
    unsigned char msg_64[] = { 0x5a, 0x86, 0xb7, 0x37, 0xea, 0xea, 0x8e, 0xe9, 0x76, 0xa0, 0xa2, 0x4d, 0xa6, 0x3e, 0x7e, 0xd7, 0xee, 0xfa, 0xd1, 0x8a, 0x10, 0x1c, 0x12, 0x11, 0xe2, 0xb3, 0x65, 0x0c, 0x51, 0x87, 0xc2, 0xa8, 0xa6, 0x50, 0x54, 0x72, 0x08, 0x25, 0x1f, 0x6d, 0x42, 0x37, 0xe6, 0x61, 0xc7, 0xbf, 0x4c, 0x77, 0xf3, 0x35, 0x39, 0x03, 0x94, 0xc3, 0x7f, 0xa1, 0xa9, 0xf9, 0xbe, 0x83, 0x6a, 0xc2, 0x85, 0x09 };
    static const int HASH_SIZE = (256/8);
    
-   InitVersatSHA(&config->simple.SHA);
+   InitVersatSHA();
 
    unsigned char digest[256];
    for(int i = 0; i < 256; i++){
@@ -409,7 +614,7 @@ void SingleTest(){
 
    uint8_t result[AES_BLK_SIZE] = {};
 
-   Versat_init_AES(&config->simple.AES256WithIterative);
+   InitVersatAES();
 
    VersatAES(result,plain,key);
 
@@ -419,8 +624,10 @@ void SingleTest(){
    printf("%s\n","df8634ca02b13a125b786e1dce90658b");
    }
 
-   // VectorLikeOperation
+   // VectorLikeOperation (McEliece base)
    {
+      SHA_AES_SimpleConfig* config = (SHA_AES_SimpleConfig*) accelConfig;
+
       SHA_AES_SimpleAddr addr = ACCELERATOR_TOP_ADDR_INIT;
       int testRow[8] = {0x19,0x2a,0x3b,0x4c,0x5d,0x6e,0x7f,0x80};
       int testMem[8] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08};
