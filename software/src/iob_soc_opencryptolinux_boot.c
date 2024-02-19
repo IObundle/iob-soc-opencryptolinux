@@ -146,12 +146,8 @@ int main() {
   for (i = 0; i < file_count; i++) {
     prog_start_addr = (char *)(EXT_MEM + file_address_array[i]);
     // Receive data from console via Ethernet
-#ifndef SIMULATION
     file_size = uart_recvfile_ethernet(file_name_array[i]);
     eth_rcv_file(prog_start_addr,file_size);
-#else
-    file_size = uart16550_recvfile(file_name_array[i], prog_start_addr);
-#endif
   }
 
   // Check if running Linux
