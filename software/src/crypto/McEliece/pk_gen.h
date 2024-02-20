@@ -1,13 +1,15 @@
-#ifndef PQCLEAN_MCELIECE348864_CLEAN_PK_GEN_H
-#define PQCLEAN_MCELIECE348864_CLEAN_PK_GEN_H
+#ifndef PK_GEN_H
+#define PK_GEN_H
 /*
   This file is for public-key generation
 */
 
+#include "namespace.h"
 
-#include <stdint.h>
+#define pk_gen CRYPTO_NAMESPACE(pk_gen)
 
-int PQCLEAN_MCELIECE348864_CLEAN_pk_gen(uint8_t * /*pk*/, uint32_t * /*perm*/, const uint8_t * /*sk*/);
+#include "gf.h"
+
+int pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, int16_t *pi);
 
 #endif
-

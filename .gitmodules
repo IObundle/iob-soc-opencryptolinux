@@ -19,3 +19,6 @@
 [submodule "submodules/ETHERNET"]
 	path = submodules/ETHERNET
 	url = git@github.com:IObundle/iob-eth.git
+[submodule "submodules/ILA"]
+	path = submodules/ILA
+	url = git@github.com:IObundle/iob-ila.git

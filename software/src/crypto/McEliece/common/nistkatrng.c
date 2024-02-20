@@ -6,11 +6,11 @@
 //  Modified for liboqs by Douglas Stebila
 //
 
+#include <assert.h>
 #include <string.h>
 
 #include "aes.h"
 #include "randombytes.h"
-#include "nistkatrng.h"
 
 typedef struct {
     uint8_t Key[32];
@@ -32,9 +32,11 @@ static void AES256_ECB(uint8_t *key, uint8_t *ctr, uint8_t *buffer) {
     aes256_ctx_release(&ctx);
 }
 
+void nist_kat_init(uint8_t *entropy_input, const uint8_t *personalization_string, int security_strength);
 void nist_kat_init(uint8_t *entropy_input, const uint8_t *personalization_string, int security_strength) {
     uint8_t seed_material[48];
 
+    assert(security_strength == 256);
     memcpy(seed_material, entropy_input, 48);
     if (personalization_string) {
         for (int i = 0; i < 48; i++) {
@@ -47,6 +49,7 @@ void nist_kat_init(uint8_t *entropy_input, const uint8_t *personalization_string
     DRBG_ctx.reseed_counter = 1;
 }
 
+#if 1
 int randombytes(uint8_t *buf, size_t n) {
     uint8_t block[16];
     int i = 0;
@@ -75,6 +78,7 @@ int randombytes(uint8_t *buf, size_t n) {
     DRBG_ctx.reseed_counter++;
     return 0;
 }
+#endif
 
 static void AES256_CTR_DRBG_Update(const uint8_t *provided_data, uint8_t *Key, uint8_t *V) {
     uint8_t temp[48];

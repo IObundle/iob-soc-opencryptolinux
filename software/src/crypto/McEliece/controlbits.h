@@ -1,21 +1,15 @@
-#ifndef PQCLEAN_MCELIECE348864_CLEAN_CONTROLBITS_H
-#define PQCLEAN_MCELIECE348864_CLEAN_CONTROLBITS_H
-/*
-  This file is for functions required for generating the control bits of the Benes network w.r.t. a random permutation
-  see the Lev-Pippenger-Valiant paper https://www.computer.org/csdl/trans/tc/1981/02/06312171.pdf
-*/
+#ifndef CONTROLBITS_H
+#define CONTROLBITS_H
+/* This file is for implementing the Nassimi-Sahni algorithm */
+/* See David Nassimi, Sartaj Sahni "Parallel algorithms to set up the Benes permutationnetwork" */
+/* See also https://cr.yp.to/papers/controlbits-20200923.pdf */
 
+#include "namespace.h"
 
-#include <stdint.h>
-#include "arena.h"
-#ifndef PC
-#include "printf.h"
-#else
-#include <stdio.h>
-#endif
+#define controlbitsfrompermutation CRYPTO_NAMESPACE(controlbitsfrompermutation)
 
-void PQCLEAN_MCELIECE348864_CLEAN_sort_63b(int n, uint64_t *x);
-void PQCLEAN_MCELIECE348864_CLEAN_controlbits(unsigned char *out, const uint32_t *pi);
+#include <inttypes.h>
+
+extern void controlbitsfrompermutation(unsigned char *out, const int16_t *pi, long long w, long long n);
 
 #endif
-

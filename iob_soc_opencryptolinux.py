@@ -19,6 +19,7 @@ from axil2iob import axil2iob
 from iob_reset_sync import iob_reset_sync
 from iob_ram_sp import iob_ram_sp
 from iob_versat import CreateVersatClass
+from iob_ila import iob_ila
 
 VERSAT_SPEC = "versatSpec.txt"
 VERSAT_EXTRA_UNITS = os.path.realpath(
@@ -47,6 +48,10 @@ class iob_soc_opencryptolinux(iob_soc):
         if cls.versatType in cls.submodule_list:
             cls.versat = cls.versatType("VERSAT0", "Versat accelerator")
             cls.peripherals.append(cls.versat)
+        #if iob_ila in cls.submodule_list:
+        #    cls.ila = iob_ila("ILA0")
+        #    cls.peripherals.append(cls.ila)
+
         if iob_eth in cls.submodule_list:
             cls.peripherals.append(
                 iob_eth(
@@ -113,6 +118,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_vexriscv,
                 iob_uart16550,
                 axil2iob,
+                #iob_ila,
                 iob_reset_sync,
                 iob_ram_sp,
                 cls.versatType,
@@ -137,6 +143,9 @@ class iob_soc_opencryptolinux(iob_soc):
     @classmethod
     def _post_setup(cls):
         super()._post_setup()
+
+        #iob_ila.generate_system_wires(cls.ila, "hardware/src/iob_soc_opencryptolinux.v", "clk_i", ["VERSAT0."], [("test",1)])
+
         dst = f"{cls.build_dir}/software/src"
         src = f"{__class__.setup_dir}/submodules/OS/software/OS_build"
         files = ["rootfs.cpio.gz", "Image"]

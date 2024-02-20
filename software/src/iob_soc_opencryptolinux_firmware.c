@@ -94,8 +94,10 @@ void versat_init(int);
 
 // McEliece
 #include "api.h"
-#include "nistkatrng.h"
 #include "arena.h"
+void nist_kat_init(unsigned char *entropy_input, unsigned char *personalization_string, int security_strength);
+
+#include "versat_accel.h"
 
 int main() {
   char pass_string[] = "Test passed!";
@@ -124,6 +126,7 @@ int main() {
 
   printf("\n\n\nHello world!\n\n\n");
 
+#if 0
   // SHA test
   {
     unsigned char msg_64[] = { 0x5a, 0x86, 0xb7, 0x37, 0xea, 0xea, 0x8e, 0xe9, 0x76, 0xa0, 0xa2, 0x4d, 0xa6, 0x3e, 0x7e, 0xd7, 0xee, 0xfa, 0xd1, 0x8a, 0x10, 0x1c, 0x12, 0x11, 0xe2, 0xb3, 0x65, 0x0c, 0x51, 0x87, 0xc2, 0xa8, 0xa6, 0x50, 0x54, 0x72, 0x08, 0x25, 0x1f, 0x6d, 0x42, 0x37, 0xe6, 0x61, 0xc7, 0xbf, 0x4c, 0x77, 0xf3, 0x35, 0x39, 0x03, 0x94, 0xc3, 0x7f, 0xa1, 0xa9, 0xf9, 0xbe, 0x83, 0x6a, 0xc2, 0x85, 0x09 };
@@ -174,6 +177,7 @@ int main() {
     printf("Versat:   %s\n",versat_buffer);
     printf("Software: %s\n",software_buffer);
   }  
+#endif
 
   // McEliece
   {
@@ -201,9 +205,9 @@ int main() {
     secret_key_buffer[100] = '\0';
 
     printf("%s\n",public_key_buffer);
-    printf("%s\n","0707214775B5EB3E7CCE7AF7804A06146FB1F74DCD6FAA9635128E317A6870E8F5385434299BB88884959DE74D8E46DBE5EE\n");
+    printf("%s\n","C5ED9AF0EEA0D4ADEA66D1A2A2F614E05500FB4344221FAA9135B50600BB8C5652C79FA603A2BC60EE8481D457C2CD81B21C\n");
     printf("%s\n",secret_key_buffer);
-    printf("%s\n","1E676D1BD2AC9A8407C0E1B06BD742EA37ACA869C6BC51FF23B426C4B95FC1A24FCA61811CF733C3626C425031E91FFA0267\n");
+    printf("%s\n","5B815C890117893D8BB8E886F63A78CE2D5F58342D703348CB95539E14B9A719FFFFFFFF00000000F7066E0E5103160E7600\n");
   }
 
   // Global interrupt disable

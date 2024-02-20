@@ -18,6 +18,7 @@ void InitArena(int size){
     return;
   }
 
+  //arena.ptr = (char*) calloc(size,sizeof(char));
   arena.ptr = (char*) malloc(size * sizeof(char));
   arena.allocated = size;
 }

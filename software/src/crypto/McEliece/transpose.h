@@ -1,13 +1,15 @@
-#ifndef PQCLEAN_MCELIECE348864_CLEAN_TRANSPOSE_H
-#define PQCLEAN_MCELIECE348864_CLEAN_TRANSPOSE_H
+#ifndef TRANSPOSE_H
+#define TRANSPOSE_H
 /*
   This file is for matrix transposition
 */
 
+#include "namespace.h"
 
-#include <stdint.h>
+#define transpose_64x64 CRYPTO_NAMESPACE(transpose_64x64)
 
-void PQCLEAN_MCELIECE348864_CLEAN_transpose_64x64(uint64_t * /*out*/, const uint64_t * /*in*/);
+#include <inttypes.h>
+
+void transpose_64x64(uint64_t *out, const uint64_t *in);
 
 #endif
-
