@@ -7,7 +7,8 @@ from iob_soc_opencryptolinux_create_periphs_tmp import (
     create_periphs_tmp,
     check_linux_build_macros,
 )
-from mk_configuration import append_str_config_build_mk
+
+from config_gen import append_str_config_build_mk
 
 from iob_soc import iob_soc
 from iob_vexriscv import iob_vexriscv
@@ -130,10 +131,19 @@ class iob_soc_opencryptolinux(iob_soc):
 
         super()._post_setup()
 
-        # Copy terminalMode script to scripts build directory
+        # Copy scripts to scripts build directory
+        iob_soc_scripts = [
+            "terminalMode",
+            "makehex",
+            "hex_split",
+            "board_client",
+            "console",
+            "console_ethernet",
+        ]
         dst = f"{cls.build_dir}/scripts"
-        src_file = f"{__class__.setup_dir}/submodules/IOBSOC/submodules/LIB/scripts/terminalMode.py"
-        shutil.copy2(src_file, dst)
+        for script in iob_soc_scripts:
+            src_file = f"{__class__.setup_dir}/submodules/IOBSOC/scripts/{script}.py"
+            shutil.copy2(src_file, dst)
         src_file = f"{__class__.setup_dir}/scripts/check_if_run_linux.py"
         shutil.copy2(src_file, dst)
 
@@ -194,7 +204,7 @@ export RMAC_ADDR
 ifneq ($(filter pudim-flan sericaia,$(shell hostname)),)
 IOB_CONSOLE_PYTHON_ENV ?= /opt/pyeth3/bin/python
 endif
-                """,
+                    """,
                 cls.build_dir,
             )
 

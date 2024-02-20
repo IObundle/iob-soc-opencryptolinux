@@ -4,7 +4,7 @@
 import os
 import math
 import iob_colors
-import build_srcs
+import copy_srcs
 
 
 def create_periphs_tmp(name, addr_w, peripherals_list, out_file):
@@ -87,7 +87,7 @@ def check_linux_build_macros(python_module, iob_linux_setup_dir):
 
     # Update Linux build macros
     def update_build_macros():
-        lib_dir = build_srcs.LIB_DIR
+        lib_dir = copy_srcs.LIB_DIR
 
         # Delete dtb and openSBI files to ensure user create new ones
         for path in board_paths_with_prefix:
