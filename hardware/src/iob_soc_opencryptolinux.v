@@ -2,7 +2,6 @@
 
 `include "bsp.vh"
 `include "iob_soc_opencryptolinux_conf.vh"
-`include "iob_soc_opencryptolinux.vh"
 `include "iob_utils.vh"
 
 `include "iob_soc_opencryptolinux_periphs_swreg_def.vs"

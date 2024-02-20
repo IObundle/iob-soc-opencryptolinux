@@ -3,17 +3,10 @@
 #include "iob-uart16550.h"
 #include "iob_soc_opencryptolinux_conf.h"
 #include "iob_soc_opencryptolinux_system.h"
+#include "iob_soc_opencryptolinux_periphs.h"
 #include "printf.h"
 #include "iob-eth.h"
 #include <string.h>
-
-// defined here (and not in periphs.h) because it is the only peripheral used
-// by the bootloader
-#define UART0_BASE                                                             \
-  ((IOB_SOC_OPENCRYPTOLINUX_UART0 << (IOB_SOC_OPENCRYPTOLINUX_ADDR_W - 4 -     \
-                                      IOB_SOC_OPENCRYPTOLINUX_N_SLAVES_W)) |   \
-   (0xf << (IOB_SOC_OPENCRYPTOLINUX_ADDR_W - 4)))
-#define ETH0_BASE ((IOB_SOC_OPENCRYPTOLINUX_ETH0<<(IOB_SOC_OPENCRYPTOLINUX_ADDR_W-4-IOB_SOC_OPENCRYPTOLINUX_N_SLAVES_W))|(0xf<<(IOB_SOC_OPENCRYPTOLINUX_ADDR_W-4)))
 
 #define PROGNAME "IOb-Bootloader"
 
