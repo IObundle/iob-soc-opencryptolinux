@@ -136,6 +136,7 @@ class iob_soc_opencryptolinux(iob_soc):
             "terminalMode",
             "makehex",
             "hex_split",
+            "hex_join",
             "board_client",
             "console",
             "console_ethernet",
