@@ -173,9 +173,11 @@ ifneq ($(wildcard minicom_linux_script.txt),)
 SCRIPT_STR:=-S minicom_linux_script.txt
 # Set TERM variable to linux-c-nc (needed to run in non-interactive mode https://stackoverflow.com/a/49077622)
 TERM_STR:=TERM=linux-c-nc
+# Give fake stdin and stdout to minicom, as it might not have any available (based on https://www.linuxquestions.org/questions/linux-general-1/capuring-data-with-minicom-over-tty-interface-4175558631/#post5448734)
+FAKE_STDIN_STDOUT:=> minicom2.log < /dev/zero
 endif
 # Set a capture file and print its contents (to work around minicom clearing the screen)
-LOG_STR:=-C minicom_out.log; cat minicom_out.log
+LOG_STR:=-C minicom_out.log $(FAKE_STDIN_STDOUT) || cat minicom_out.log
 # Set HOME to current (fpga) directory (needed because minicom always reads the '.minirc.*' config file from HOME)
 HOME_STR:=HOME=$$(pwd)
 # Always exit with code 0 (since linux is terminated with CTRL-C)
