@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 import shutil
 import math
 
@@ -19,7 +20,8 @@ from axil2iob import axil2iob
 from iob_reset_sync import iob_reset_sync
 from iob_ram_sp import iob_ram_sp
 from iob_versat import CreateVersatClass
-from iob_ila import iob_ila
+
+# from iob_ila import iob_ila
 
 VERSAT_SPEC = "versatSpec.txt"
 VERSAT_EXTRA_UNITS = os.path.realpath(
@@ -48,7 +50,7 @@ class iob_soc_opencryptolinux(iob_soc):
         if cls.versatType in cls.submodule_list:
             cls.versat = cls.versatType("VERSAT0", "Versat accelerator")
             cls.peripherals.append(cls.versat)
-        #if iob_ila in cls.submodule_list:
+        # if iob_ila in cls.submodule_list:
         #    cls.ila = iob_ila("ILA0")
         #    cls.peripherals.append(cls.ila)
 
@@ -118,7 +120,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_vexriscv,
                 iob_uart16550,
                 axil2iob,
-                #iob_ila,
+                # iob_ila,
                 iob_reset_sync,
                 iob_ram_sp,
                 cls.versatType,
@@ -143,8 +145,6 @@ class iob_soc_opencryptolinux(iob_soc):
     @classmethod
     def _post_setup(cls):
         super()._post_setup()
-
-        #iob_ila.generate_system_wires(cls.ila, "hardware/src/iob_soc_opencryptolinux.v", "clk_i", ["VERSAT0."], [("test",1)])
 
         dst = f"{cls.build_dir}/software/src"
         src = f"{__class__.setup_dir}/submodules/OS/software/OS_build"
@@ -226,6 +226,53 @@ endif
                 """,
                 cls.build_dir,
             )
+
+        """
+        signalList = [
+            ("VERSAT0.axi_awaddr_o", 32),
+            ("VERSAT0.axi_awlen_o", 8),
+            ("VERSAT0.axi_wdata_o", 32),
+            ("VERSAT0.axi_wstrb_o", 4),
+            ("VERSAT0.axi_wlast_o", 1),
+            ("VERSAT0.axi_wvalid_o", 1),
+            ("VERSAT0.axi_wready_i", 1),
+            ("VERSAT0.axi_araddr_o", 32),
+            ("VERSAT0.axi_arlen_o", 8),
+            ("VERSAT0.axi_rdata_i", 32),
+            ("VERSAT0.axi_rlast_i", 1),
+            ("VERSAT0.axi_rvalid_i", 1),
+            ("VERSAT0.axi_rready_o", 1),
+            ("VERSAT0.axi_awvalid_o", 1),
+            ("VERSAT0.axi_awready_i", 1),
+            ("VERSAT0.axi_arvalid_o", 1),
+            ("VERSAT0.axi_arready_i", 1),
+            ("VERSAT0.xversat.run", 1),
+            ("VERSAT0.xversat.running", 1),
+            ("VERSAT0.xversat.TOP_0.results_writer_15.in0", 32),
+            ("VERSAT0.xversat.TOP_0.mat_18.in0", 32),
+            ("VERSAT0.xversat.TOP_0.mat_18.out0", 32),
+            ("VERSAT0.xversat.TOP_0.cypher_row_14.out0", 32),
+        ]
+
+        print("\n\n\n", file=sys.stderr)
+        print(f"SIGNAL_W = {sum([x[1] for x in signalList])}", file=sys.stderr)
+        print("\n\n\n", file=sys.stderr)
+
+        iob_ila.generate_system_wires(
+            cls.ila,
+            "hardware/src/iob_soc_opencryptolinux.v",
+            "clk_i",
+            [
+                "VERSAT0.axi_awvalid_o && VERSAT0.axi_awready_i",
+                "VERSAT0.axi_arvalid_o && VERSAT0.axi_arready_i",
+                "VERSAT0.axi_wvalid_o",
+                "VERSAT0.axi_rready_o",
+                "VERSAT0.xversat.run",
+                "VERSAT0.xversat.running",
+            ],
+            signalList,
+        )
+        """
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):

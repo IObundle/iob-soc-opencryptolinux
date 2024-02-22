@@ -83,6 +83,7 @@ IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/printf.c
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/SHA_AES.c
 #IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/crypto/sha2.c
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/crypto/aes.c
+
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(wildcard src/crypto/McEliece/*.c)
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(wildcard src/crypto/McEliece/common/*.c)
 

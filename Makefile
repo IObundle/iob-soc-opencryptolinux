@@ -18,7 +18,7 @@ SETUP_ARGS += INIT_MEM
 endif
 
 setup:
-	make build-setup SETUP_ARGS="$(SETUP_ARGS)"
+	nix-shell --run "make build-setup SETUP_ARGS="$(SETUP_ARGS)""
 
 sim-test-linux:
 	nix-shell --run "make clean"
@@ -48,7 +48,12 @@ fpga-run:
 	nix-shell --run 'make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX)'
 	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
 
+# Need this because ILA has a file that after passing through the format exe becomes invalid.
+fpga-run-no-setup:
+	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
+
 fpga-run-only:
+	cp -r ./software/src ../$(CORE)_V*/software
 	make -C ../$(CORE)_V*/ fpga-fw-build fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
 
 fpga-connect:

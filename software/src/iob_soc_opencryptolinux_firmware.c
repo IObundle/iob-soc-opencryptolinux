@@ -61,7 +61,6 @@ uint32_t uart_recvfile_ethernet(char *file_name) {
   return file_size;
 }
 
-
 // copy src to dst
 // return number of copied chars (excluding '\0')
 int string_copy(char *dst, char *src) {
@@ -97,8 +96,6 @@ void versat_init(int);
 #include "arena.h"
 void nist_kat_init(unsigned char *entropy_input, unsigned char *personalization_string, int security_strength);
 
-#include "versat_accel.h"
-
 int main() {
   char pass_string[] = "Test passed!";
   uint_xlen_t irq_entry_copy;
@@ -126,7 +123,7 @@ int main() {
 
   printf("\n\n\nHello world!\n\n\n");
 
-#if 0
+#if 1
   // SHA test
   {
     unsigned char msg_64[] = { 0x5a, 0x86, 0xb7, 0x37, 0xea, 0xea, 0x8e, 0xe9, 0x76, 0xa0, 0xa2, 0x4d, 0xa6, 0x3e, 0x7e, 0xd7, 0xee, 0xfa, 0xd1, 0x8a, 0x10, 0x1c, 0x12, 0x11, 0xe2, 0xb3, 0x65, 0x0c, 0x51, 0x87, 0xc2, 0xa8, 0xa6, 0x50, 0x54, 0x72, 0x08, 0x25, 0x1f, 0x6d, 0x42, 0x37, 0xe6, 0x61, 0xc7, 0xbf, 0x4c, 0x77, 0xf3, 0x35, 0x39, 0x03, 0x94, 0xc3, 0x7f, 0xa1, 0xa9, 0xf9, 0xbe, 0x83, 0x6a, 0xc2, 0x85, 0x09 };
@@ -153,7 +150,9 @@ int main() {
     printf("Versat:   %s\n",versat_buffer);
     printf("Software: %s\n",software_buffer);
   }
+#endif
 
+#if 1
   {
     uint8_t key[128] = {};
     uint8_t plain[128] = {};
@@ -167,7 +166,7 @@ int main() {
     InitVersatAES();
 
     VersatAES(versat_result,plain,key);
-    VersatAES(software_result,plain,key);
+    VersatAES(software_result,plain,key); // TODO: This should be software!!! Why did I put Versat again?
 
     char versat_buffer[2048];
     char software_buffer[2048];
@@ -179,6 +178,7 @@ int main() {
   }  
 #endif
 
+#if 1
   // McEliece
   {
     unsigned char public_key[PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES];
@@ -209,6 +209,7 @@ int main() {
     printf("%s\n",secret_key_buffer);
     printf("%s\n","5B815C890117893D8BB8E886F63A78CE2D5F58342D703348CB95539E14B9A719FFFFFFFF00000000F7066E0E5103160E7600\n");
   }
+#endif
 
   // Global interrupt disable
   csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
