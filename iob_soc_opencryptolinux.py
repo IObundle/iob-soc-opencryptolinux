@@ -173,8 +173,13 @@ ifneq ($(wildcard minicom_linux_script.txt),)
 SCRIPT_STR:=-S minicom_linux_script.txt
 # Set TERM variable to linux-c-nc (needed to run in non-interactive mode https://stackoverflow.com/a/49077622)
 TERM_STR:=TERM=linux-c-nc
-# Give fake stdin and stdout to minicom, as it might not have any available (based on https://www.linuxquestions.org/questions/linux-general-1/capuring-data-with-minicom-over-tty-interface-4175558631/#post5448734)
+# Give fake stdin and stdout to minicom on CI (continuous integration), as it does not have any available (based on https://www.linuxquestions.org/questions/linux-general-1/capuring-data-with-minicom-over-tty-interface-4175558631/#post5448734)
+# Github Actions sets CI="true" (https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
+ifneq ($(CI),)
 FAKE_STDIN_STDOUT:=> minicom2.log < /dev/zero
+else
+FAKE_STDIN_STDOUT:=
+endif
 endif
 # Set a capture file and print its contents (to work around minicom clearing the screen)
 LOG_STR:=-C minicom_out.log $(FAKE_STDIN_STDOUT) || cat minicom_out.log
