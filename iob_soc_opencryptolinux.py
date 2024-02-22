@@ -168,6 +168,8 @@ class iob_soc_opencryptolinux(iob_soc):
             contents.append(
                 f"""
 ### Launch minicom if running Linux
+# pass CI variable over ssh commands
+UFLAGS+=CI=$(CI)
 ifeq ($(shell grep -o rootfs.cpio.gz ../{cls.name}_mem.config),rootfs.cpio.gz)
 ifneq ($(wildcard minicom_linux_script.txt),)
 SCRIPT_STR:=-S minicom_linux_script.txt
@@ -175,7 +177,7 @@ SCRIPT_STR:=-S minicom_linux_script.txt
 TERM_STR:=TERM=linux-c-nc
 # Give fake stdin and stdout to minicom on CI (continuous integration), as it does not have any available (based on https://www.linuxquestions.org/questions/linux-general-1/capuring-data-with-minicom-over-tty-interface-4175558631/#post5448734)
 # Github Actions sets CI="true" (https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
-ifdef CI
+ifneq ($(CI),)
 FAKE_STDIN_STDOUT:=> minicom2.log < /dev/zero
 else
 FAKE_STDIN_STDOUT:=
