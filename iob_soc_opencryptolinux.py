@@ -189,6 +189,9 @@ LOG_STR:=-C minicom_out.log $(FAKE_STDOUT) || cat minicom_out.log
 HOME_STR:=HOME=$$(pwd)
 # Always exit with code 0 (since linux is terminated with CTRL-C)
 CONSOLE_CMD += && ($(HOME_STR) $(TERM_STR) minicom iobundle.dfl $(SCRIPT_STR) $(LOG_STR) || (exit 0))
+# potential better CONSOLE_CMD for github actions
+#CONSOLE_CMD += && (($(HOME_STR) $(TERM_STR) minicom iobundle.dfl $(SCRIPT_STR) $(LOG_STR) || (exit 0)) & tail --pid=$$! -f /dev/null )
+#CONSOLE_CMD += && mkfifo tmp.fifo && (sleep 999 > tmp.fifo &) && ($(HOME_STR) $(TERM_STR) minicom iobundle.dfl $(SCRIPT_STR) $(LOG_STR) || rm tmp.fifo || (exit 0))
 endif
             """
             )
