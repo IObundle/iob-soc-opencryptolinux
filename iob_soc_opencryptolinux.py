@@ -178,13 +178,13 @@ TERM_STR:=TERM=linux-c-nc
 # Give fake stdin and stdout to minicom on CI (continuous integration), as it does not have any available (based on https://www.linuxquestions.org/questions/linux-general-1/capuring-data-with-minicom-over-tty-interface-4175558631/#post5448734)
 # Github Actions sets CI="true" (https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
 ifneq ($(CI),)
-FAKE_STDIN_STDOUT:=> minicom2.log < /dev/zero
+FAKE_STDOUT:=> minicom2.log
 else
-FAKE_STDIN_STDOUT:=
+FAKE_STDOUT:=
 endif
 endif
 # Set a capture file and print its contents (to work around minicom clearing the screen)
-LOG_STR:=-C minicom_out.log $(FAKE_STDIN_STDOUT) || cat minicom_out.log
+LOG_STR:=-C minicom_out.log $(FAKE_STDOUT) || cat minicom_out.log
 # Set HOME to current (fpga) directory (needed because minicom always reads the '.minirc.*' config file from HOME)
 HOME_STR:=HOME=$$(pwd)
 # Always exit with code 0 (since linux is terminated with CTRL-C)
