@@ -168,6 +168,8 @@ void InitVersatAES() {
    aes->aes.rcon6.constant = 0x40;
 }
 
+void clear_cache();
+
 void VersatAES(uint8_t *result, uint8_t *cypher, uint8_t *key) {
    static int cypher_int[AES_BLK_SIZE] = {0};
    static int key_int[AES_KEY_SIZE] = {0};
@@ -179,13 +181,13 @@ void VersatAES(uint8_t *result, uint8_t *cypher, uint8_t *key) {
    SHA_AESConfig* config = (SHA_AESConfig*) accelConfig;
    ReadWriteAES256Config* con = (ReadWriteAES256Config*) &config->ReadWriteAES256;
 
-   //printf("VersatAES: %p %p %p\n",cypher_int,key_int,result_int);
-
    ConfigureSimpleVRead(&con->cypher,AES_BLK_SIZE,cypher_int);
    ConfigureSimpleVRead(&con->key,AES_KEY_SIZE,key_int);
    ConfigureSimpleVWrite(&con->results,AES_BLK_SIZE,result_int);
 
    RunAccelerator(3);
+
+   clear_cache();
 
    int_to_byte(result_int, result, AES_BLK_SIZE);
 
@@ -200,8 +202,7 @@ static char HexToInt(char ch){
    } else if('A' <= ch && ch <= 'F'){
       return ch - 'A' + 10;
    } else {
-      printf("Error, invalid character inside hex string:%c",ch);
-      return 0;
+      return 0x7f;
    }
 }
 
@@ -209,15 +210,17 @@ static char HexToInt(char ch){
 int HexStringToHex(char* buffer,const char* str){
    int inserted = 0;
    for(int i = 0; ; i += 2){
-      char upper = str[i];
-      char lower = str[i+1];
+      char upper = HexToInt(str[i]);
+      char lower = HexToInt(str[i+1]);
 
-      if(upper == '\0' || lower == '\0'){
-         if(upper != '\0') printf("Warning: HexString was not divisible by 2\n");
+      if(upper >= 16 || lower >= 16){
+         if(upper < 16){ // Upper is good but lower is not
+            printf("Warning: HexString was not divisible by 2\n");
+         }
          break;
-      }   
+      }
 
-      buffer[inserted++] = HexToInt(upper) * 16 + HexToInt(lower);
+      buffer[inserted++] = upper * 16 + lower;
    }
 
    return inserted;
@@ -278,8 +281,6 @@ void InitVersatSHA(){
 static size_t versat_crypto_hashblocks_sha256(const uint8_t *in, size_t inlen) {
    while (inlen >= 64) {
       ACCEL_TOP_MemRead_key_ext_addr = (iptr) in;
-
-      //printf("versat_crypto_hashblocks_sha256: %p\n",in);
    
       // Loads data + performs work
       RunAccelerator(1);
@@ -363,7 +364,7 @@ char GetHexadecimalChar(unsigned char value){
   if(value < 10){
     return '0' + value;
   } else{
-    return 'a' + (value - 10);
+    return 'A' + (value - 10);
   }
 }
 

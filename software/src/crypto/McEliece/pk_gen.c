@@ -115,30 +115,17 @@ void VersatMcElieceLoop1(uint8_t *row, uint8_t mask,bool first){
     static uint8_t savedMask = 0;
     uint32_t *row_int = (uint32_t*) row;
 
-    //printf("VersatMcElieceLoop1: %p\n",row_int);
-
     ConfigureSimpleVReadShallow(&vec->row, SINT, (int*) row_int);
     if(first){
         vec->mat.in0_wr = 0;
     } else {
-        //ConfigureSimpleVReadShallow(&vec->row, SINT, (int*) row_int);
         uint32_t mask_int = (savedMask) | (savedMask << 8) | (savedMask << 8*2) | (savedMask << 8*3);
         vec->mask.constant = mask_int;
         vec->mat.in0_wr = 1;
     }
 
-    //printf("Gonna run\n");
-    //RunAccelerator(1);
-    //printf("Finish run\n");
-
-#if 1
-    // Allow reconfiguration while accelerator is running.
-
-    // Note: Because of pc-emul and sim-run differences, this might not actually work.
-    //       If troubles start appearing on the board, change this.
     EndAccelerator();
     StartAccelerator();
-#endif
 
     savedMask = mask;
 }
@@ -180,16 +167,11 @@ void VersatMcElieceLoop2(unsigned char** mat,int timesCalled,int k,int row,uint8
         vec->writer.enableWrite = 0;
     }
 
-    //RunAccelerator(1);
-
-#if 1
     EndAccelerator();
     StartAccelerator();
-#endif
 
     savedMask = mask;
 }
-
 
 static crypto_uint64 uint64_is_equal_declassify(uint64_t t, uint64_t u) {
     crypto_uint64 mask = crypto_uint64_equal_mask(t, u);
@@ -201,27 +183,6 @@ static crypto_uint64 uint64_is_zero_declassify(uint64_t t) {
     crypto_uint64 mask = crypto_uint64_zero_mask(t);
     crypto_declassify(&mask, sizeof mask);
     return mask;
-}
-
-static void ClearCache(){
-#ifndef PC
-  int size = 1024 * 32;
-  char* m = (char*) malloc(size); // Should not use malloc but some random fixed ptr in embedded. No use calling malloc since we can always read at any point in memory without worrying about memory protection.
-
-  // volatile and asm are used to make sure that gcc does not optimize away this loop that appears to do nothing
-  volatile int val = 0;
-  for(int i = 0; i < size; i += 32){
-    val += m[i];
-    __asm__ volatile("" : "+g" (val) : :);
-  }
-  free(m);
-#else
-  static bool once = true;
-  if(once){
-    printf("[INFO] ClearCache not being used\n");
-    once = false;
-  }
-#endif
 }
 
 /* input: secret key sk */
@@ -251,9 +212,9 @@ int pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, int16_t *
 
     uint64_t buf[ 1 << GFBITS ];
 
-    unsigned char** mat = PushArray(PK_NROWS,unsigned char*);
+    volatile unsigned char** mat = PushArray(PK_NROWS,volatile unsigned char*);
     for(int i = 0; i < PK_NROWS; i++){
-        mat[i] = PushArray(SYS_N / 8,unsigned char);
+        mat[i] = PushArray(SYS_N / 8,volatile unsigned char);
     }
 
     unsigned char mask;
@@ -334,7 +295,6 @@ int pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, int16_t *
         for (j = 0; j < SYS_N; j++) {
             inv[j] = gf_mul(inv[j], L[j]);
         }
-
     }
 
     // gaussian elimination
@@ -370,7 +330,6 @@ int pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, int16_t *
 
             EndAccelerator();
 
-            ReadRow(out_int);
 #else
             for (k = row + 1; k < PK_NROWS; k++) {
                 mask = mat[ row ][ i ] ^ mat[ k ][ i ];
@@ -383,30 +342,13 @@ int pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, int16_t *
                 }
             }
 #endif
-
-#if 0
-            if(row >= 550 && row <= 590){
-                printf("Row: %d\n",row);
-                PrintSimpleMat(mat,row); 
-                printf("\n");               
-            }
-#endif
-
             if ( uint64_is_zero_declassify((mat[ row ][ i ] >> j) & 1) ) { // return if not systematic
                 printf("Early finish row:%d\n",row);
-#if 0
-                printf("Mat after loop 1\n");
-                PrintFullMat(mat);
-                printf("Mat after previous loop 2\n");
-                PrintFullMat(matBuffer);
-                printf("VCD after previous loop 2\n");
-                printf("%s",ilaBuffer);
-#endif
-                //uart16550_finish();
-                //exit(0);
                 PopArena(mark);
                 return -1;
             }
+
+            ReadRow(out_int);
 
 #if 1
             int index = 0;
@@ -416,57 +358,16 @@ int pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, int16_t *
                     mask &= 1;
                     mask = -mask;
 
-#if 0
-                    if(row >= 550 && row <= 590 && k >= 500){                
-                        ila_reset();
-                    }    
-#endif
-
                     VersatMcElieceLoop2(mat,index,k,row,mask);
-#if 0
-                    if(row >= 550 && row <= 590 && k >= 500){                
-                        ptr += sprintf(ptr,"K:%d\n",k);
-                        ptr = ila_output_all_data(ptr,ILA0_DWORD_SIZE);
-                        ptr += sprintf(ptr,"\n");
-                    }    
-#endif
                     index += 1;
                 }
             }
 
-#if 0
-            if(row >= 550 && row <= 590){
-                ila_reset();
-            }
-#endif
             VersatMcElieceLoop2(mat,index++,PK_NROWS,row,0);
-#if 0
-            if(row >= 550 && row <= 590){
-                ptr += sprintf(ptr,"K\n");
-                ptr = ila_output_all_data(ptr,ILA0_DWORD_SIZE);
-                ptr += sprintf(ptr,"\n");
-                ila_reset();
-            }
-#endif
             VersatMcElieceLoop2(mat,index++,PK_NROWS + 1,row,0);
-#if 0
-            if(row >= 550 && row <= 590){
-                ptr += sprintf(ptr,"K+1\n");
-                ptr += sprintf(ptr,"\n");
-                ptr = ila_output_all_data(ptr,ILA0_DWORD_SIZE);
-            }
-#endif
-
             vec->writer.enableWrite = 0;
 
-            ClearCache();
-
-#if 0
-            for(int ii = 0; ii < PK_NROWS; ii++){
-                memcpy(matBuffer[ii],mat[ii],(SYS_N / 8) * sizeof(unsigned char));
-            }
-#endif
-
+            clear_cache();
 #else
             for (k = 0; k < PK_NROWS; k++) {
                 if (k != row) {
@@ -480,20 +381,13 @@ int pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, int16_t *
                 }
             }
 #endif
-            //printf("Final%d",row);
-            //printf("After second loop\n");
-            //PrintFullMat(mat);
         }
     }
-
-    //printf("Success\n");
-    //PrintFullMat(mat);
 
     for (i = 0; i < PK_NROWS; i++) {
         memcpy(pk + i * PK_ROW_BYTES, mat[i] + PK_NROWS / 8, PK_ROW_BYTES);
     }
 
-    printf("Finish full func\n");
     PopArena(mark);
     return 0;
 }
