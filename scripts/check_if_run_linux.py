@@ -53,13 +53,13 @@ if "define SIMULATION 1" in content:
         # replace_line(bsp_file, "#define BAUD", "#define BAUD 115200\n")
 
         conf_file = f"{ROOT_DIR}/hardware/src/{SOC_NAME}_conf.vh"
-        replace_line(conf_file, "", "`define IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX 1\n")
+        replace_line(conf_file, "", "`define {SOC_NAME.upper()}_RUN_LINUX 1\n")
 
         conf_file = f"{ROOT_DIR}/software/src/{SOC_NAME}_conf.h"
         replace_line(
             conf_file,
-            "#define H_IOB_SOC_OPENCRYPTOLINUX_CONF_H",
-            "#define H_IOB_SOC_OPENCRYPTOLINUX_CONF_H\n#define IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX 1\n",
+            "#define H_{SOC_NAME.upper()}_CONF_H",
+            "#define H_{SOC_NAME.upper()}_CONF_H\n#define {SOC_NAME.upper()}_RUN_LINUX 1\n",
         )
     else:
         # bsp_file = f"{ROOT_DIR}/hardware/simulation/src/bsp.vh"
@@ -69,7 +69,7 @@ if "define SIMULATION 1" in content:
         # replace_line(bsp_file, "#define BAUD", "#define BAUD 3000000\n")
 
         conf_file = f"{ROOT_DIR}/hardware/src/{SOC_NAME}_conf.vh"
-        replace_line(conf_file, "`define IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX", "")
+        replace_line(conf_file, "`define {SOC_NAME.upper()}_RUN_LINUX", "")
 
         conf_file = f"{ROOT_DIR}/software/src/{SOC_NAME}_conf.h"
-        replace_line(conf_file, "#define IOB_SOC_OPENCRYPTOLINUX_RUN_LINUX", "")
+        replace_line(conf_file, "#define {SOC_NAME.upper()}_RUN_LINUX", "")
