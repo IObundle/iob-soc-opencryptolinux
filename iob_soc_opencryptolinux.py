@@ -139,8 +139,6 @@ class iob_soc_opencryptolinux(iob_soc):
 
     @classmethod
     def _post_setup(cls):
-        super()._post_setup()
-
         # OpenCrypts testcases
         shutil.copytree(
             f"{cls.setup_dir}/tests", f"{cls.build_dir}/tests", dirs_exist_ok=True

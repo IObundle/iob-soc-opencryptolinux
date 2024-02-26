@@ -80,10 +80,11 @@ IOB_SOC_OPENCRYPTOLINUX_LFLAGS=-Wl,-Bstatic,-T,$(TEMPLATE_LDS),--strip-debug
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC=src/iob_soc_opencryptolinux_firmware.S
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/iob_soc_opencryptolinux_firmware.c
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/printf.c
+
+# NOTE(Ruben): To speed up simulation, the following files can be commented out to greatly reduce filesize from around ~120Kb to ~20Kb.
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/versat_crypto.c
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/versat_crypto_tests.c
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/crypto/aes.c
-
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(wildcard src/crypto/McEliece/*.c)
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(wildcard src/crypto/McEliece/common/*.c)
 

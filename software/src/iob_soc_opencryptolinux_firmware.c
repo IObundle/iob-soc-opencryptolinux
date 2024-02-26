@@ -117,7 +117,9 @@ int main() {
     uart16550_putc(buffer[i]);
 #endif
 
+#ifndef SIMULATION
   InitializeCryptoSide(VERSAT0_BASE);
+#endif
 
   printf("\n\n\nHello world!\n\n\n");
 
@@ -146,9 +148,13 @@ int main() {
 
   int testResult = 0;
 
+#ifndef SIMULATION
+  // Tests are too big and slow to perform during simulation.
+  // Comment out the source files in sw_build.mk to also reduce binary size and speedup simulation.
   testResult |= VersatSHATests();
   testResult |= VersatAESTests();
   testResult |= VersatMcElieceTests();
+#endif
 
   if(testResult){
     uart16550_sendfile("test.log", 12, "Test failed!");

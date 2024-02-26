@@ -8,9 +8,8 @@ DISABLE_LINT:=1
 LIB_DIR:=submodules/IOBSOC/submodules/LIB
 include $(LIB_DIR)/setup.mk
 
-VCD ?= 0
 INIT_MEM ?= 0
-RUN_LINUX ?= 0
+RUN_LINUX ?= 1
 USE_EXTMEM := 1
 
 ifeq ($(INIT_MEM),1)
@@ -18,7 +17,7 @@ SETUP_ARGS += INIT_MEM
 endif
 
 setup:
-	nix-shell --run "make build-setup SETUP_ARGS="$(SETUP_ARGS)""
+	make build-setup SETUP_ARGS="$(SETUP_ARGS)"
 
 sim-test-linux:
 	nix-shell --run "make clean"
@@ -33,32 +32,10 @@ sim-test:
 	nix-shell --run "make setup INIT_MEM=0"
 	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
 
-sim-run:
-	nix-shell --run "make clean"
-	nix-shell --run "make setup INIT_MEM=$(INIT_MEM) VCD=$(VCD)"
-	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator INIT_MEM=$(INIT_MEM) VCD=$(VCD)" 
-
-sim-build:
-	nix-shell --run "make clean"
-	nix-shell --run "make setup INIT_MEM=$(INIT_MEM) VCD=$(VCD)"
-	nix-shell --run "make -C ../iob_soc_o* sim-build SIMULATOR=icarus" 
-
 fpga-run:
 	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM)'
 	nix-shell --run 'make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX)'
 	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
-
-# Need this because ILA has a file that after passing through the format exe becomes invalid.
-fpga-run-no-setup:
-	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
-
-fpga-run-only:
-	cp -r ./software/src ../$(CORE)_V*/software
-	make -C ../$(CORE)_V*/ fpga-fw-build fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
-
-fw-build:
-	cp -r ./software/src ../$(CORE)_V*/software
-	make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
 
 fpga-connect:
 	nix-shell --run 'make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX)'
