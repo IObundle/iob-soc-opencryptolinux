@@ -56,6 +56,10 @@ fpga-run-only:
 	cp -r ./software/src ../$(CORE)_V*/software
 	make -C ../$(CORE)_V*/ fpga-fw-build fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
 
+fw-build:
+	cp -r ./software/src ../$(CORE)_V*/software
+	make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
+
 fpga-connect:
 	nix-shell --run 'make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX)'
 	# Should run under 'bash', running with 'fish' as a shell gives an error

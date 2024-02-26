@@ -1562,7 +1562,7 @@ module AES256WithIterative(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,k0,k1
    lastKey:15 -> out:15;
 }
 
-module VectorLikeOperation(){
+module McEliece(){
    ReadWriteMem mat;
    VRead row;
    VWrite writer;
@@ -1583,10 +1583,8 @@ module ReadWriteAES256(){
    VRead key;
    VWrite results;
    Merge merge;
-   // Simple aes;
    AES256WithIterative aes;
 #
-   
    cypher[0..15] -> aes:0..15;
    key[0..31] -> aes:16..47;
 
@@ -1595,5 +1593,5 @@ module ReadWriteAES256(){
    merge -> results;
 }
 
-merge SHA_AES = SHA | ReadWriteAES256 | VectorLikeOperation;
+merge CryptoAlgos = SHA | ReadWriteAES256 | McEliece;
 

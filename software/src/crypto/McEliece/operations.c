@@ -90,30 +90,23 @@ int crypto_kem_keypair
 
     randombytes(seed + 1, 32);
 
-    printf("Random bytes\n");
-
     while (1) {
         rp = &r[ sizeof(r) - 32 ];
         skp = sk;
 
         // expanding and updating the seed
-
-        printf("Going to shake\n");
         shake(r, sizeof(r), seed, 33);
         memcpy(skp, seed + 1, 32);
         skp += 32 + 8;
         memcpy(seed + 1, &r[ sizeof(r) - 32 ], 32);
 
-        printf("Finish shake\n");
         // generating irreducible polynomial
-
         rp -= sizeof(f);
 
         for (i = 0; i < SYS_T; i++) {
             f[i] = load_gf(rp + i * 2);
         }
 
-        printf("Going to genpoly_gen\n");
         if (genpoly_gen(irr, f)) {
             continue;
         }
@@ -125,31 +118,24 @@ int crypto_kem_keypair
         skp += IRR_BYTES;
 
         // generating permutation
-
         rp -= sizeof(perm);
 
         for (i = 0; i < (1 << GFBITS); i++) {
             perm[i] = load4(rp + i * 4);
         }
 
-        printf("Going to pk_gen\n");
         if (pk_gen(pk, skp - IRR_BYTES, perm, pi)) {
             continue;
         }
 
-        printf("Going to controlbitsfrompermutation\n");
         controlbitsfrompermutation(skp, pi, GFBITS, 1 << GFBITS);
         skp += COND_BYTES;
 
         // storing the random string s
-
-        printf("Finished controlbitsfrompermutation\n");
-
         rp -= SYS_N / 8;
         memcpy(skp, rp, SYS_N / 8);
 
         // storing positions of the 32 pivots
-
         store8(sk + 32, 0xFFFFFFFF);
 
         break;

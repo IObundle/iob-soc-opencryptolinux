@@ -22,10 +22,12 @@ void InitVersatAES();
 void VersatAES(uint8_t *result, uint8_t *cypher, uint8_t *key);
 
 // McEliece
-void VersatLineXOR(uint8_t* out, uint8_t *mat, uint8_t *row, int n_cols, uint8_t mask);
+int VersatMcEliece(unsigned char *pk,unsigned char *sk);
 
 // Simple function to convert result into plain text hexadecimal number and vice versa. Useful for testing
 char* GetHexadecimal(const char* text,char* buffer,int str_size);
 int HexStringToHex(char* buffer,const char* str);
+
+
 
 #endif // INCLUDED_SHA_AES

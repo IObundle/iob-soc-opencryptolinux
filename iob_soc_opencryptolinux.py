@@ -21,8 +21,6 @@ from iob_reset_sync import iob_reset_sync
 from iob_ram_sp import iob_ram_sp
 from iob_versat import CreateVersatClass
 
-# from iob_ila import iob_ila
-
 VERSAT_SPEC = "versatSpec.txt"
 VERSAT_EXTRA_UNITS = os.path.realpath(
     os.path.join(os.path.dirname(__file__), "hardware/src/units")
@@ -50,9 +48,6 @@ class iob_soc_opencryptolinux(iob_soc):
         if cls.versatType in cls.submodule_list:
             cls.versat = cls.versatType("VERSAT0", "Versat accelerator")
             cls.peripherals.append(cls.versat)
-        # if iob_ila in cls.submodule_list:
-        #    cls.ila = iob_ila("ILA0")
-        #    cls.peripherals.append(cls.ila)
 
         if iob_eth in cls.submodule_list:
             cls.peripherals.append(
@@ -104,7 +99,7 @@ class iob_soc_opencryptolinux(iob_soc):
         """Create submodules list with dependencies of this module"""
 
         cls.versatType = CreateVersatClass(
-            False, VERSAT_SPEC, "SHA_AES", VERSAT_EXTRA_UNITS, cls.build_dir
+            False, VERSAT_SPEC, "CryptoAlgos", VERSAT_EXTRA_UNITS, cls.build_dir
         )
 
         super()._create_submodules_list(
@@ -120,7 +115,6 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_vexriscv,
                 iob_uart16550,
                 axil2iob,
-                # iob_ila,
                 iob_reset_sync,
                 iob_ram_sp,
                 cls.versatType,
@@ -136,7 +130,7 @@ class iob_soc_opencryptolinux(iob_soc):
             if type(cls.submodule_list[i]) == type and cls.submodule_list[i].name in [
                 "iob_picorv32",
                 "iob_uart",
-                # "iob_cache",
+                "iob_cache",
             ]:
                 cls.submodule_list.pop(i)
                 continue
@@ -146,6 +140,7 @@ class iob_soc_opencryptolinux(iob_soc):
     def _post_setup(cls):
         super()._post_setup()
 
+        # OpenCrypts testcases
         shutil.copytree(
             f"{cls.setup_dir}/tests", f"{cls.build_dir}/tests", dirs_exist_ok=True
         )
