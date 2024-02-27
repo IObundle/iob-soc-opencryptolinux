@@ -449,7 +449,7 @@ module ShaState(x0,x1,x2,x3,x4,x5,x6,x7){
 }
 
 module Constants(){
-   static Mem mem;
+   static OnlyOutputMem mem;
 #
    mem -> out:0;
 }
@@ -810,34 +810,6 @@ module MainRound(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,k0,k1,k2,k3,k4,
    kf -> addRoundKey:31;
 
    addRoundKey:0..15 -> out:0..15;
-}
-
-module FloatTest(x,y){
-   MyFloatAdd unit;   
-#
-   x -> unit:0;
-   y -> unit:1;
-
-   unit -> out;
-}
-
-iterative SimpleIterative(x){
-   Mul mul; // The first unit is defined as the "core" unit of the iterative 
-   Const const0;
-   Const const1;
-   Const const2;
-   Const const3;
-# 4
-   x -> mul:0;
-
-   %0 const0 -> mul:1;   
-   %1 const1 -> mul:1;
-   %2 const2 -> mul:1;
-   %3 const3 -> mul:1;
-
-   mul -> mul:0;
-
-   mul -> out;
 }
 
 module MainRoundAndKey(x0,x1,x2,x3,x4,x5,x6,x7,x8,x9,xa,xb,xc,xd,xe,xf,k0,k1,k2,k3,k4,k5,k6,k7,k8,k9,ka,kb,kc,kd,ke,kf,rcon){

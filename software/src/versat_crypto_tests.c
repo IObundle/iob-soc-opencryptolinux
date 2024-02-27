@@ -78,7 +78,7 @@ int VersatSHATests(){
 
   printf("Init versat SHA took: %d\n",end - start);
 
-  String content = PushFileFromEthernet("../../tests/SHA256ShortMsg.rsp");
+  String content = PushFileFromEthernet("../../software/versat/tests/SHA256ShortMsg.rsp");
 
   static const int HASH_SIZE = (256/8);
 
@@ -165,7 +165,7 @@ int VersatAESTests(){
 
   InitVersatAES();
 
-  String content = PushFileFromEthernet("../../tests/AESECB256.rsp");
+  String content = PushFileFromEthernet("../../software/versat/tests/AESECB256.rsp");
 
   char* ptr = content.str;
   int goodTests = 0;
@@ -260,7 +260,7 @@ int VersatMcElieceTests(){
   unsigned char* public_key = PushArray(PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES,unsigned char);
   unsigned char* secret_key = PushArray(PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES,unsigned char);
 
-  String content = PushFileFromEthernet("../../tests/McElieceRound4kat_kem.rsp");
+  String content = PushFileFromEthernet("../../software/versat/tests/McElieceRound4kat_kem.rsp");
   char* ptr = content.str;
   int goodTests = 0;
   int tests = 0;

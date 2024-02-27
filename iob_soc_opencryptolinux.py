@@ -22,11 +22,6 @@ from iob_reset_sync import iob_reset_sync
 from iob_ram_sp import iob_ram_sp
 from iob_versat import CreateVersatClass
 
-VERSAT_SPEC = "versatSpec.txt"
-VERSAT_EXTRA_UNITS = os.path.realpath(
-    os.path.join(os.path.dirname(__file__), "hardware/src/units")
-)
-
 
 class iob_soc_opencryptolinux(iob_soc):
     name = "iob_soc_opencryptolinux"
@@ -47,7 +42,16 @@ class iob_soc_opencryptolinux(iob_soc):
             cls.peripherals.append(iob_spi_master("SPI0", "SPI master peripheral"))
         # Instantiate versat
         if cls.versatType in cls.submodule_list:
-            cls.versat = cls.versatType("VERSAT0", "Versat accelerator")
+            cls.versat = cls.versatType(
+                "VERSAT0",
+                "Versat accelerator",
+                parameters={
+                    "AXI_ID_W": "AXI_ID_W",
+                    "AXI_LEN_W": "AXI_LEN_W",
+                    "AXI_ADDR_W": "AXI_ADDR_W",
+                    "AXI_DATA_W": "AXI_DATA_W",
+                },
+            )
             cls.peripherals.append(cls.versat)
 
         if iob_eth in cls.submodule_list:
@@ -99,6 +103,11 @@ class iob_soc_opencryptolinux(iob_soc):
     def _create_submodules_list(cls, extra_submodules=[]):
         """Create submodules list with dependencies of this module"""
 
+        VERSAT_SPEC = f"{cls.setup_dir}/software/versat/versatSpec.txt"
+        VERSAT_EXTRA_UNITS = os.path.realpath(
+            os.path.join(os.path.dirname(__file__), "hardware/src/units")
+        )
+
         cls.versatType = CreateVersatClass(
             False, VERSAT_SPEC, "CryptoAlgos", VERSAT_EXTRA_UNITS, cls.build_dir
         )
@@ -139,11 +148,6 @@ class iob_soc_opencryptolinux(iob_soc):
 
     @classmethod
     def _post_setup(cls):
-        # OpenCrypts testcases
-        shutil.copytree(
-            f"{cls.setup_dir}/tests", f"{cls.build_dir}/tests", dirs_exist_ok=True
-        )
-
         dst = f"{cls.build_dir}/software/src"
         src = f"{__class__.setup_dir}/submodules/OS/software/OS_build"
         files = ["rootfs.cpio.gz", "Image"]
