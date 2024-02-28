@@ -82,6 +82,9 @@ int VersatSHATests(){
 
   static const int HASH_SIZE = (256/8);
 
+  int versatTimeAccum = 0;
+  int softwareTimeAccum = 0;
+
   char* ptr = content.str;
   int goodTests = 0;
   int tests = 0;
@@ -125,9 +128,6 @@ int VersatSHATests(){
     sha256(software_digest,message,len / 8);
     int end = GetTime();
 
-    printf("Versat   took: %d\n",middle - start);
-    printf("Software took: %d\n",end - middle);
-
     bool good = true;
     for(int i = 0; i < 256; i++){
       if(versat_digest[i] != software_digest[i]){
@@ -137,6 +137,8 @@ int VersatSHATests(){
     }
 
     if(good){
+      versatTimeAccum += middle - start;
+      softwareTimeAccum += end - middle;
       goodTests += 1;
     } else {
       char versat_buffer[2048];
@@ -154,7 +156,12 @@ int VersatSHATests(){
     PopArena(testMark);
   }
 
-  printf("\n\nSHA tests: %d passed out of %d\n\n",goodTests,tests);
+  printf("\n\n=======================================================\n");
+  printf("SHA tests: %d passed out of %d\n\n",goodTests,tests);
+  printf("  Average cycles (only counting passing tests) (not seconds)\n");
+  printf("    Versat:  %d\n",versatTimeAccum / goodTests);
+  printf("  Software: %d\n",softwareTimeAccum / goodTests);
+  printf("=======================================================\n\n");
   PopArena(mark);
 
   return (goodTests == tests) ? 0 : 1;
@@ -166,6 +173,9 @@ int VersatAESTests(){
   InitVersatAES();
 
   String content = PushFileFromEthernet("../../software/versat/tests/AESECB256.rsp");
+
+  int versatTimeAccum = 0;
+  int softwareTimeAccum = 0;
 
   char* ptr = content.str;
   int goodTests = 0;
@@ -219,9 +229,6 @@ int VersatAESTests(){
     AES_ECB_encrypt(&ctx,software_result);
     int end = GetTime();
 
-    printf("Versat   took: %d\n",middle - start);
-    printf("Software took: %d\n",end - middle);
-
     bool good = true;
     for(int i = 0; i < AES_BLK_SIZE; i++){
       if(versat_result[i] != software_result[i]){
@@ -231,6 +238,8 @@ int VersatAESTests(){
     }
 
     if(good){
+      versatTimeAccum += middle - start;
+      softwareTimeAccum += end - middle;
       goodTests += 1;
     } else {
       char versat_buffer[2048];
@@ -248,7 +257,12 @@ int VersatAESTests(){
     PopArena(testMark);
   }
 
-  printf("\n\nAES tests: %d passed out of %d\n\n",goodTests,tests);
+  printf("\n\n=======================================================\n");
+  printf("AES tests: %d passed out of %d\n\n",goodTests,tests);
+  printf("  Average cycles (only counting passing tests)\n");
+  printf("    Versat:  %d\n",versatTimeAccum / goodTests);
+  printf("  Software: %d\n",softwareTimeAccum / goodTests);
+  printf("=======================================================\n\n");
   PopArena(mark);
 
   return (goodTests == tests) ? 0 : 1;
@@ -259,6 +273,8 @@ int VersatMcElieceTests(){
 
   unsigned char* public_key = PushArray(PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES,unsigned char);
   unsigned char* secret_key = PushArray(PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES,unsigned char);
+
+  int versatTimeAccum = 0;
 
   String content = PushFileFromEthernet("../../software/versat/tests/McElieceRound4kat_kem.rsp");
   char* ptr = content.str;
@@ -300,7 +316,10 @@ int VersatMcElieceTests(){
     char* good_sk = ptr;
 
     nist_kat_init(seed, NULL, 256);
+
+    int start = GetTime();
     VersatMcEliece(public_key, secret_key);
+    int end = GetTime();
 
     // Software only implementation is slow and we are already comparing to KAT anyway and so, for McEliece, we skipping software implementation test of McEliece.
     //PQCLEAN_MCELIECE348864_CLEAN_crypto_kem_keypair(public_key, secret_key);
@@ -326,6 +345,7 @@ int VersatMcElieceTests(){
     }
 
     if(good){
+      versatTimeAccum += end - start;
       goodTests += 1;
     } else {
       printf("McEliece Test %02d: Error\n",tests);
@@ -343,8 +363,9 @@ int VersatMcElieceTests(){
       break;
     }
   }
-
-  printf("\n\nMcEliece tests: %d passed out of %d\n\n",goodTests,tests);
+  printf("\n\n=======================================================\n");
+  printf("McEliece tests: %d passed out of %d\n",goodTests,tests);
+  printf("=======================================================\n\n");
   PopArena(mark);
 
   return (goodTests == tests) ? 0 : 1;
