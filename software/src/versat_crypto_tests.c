@@ -365,6 +365,9 @@ int VersatMcElieceTests(){
   }
   printf("\n\n=======================================================\n");
   printf("McEliece tests: %d passed out of %d\n",goodTests,tests);
+  printf("  No time taken since software implementation is really\n");
+  printf("  slow, so we would just be wasting time. We are alredy\n");
+  printf("  comparing solutions to a KAT.\n");
   printf("=======================================================\n\n");
   PopArena(mark);
 
