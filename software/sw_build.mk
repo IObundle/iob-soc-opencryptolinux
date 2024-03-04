@@ -1,3 +1,4 @@
+
 #########################################
 #            Embedded targets           #
 #########################################
@@ -10,6 +11,10 @@ GET_MACRO = $(shell grep "define $(1)" $(2) | rev | cut -d" " -f1 | rev)
 
 #Function to obtain parameter named $(1) from iob_soc_opencryptolinux_conf.vh
 GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO = $(call GET_MACRO,IOB_SOC_OPENCRYPTOLINUX_$(1),$(ROOT_DIR)/hardware/src/iob_soc_opencryptolinux_conf.vh)
+
+ifneq ($(shell grep -s "#define SIMULATION" src/bsp.h),)
+SIMULATION=1
+endif
 
 iob_soc_opencryptolinux_boot.hex: ../../software/iob_soc_opencryptolinux_boot.bin
 	../../scripts/makehex.py $< $(call GET_IOB_SOC_OPENCRYPTOLINUX_CONF_MACRO,BOOTROM_ADDR_W) > $@
@@ -63,7 +68,7 @@ TEMPLATE_LDS=src/$@.lds
 
 IOB_SOC_OPENCRYPTOLINUX_CFLAGS ?=-Os -nostdlib -march=rv32imac -mabi=ilp32 --specs=nano.specs -Wcast-align=strict
 
-IOB_SOC_OPENCRYPTOLINUX_INCLUDES=-I. -Isrc 
+IOB_SOC_OPENCRYPTOLINUX_INCLUDES=-I. -Isrc -Isrc/crypto/McEliece -Isrc/crypto/McEliece/common
 
 IOB_SOC_OPENCRYPTOLINUX_LFLAGS=-Wl,-Bstatic,-T,$(TEMPLATE_LDS),--strip-debug
 
@@ -71,6 +76,16 @@ IOB_SOC_OPENCRYPTOLINUX_LFLAGS=-Wl,-Bstatic,-T,$(TEMPLATE_LDS),--strip-debug
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC=src/iob_soc_opencryptolinux_firmware.S
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/iob_soc_opencryptolinux_firmware.c
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/printf.c
+
+# NOTE(Ruben): To speed up simulation, we do not include or simulate crypto code in simulation. It greatly increases binary size and some tests would take forever. Better to run all tests in fpga-run.
+ifneq ($(SIMULATION),1)
+IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/versat_crypto.c
+IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/versat_crypto_tests.c
+IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/crypto/aes.c
+IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(wildcard src/crypto/McEliece/*.c)
+IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(wildcard src/crypto/McEliece/common/*.c)
+endif
+
 # PERIPHERAL SOURCES
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(wildcard src/iob-*.c)
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=$(filter-out %_emul.c, $(wildcard src/*swreg*.c))

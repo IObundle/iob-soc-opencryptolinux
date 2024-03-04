@@ -11,6 +11,8 @@
 #include "riscv-csr.h"
 #include "riscv-interrupts.h"
 
+#include "versat_crypto_tests.h"
+
 #ifdef SIMULATION
 #define WAIT_TIME 0.001
 #else
@@ -34,7 +36,7 @@ void clear_cache(){
 }
 
 // Send signal by uart to receive file by ethernet
-uint32_t uart_recvfile_ethernet(char *file_name) {
+uint32_t uart_recvfile_ethernet(const char *file_name) {
 
   uart16550_puts(UART_PROGNAME);
   uart16550_puts (": requesting to receive file by ethernet\n");
@@ -56,7 +58,6 @@ uint32_t uart_recvfile_ethernet(char *file_name) {
 
   return file_size;
 }
-
 
 // copy src to dst
 // return number of copied chars (excluding '\0')
@@ -86,6 +87,13 @@ int compare_str(char *str1, char *str2, int str_size) {
   return 0;
 }
 
+// Needed by crypto side to time algorithms.
+// Does not need to return seconds or any time unit, we are comparing directly with the software implementation. 
+// Only care about the relative differences
+int GetTime(){
+  return clint_getTime(CLINT0_BASE);
+}
+
 int main() {
   char pass_string[] = "Test passed!";
   uint_xlen_t irq_entry_copy;
@@ -107,6 +115,10 @@ int main() {
   uart16550_puts("\nFile received from console via ethernet:\n");
   for(i=0; i<file_size; i++)
     uart16550_putc(buffer[i]);
+#endif
+
+#ifndef SIMULATION
+  InitializeCryptoSide(VERSAT0_BASE);
 #endif
 
   printf("\n\n\nHello world!\n\n\n");
@@ -134,7 +146,21 @@ int main() {
   // Global interrupt disable
   csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 
-  uart16550_sendfile("test.log", 12, "Test passed!");
+  int testResult = 0;
+
+#ifndef SIMULATION
+  // Tests are too big and slow to perform during simulation.
+  // Comment out the source files in sw_build.mk to also reduce binary size and speedup simulation.
+  testResult |= VersatSHATests();
+  testResult |= VersatAESTests();
+  testResult |= VersatMcElieceTests();
+#endif
+
+  if(testResult){
+    uart16550_sendfile("test.log", 12, "Test failed!");
+  } else {
+    uart16550_sendfile("test.log", 12, "Test passed!");
+  }
 
   printf("Exit...\n");
   uart16550_finish();
