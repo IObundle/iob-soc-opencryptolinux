@@ -286,6 +286,7 @@ static size_t crypto_hashblocks_sha256(uint8_t *statebytes,
     return inlen;
 }
 
+#if 0
 static size_t crypto_hashblocks_sha512(uint8_t *statebytes,
                                        const uint8_t *in, size_t inlen) {
     uint64_t state[8];
@@ -468,6 +469,7 @@ static const uint8_t iv_224[32] = {
     0xff, 0xc0, 0x0b, 0x31, 0x68, 0x58, 0x15, 0x11,
     0x64, 0xf9, 0x8f, 0xa7, 0xbe, 0xfa, 0x4f, 0xa4
 };
+#endif
 
 static const uint8_t iv_256[32] = {
     0x6a, 0x09, 0xe6, 0x67, 0xbb, 0x67, 0xae, 0x85,
@@ -476,6 +478,7 @@ static const uint8_t iv_256[32] = {
     0x1f, 0x83, 0xd9, 0xab, 0x5b, 0xe0, 0xcd, 0x19
 };
 
+#if 0
 static const uint8_t iv_384[64] = {
     0xcb, 0xbb, 0x9d, 0x5d, 0xc1, 0x05, 0x9e, 0xd8, 0x62, 0x9a, 0x29,
     0x2a, 0x36, 0x7c, 0xd5, 0x07, 0x91, 0x59, 0x01, 0x5a, 0x30, 0x70,
@@ -493,7 +496,9 @@ static const uint8_t iv_512[64] = {
     0x2b, 0x3e, 0x6c, 0x1f, 0x1f, 0x83, 0xd9, 0xab, 0xfb, 0x41, 0xbd,
     0x6b, 0x5b, 0xe0, 0xcd, 0x19, 0x13, 0x7e, 0x21, 0x79
 };
+#endif
 
+#if 0
 void sha224_inc_init(sha224ctx *state) {
     state->ctx = malloc(PQC_SHA256CTX_BYTES);
     if (state->ctx == NULL) {
@@ -506,6 +511,7 @@ void sha224_inc_init(sha224ctx *state) {
         state->ctx[i] = 0;
     }
 }
+#endif
 
 void sha256_inc_init(sha256ctx *state) {
     state->ctx = malloc(PQC_SHA256CTX_BYTES);
@@ -520,6 +526,7 @@ void sha256_inc_init(sha256ctx *state) {
     }
 }
 
+#if 0
 void sha384_inc_init(sha384ctx *state) {
     state->ctx = malloc(PQC_SHA512CTX_BYTES);
     if (state->ctx == NULL) {
@@ -553,6 +560,7 @@ void sha224_inc_ctx_clone(sha224ctx *stateout, const sha224ctx *statein) {
     }
     memcpy(stateout->ctx, statein->ctx, PQC_SHA256CTX_BYTES);
 }
+#endif
 
 void sha256_inc_ctx_clone(sha256ctx *stateout, const sha256ctx *statein) {
     stateout->ctx = malloc(PQC_SHA256CTX_BYTES);
@@ -562,6 +570,7 @@ void sha256_inc_ctx_clone(sha256ctx *stateout, const sha256ctx *statein) {
     memcpy(stateout->ctx, statein->ctx, PQC_SHA256CTX_BYTES);
 }
 
+#if 0
 void sha384_inc_ctx_clone(sha384ctx *stateout, const sha384ctx *statein) {
     stateout->ctx = malloc(PQC_SHA512CTX_BYTES);
     if (stateout->ctx == NULL) {
@@ -582,12 +591,14 @@ void sha512_inc_ctx_clone(sha512ctx *stateout, const sha512ctx *statein) {
 void sha224_inc_ctx_release(sha224ctx *state) {
     free(state->ctx);
 }
+#endif
 
 /* Destroy the hash state. */
 void sha256_inc_ctx_release(sha256ctx *state) {
     free(state->ctx);
 }
 
+#if 0
 /* Destroy the hash state. */
 void sha384_inc_ctx_release(sha384ctx *state) {
     free(state->ctx);
@@ -597,6 +608,7 @@ void sha384_inc_ctx_release(sha384ctx *state) {
 void sha512_inc_ctx_release(sha512ctx *state) {
     free(state->ctx);
 }
+#endif
 
 void sha256_inc_blocks(sha256ctx *state, const uint8_t *in, size_t inblocks) {
     uint64_t bytes = load_bigendian_64(state->ctx + 32);
@@ -607,6 +619,7 @@ void sha256_inc_blocks(sha256ctx *state, const uint8_t *in, size_t inblocks) {
     store_bigendian_64(state->ctx + 32, bytes);
 }
 
+#if 0
 void sha224_inc_blocks(sha224ctx *state, const uint8_t *in, size_t inblocks) {
     sha256_inc_blocks((sha256ctx *) state, in, inblocks);
 }
@@ -623,6 +636,7 @@ void sha512_inc_blocks(sha512ctx *state, const uint8_t *in, size_t inblocks) {
 void sha384_inc_blocks(sha384ctx *state, const uint8_t *in, size_t inblocks) {
     sha512_inc_blocks((sha512ctx *) state, in, inblocks);
 }
+#endif
 
 void sha256_inc_finalize(uint8_t *out, sha256ctx *state, const uint8_t *in, size_t inlen) {
     uint8_t padded[128];
@@ -672,6 +686,7 @@ void sha256_inc_finalize(uint8_t *out, sha256ctx *state, const uint8_t *in, size
     sha256_inc_ctx_release(state);
 }
 
+#if 0
 void sha224_inc_finalize(uint8_t *out, sha224ctx *state, const uint8_t *in, size_t inlen) {
     uint8_t tmp[32];
     sha256_inc_finalize(tmp, (sha256ctx *)state, in, inlen);
@@ -746,6 +761,7 @@ void sha224(uint8_t *out, const uint8_t *in, size_t inlen) {
     sha224_inc_init(&state);
     sha224_inc_finalize(out, &state, in, inlen);
 }
+#endif
 
 void sha256(uint8_t *out, const uint8_t *in, size_t inlen) {
     sha256ctx state;
@@ -754,6 +770,7 @@ void sha256(uint8_t *out, const uint8_t *in, size_t inlen) {
     sha256_inc_finalize(out, &state, in, inlen);
 }
 
+#if 0
 void sha384(uint8_t *out, const uint8_t *in, size_t inlen) {
     sha384ctx state;
 
@@ -767,3 +784,4 @@ void sha512(uint8_t *out, const uint8_t *in, size_t inlen) {
     sha512_inc_init(&state);
     sha512_inc_finalize(out, &state, in, inlen);
 }
+#endif
