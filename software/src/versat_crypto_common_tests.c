@@ -10,10 +10,7 @@
 #include "crypto/aes.h"
 #include "crypto/sha2.h"
 
-// McEliece
-#include "api.h"
 #include "arena.h"
-void nist_kat_init(unsigned char *entropy_input, unsigned char *personalization_string, int security_strength);
 
 #include "string.h"
 

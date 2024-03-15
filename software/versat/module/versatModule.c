@@ -9,6 +9,12 @@
 #include <linux/interrupt.h>
 #include <linux/types.h>
 #include <asm/uaccess.h>
+#include <asm/io.h>
+
+//static inline void __iomem *ioremap(phys_addr_t addr, size_t size)
+//void iounmap(volatile void __iomem *addr);
+
+void *memremap(resource_size_t offset, size_t size, unsigned long flags); // MEMREMAP_WT or MEMREMAP_WB
 
 static struct class* class;
 static struct device* device;
@@ -18,16 +24,79 @@ static int major;
 #define DEVICE_NAME "versat"
 #define CLASS_NAME  "versat_class"
 
-static int module_release(struct inode *inodep, struct file *filep)
-{
+static int module_release(struct inode* inodep, struct file* filp){
    printk(KERN_INFO "Device closed\n");
 
    return 0;
 }
 
-static int module_open(struct inode *inodep, struct file *filep)
-{
+static int module_open(struct inode* inodep, struct file* filp){
    printk(KERN_INFO "Device opened\n");
+
+   return 0;
+}
+
+#if 0
+static void* alloc_mapable_pages(int pages){
+   int i;
+   int size = PAGE_SIZE * pages;
+   char* mem = kmalloc(size,GFP_DMA | GFP_USER);
+
+   if(mem == NULL){
+      return NULL;
+   }
+
+   for(i = 0; i < size; i += PAGE_SIZE){
+      SetPageReserved(virt_to_page((unsigned long)mem) + i);
+   }
+
+   return mem;
+}
+#endif
+
+#if 0
+static void free_mapable_pages(void *mem, int npages){
+   int i;
+   for(i = 0; i < npages * PAGE_SIZE; i += PAGE_SIZE) {
+      ClearPageReserved(virt_to_page(((unsigned long)mem) + i));
+
+   kfree(mem);
+}
+#endif
+
+static int module_mmap(struct file* filp, struct vm_area_struct* vma){
+   unsigned long size;
+   struct page* page;
+   void* cpu_mem;
+   unsigned long pageStart;
+   int res;
+
+   size = (unsigned long)(vma->vm_end - vma->vm_start);
+
+   printk(KERN_INFO "Size %lu\n",size);
+   page = alloc_page(GFP_KERNEL); // alloc_page(GFP_DMA | GFP_USER)
+   if(page == NULL){
+      printk(KERN_INFO "Error allocating page\n");
+      return -EIO;
+   }
+
+   cpu_mem = page_address(page); //alloc_mapable_pages(pages); 
+   printk(KERN_INFO "Virtual Address %px\n",cpu_mem);
+
+   if(cpu_mem == NULL){
+      pr_err("Failed to allocate memory\n");
+      return -EIO;
+   }
+
+   pageStart = page_to_pfn(page);
+   printk(KERN_INFO "PageStart %lx\n",pageStart);
+
+   res = remap_pfn_range(vma,vma->vm_start,pageStart,size,vma->vm_page_prot);
+   printk(KERN_INFO "VM Start %lx\n",vma->vm_start);
+   if(res != 0){
+      pr_err("Failed to remap\n");
+      return -EIO;
+   }
 
    return 0;
 }
@@ -35,6 +104,7 @@ static int module_open(struct inode *inodep, struct file *filep)
 static const struct file_operations fops = {
    .open = module_open,
    .release = module_release,
+   .mmap = module_mmap,
    .owner = THIS_MODULE,
 };
 
