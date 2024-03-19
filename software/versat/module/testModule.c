@@ -4,15 +4,18 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
 #include <stdio.h>
-
-#if 0
 
 #include "arena.h"
 #include "versat.h"
 #include "versat_accel.h"
 #include "versat_crypto.h"
+#include "unitConfiguration.h"
+
+#if 0
+
 
 #include <stdint.h>
 #include <string.h>
@@ -128,6 +131,7 @@ static TestState VersatCommonSHATests(String content){
 #endif
 
 int main(int argc,const char* argv){
+#if 1
    int versat = -1;
    {
       versat = open("/dev/versat",O_RDWR | O_SYNC);
@@ -136,36 +140,9 @@ int main(int argc,const char* argv){
          return -1;
       }
    }
+#endif
 
-   void* res = mmap(0,4096,PROT_READ | PROT_WRITE,MAP_SHARED,versat,0);
-
-   if(res == MAP_FAILED){
-      printf("mmap failed\n");
-      return -1;
-   }
-
-   printf("here %p\n",res);
-   fflush(stdout);
-
-   char* view = (char*) res;
-
-   for(int i = 0; i < 8; i++){
-      view[i] = i + 1;
-   }
-
-   for(int i = 0; i < 8; i++){
-      printf("%c\n",view[i]);
-   }
-
-   {
-      int fd = close(versat);
-      if(fd == -1){
-         puts("Open versat is -1\n");
-         return -1;
-      }
-   }
-
-#if 0
+#if 1
    int mem = -1;
    {
       mem = open("/dev/mem",O_RDWR | O_SYNC);
@@ -174,7 +151,7 @@ int main(int argc,const char* argv){
          return -1;
       }
    }
-
+{
    void* res = mmap(0, versatAddressSpace, PROT_READ | PROT_WRITE, MAP_SHARED,mem,VERSAT_ADDRESS);   
 
    if(res == MAP_FAILED){
@@ -183,14 +160,58 @@ int main(int argc,const char* argv){
       return -1;
    }
 
-
-   int* view = (int*) res;
-   printf("VersatRead: %d\n",*view);
-
    versat_init((int) res);
+}
+#endif
 
-   String content = STRING("LEN = 0\nMSG = 00\nMD = E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855");
-   TestState result = VersatCommonSHATests(content);
+   void* res = mmap(0,4096,PROT_READ | PROT_WRITE,MAP_SHARED,versat,0);
+
+   if(res == MAP_FAILED){
+      printf("mmap failed\n");
+      return -1;
+   }
+
+   void* physical_address;
+   int res2 = ioctl(versat,0,&physical_address);
+
+   if(res2){
+      printf("Failed to call ioctl\n");
+      return 0;
+   }
+
+   printf("Got physical %p\n",physical_address);
+
+   int* input = (int*) res;
+   printf("%d\n",input[0]);
+
+   for(int i = 0; i < 8; i++){
+      input[i] = i + 1;
+   }
+
+   int* output = (int*) &input[16];
+
+   int* inputPhysical = (int*) physical_address;
+   int* outputPhysical = (int*) &inputPhysical[16];
+
+   McElieceConfig* config = (McElieceConfig*) accelConfig;
+
+   ConfigureSimpleVRead(&config->row,8,inputPhysical);
+   ConfigureSimpleVWrite(&config->writer,8,outputPhysical);
+
+   RunAccelerator(3);
+
+   for(int i = 0; i < 8; i++){
+      printf("%d\n",output[i]);
+   }
+
+#if 1
+   {
+      int fd = close(versat);
+      if(fd == -1){
+         puts("Open versat is -1\n");
+         return -1;
+      }
+   }
 #endif
 
    return 0;

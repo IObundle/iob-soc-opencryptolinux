@@ -3,6 +3,7 @@ PWD:=$(shell pwd)
 obj-m += versatModule.o
 
 SRC:=testModule.c
+SRC+=iob-versat.c
 #SRC+=iob-versat.c arena.c versat_crypto.c
 
 # Need to use nix-shell started from the OS submodules to compile
