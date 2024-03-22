@@ -1,10 +1,11 @@
 LINUX_DIR := ../../../submodules/OS/submodules/linux-5.15.98
 PWD:=$(shell pwd)
-obj-m += versatModule.o
+obj-m += phys.o
 
 SRC:=testModule.c
 SRC+=iob-versat.c
-#SRC+=iob-versat.c arena.c versat_crypto.c
+SRC+=arena.c 
+#SRC+=iob-versat.c versat_crypto.c
 
 # Need to use nix-shell started from the OS submodules to compile
 all: test module
@@ -18,4 +19,4 @@ test:
 
 clean:
 	find . ! -name 'Makefile' -and ! -name '*.c' -and ! -name '*.h' -and ! -name '*.sh' -type f -exec rm -f {} +
-	rm versatModule.mod.c
+	rm phys.mod.c

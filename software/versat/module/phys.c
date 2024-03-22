@@ -11,21 +11,17 @@
 #include <asm/uaccess.h>
 #include <asm/io.h>
 
-//static inline void __iomem *ioremap(phys_addr_t addr, size_t size)
-//void iounmap(volatile void __iomem *addr);
-
-void *memremap(resource_size_t offset, size_t size, unsigned long flags); // MEMREMAP_WT or MEMREMAP_WB
+// TODO: Do not know if this module supports concurrent access. I believe it does because no use of shared memory but have not tested it.
 
 static struct class* class;
 static struct device* device;
-static struct kobject* kobj_ptr;
 
 static void* last_physical;
 
 static int major; 
 
-#define DEVICE_NAME "versat"
-#define CLASS_NAME  "versat_class"
+#define DEVICE_NAME "phys"
+#define CLASS_NAME  "phys_class"
 
 static int module_release(struct inode* inodep, struct file* filp){
    printk(KERN_INFO "Device closed\n");
@@ -39,92 +35,65 @@ static int module_open(struct inode* inodep, struct file* filp){
    return 0;
 }
 
-#if 0
-static void* alloc_mapable_pages(int pages){
-   int i;
-   int size = PAGE_SIZE * pages;
-   char* mem = kmalloc(size,GFP_DMA | GFP_USER);
-
-   if(mem == NULL){
-      return NULL;
+static unsigned int numberToNextOrder(int val){
+   unsigned int order = 0;
+   while((1 << order) < val){
+      order += 1;
    }
-
-   for(i = 0; i < size; i += PAGE_SIZE){
-      SetPageReserved(virt_to_page((unsigned long)mem) + i);
-   }
-
-   return mem;
-}
-#endif
-
-#if 0
-static void free_mapable_pages(void *mem, int npages){
-   int i;
-   for(i = 0; i < npages * PAGE_SIZE; i += PAGE_SIZE) {
-      ClearPageReserved(virt_to_page(((unsigned long)mem) + i));
-
-   kfree(mem);
-}
-#endif
-
-#ifdef pgprot_noncached
-static int uncached_access(struct file *file, phys_addr_t addr)
-{
-#if defined(CONFIG_IA64)
-   /*
-    * On ia64, we ignore O_DSYNC because we cannot tolerate memory
-    * attribute aliases.
-    */
-   return !(efi_mem_attributes(addr) & EFI_MEMORY_WB);
-#else
-   /*
-    * Accessing memory above the top the kernel knows about or through a
-    * file pointer
-    * that was marked O_DSYNC will be done non-cached.
-    */
-   if (file->f_flags & O_DSYNC)
-      return 1;
-   return addr >= __pa(high_memory);
-#endif
-}
-#endif
-
-static pgprot_t phys_mem_access_prot(struct file *file, unsigned long pfn,
-                 unsigned long size, pgprot_t vma_prot)
-{
-#ifdef pgprot_noncached
-   phys_addr_t offset = pfn << PAGE_SHIFT;
-
-   if (uncached_access(file, offset))
-      return pgprot_noncached(vma_prot);
-#endif
-   return vma_prot;
+   return order;
 }
 
-static const struct vm_operations_struct mmap_mem_ops = {
-#ifdef CONFIG_HAVE_IOREMAP_PROT
-   .access = generic_access_phys
-#endif
+void module_vma_close(struct vm_area_struct *vma){
+   int pageSize;
+   void* virtual_mem;
+   int order;
+   uintptr_t data = (uintptr_t) vma->vm_private_data;
+
+   pageSize = 1 << PAGE_SHIFT;
+   virtual_mem = (void*) (data & ~(pageSize - 1));
+   order = (int) (data & (pageSize - 1));
+
+   printk(KERN_NOTICE "Simple VMA close, virt %lx, Priv: %px Virt: %px Ord: %d\n ",vma->vm_start,vma->vm_private_data,virtual_mem,order);
+
+   free_pages((unsigned long) virtual_mem,order);
+}
+
+static struct vm_operations_struct simple_remap_vm_ops = {
+   .close = module_vma_close,
 };
 
 static int module_mmap(struct file* file, struct vm_area_struct* vma){
    unsigned long size;
    struct page* page;
    void* virtual_mem;
-   void* physical_mem;
    unsigned long pageStart;
    int res;
    int* view;
+   unsigned int order;
+   int amountPages;
+   int pageSize;
 
    size = (unsigned long)(vma->vm_end - vma->vm_start);
+   pageSize = 1 << PAGE_SHIFT;
+   printk(KERN_INFO "PageSize %d\n",pageSize);
+   printk(KERN_INFO "Size %lu",size);
 
-   printk(KERN_INFO "Size %lu\n",size);
-   page = alloc_page(GFP_KERNEL); // alloc_page(GFP_DMA | GFP_USER)
+   // Only support page aligned sizes
+   if((size & (pageSize - 1)) != 0){
+      return -EIO;
+   }
+
+   amountPages = (size + pageSize - 1) / pageSize;
+   order = numberToNextOrder(amountPages);
+
+   printk(KERN_INFO "Size %lu %d %u\n",size,amountPages,order);
+   page = alloc_pages(GFP_KERNEL,order);
    if(page == NULL){
       printk(KERN_INFO "Error allocating page\n");
       return -EIO;
    }
 
+   // TODO: Zero out the pages.
    virtual_mem = page_address(page); //alloc_mapable_pages(pages); 
    printk(KERN_INFO "Virtual Address %px\n",virtual_mem);
 
@@ -146,14 +115,8 @@ static int module_mmap(struct file* file, struct vm_area_struct* vma){
       return -EIO;
    }
 
-   view = (int*) virtual_mem;
-   printk(KERN_INFO "Gonna test write\n");
-
-   view[0] = 123;
-
-   printk(KERN_INFO "Gonna test read\n");
-
-   printk(KERN_INFO "%d\n",view[0]);
+   vma->vm_private_data = (void*) ((uintptr_t)virtual_mem | (uintptr_t)order); // Store order in the lower bits that are guaranteed to be zero because virtual_mem is page aligned
+   vma->vm_ops = &simple_remap_vm_ops;
 
    return 0;
 }
@@ -181,8 +144,7 @@ static const struct file_operations fops = {
    .owner = THIS_MODULE,
 };
 
-int versat_init(void){
-   char* virtual_mem;
+int phys_init(void){
    int ret = -1;
 
    major = register_chrdev(0, DEVICE_NAME, &fops);
@@ -206,7 +168,7 @@ int versat_init(void){
       goto failed_device_create;
    }
 
-   printk(KERN_INFO "Successfully loaded Versat\n");
+   printk(KERN_INFO "Successfully loaded phys\n");
 
    return 0;
 
@@ -221,7 +183,7 @@ failed_major_register:
    return ret;
 }
 
-void versat_exit(void)
+void phys_exit(void)
 {
    // This portion should reflect the error handling of this_module_init
    device_destroy(class, MKDEV(major, 0));
@@ -229,9 +191,9 @@ void versat_exit(void)
    class_destroy(class);
    unregister_chrdev(major, DEVICE_NAME);
 
-   printk(KERN_INFO "versat unregistered!\n");
+   printk(KERN_INFO "phys unregistered!\n");
 }
 
-module_init(versat_init);
-module_exit(versat_exit);
+module_init(phys_init);
+module_exit(phys_exit);
 MODULE_LICENSE("GPL");

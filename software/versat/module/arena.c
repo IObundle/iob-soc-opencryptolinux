@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#include "printf.h"
+#include <stdio.h>
 
 typedef struct{
   char* ptr;

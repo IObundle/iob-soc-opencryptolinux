@@ -1,2 +1,2 @@
-scp versatModule.ko rteixeira@sericaia.iobundle.com:/home/rteixeira/modules/
+scp phys.ko rteixeira@sericaia.iobundle.com:/home/rteixeira/modules/
 scp testModule rteixeira@sericaia.iobundle.com:/home/rteixeira/modules
