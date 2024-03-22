@@ -68,7 +68,6 @@ static int module_mmap(struct file* file, struct vm_area_struct* vma){
    void* virtual_mem;
    unsigned long pageStart;
    int res;
-   int* view;
    unsigned int order;
    int amountPages;
    int pageSize;

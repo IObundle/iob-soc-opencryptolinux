@@ -395,24 +395,6 @@ static TestState VersatCommonSHATests(String content){
 }
 
 int main(int argc,const char* argv){
-  PhysicalAllocator alloc = OpenPhysicalAllocator();
-  if(PhysicalAllocatorError(alloc)){
-    printf("Failed opening allocator\n");
-    return -1;
-  }
-
-  int size = 1024 * 1024; // 1 Megabyte
-  while(size > 4096){
-     PhysicalBuffer buffer = AllocatePhysicalBuffer(alloc,size);
-     if(PhysicalBufferError(buffer)){
-      size /= 2;
-     } else {
-      return 0;
-     }
-  }
-
-  return 0;
-
    int mem = -1;
    {
       mem = open("/dev/mem",O_RDWR | O_SYNC);
@@ -420,18 +402,16 @@ int main(int argc,const char* argv){
          puts("Open mem is -1\n");
          return -1;
       }
-   }
-{
-   void* res = mmap(0, versatAddressSpace, PROT_READ | PROT_WRITE, MAP_SHARED,mem,VERSAT_ADDRESS);   
+      void* res = mmap(0, versatAddressSpace, PROT_READ | PROT_WRITE, MAP_SHARED,mem,VERSAT_ADDRESS);   
 
-   if(res == MAP_FAILED){
-      puts("Mmap failed\n");
-      printf("%d",errno);
-      return -1;
-   }
+      if(res == MAP_FAILED){
+         puts("Mmap failed\n");
+         printf("%d",errno);
+         return -1;
+      }
 
-   versat_init((int) res);
-}
+      versat_init((int) res);
+   }
 
    InitArena(4096);
 
