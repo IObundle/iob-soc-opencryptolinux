@@ -200,6 +200,7 @@ class iob_soc_opencryptolinux(iob_soc):
             # Set custom ethernet CONSOLE_CMD
             contents.append(
                 f"""
+GRAB_TIMEOUT = 600
 ### Launch minicom if running Linux
 # pass CI variable over ssh commands
 UFLAGS+=CI=$(CI)
