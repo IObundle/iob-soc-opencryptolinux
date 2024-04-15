@@ -117,6 +117,7 @@ int main() {
   // Global interrupt disable
   csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 
+#ifdef SIMULATION
   unsigned int word = 0xFAFAB0CA;
   unsigned int address = 0x000100;
   unsigned int read_mem = 0xF0F0F0F0;
@@ -238,7 +239,9 @@ int main() {
     printf("\nRead from memory address (%x) the word: (%x)\n", address + 1,
            read_mem);
   }
+#endif // SIMULATION
 
+  uart16550_sendfile("test.log", 12, "Test passed!");
   printf("Exit...\n");
   uart16550_finish();
 
