@@ -12,6 +12,8 @@ ifeq ($(SIMULATOR),verilator)
 # verilator top module
 VTOP:=iob_soc_opencryptolinux_sim_wrapper
 
+VSRC_TMP:=$(filter-out ./src/N25Qxxx.v,$(VSRC))
+VSRC=$(VSRC_TMP)
 endif
 
 CONSOLE_CMD ?=../../scripts/console.py -L

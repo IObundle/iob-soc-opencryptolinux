@@ -118,7 +118,8 @@ int main() {
   csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 
 #ifdef SIMULATION
-  unsigned int word = 0xFAFAB0CA;
+#ifndef VERILATOR
+  unsigned int word = 0xA3A2A1A0;
   unsigned int address = 0x000100;
   unsigned int read_mem = 0xF0F0F0F0;
   printf("\nTest: %x, %x.\n", word, read_mem);
@@ -239,7 +240,8 @@ int main() {
     printf("\nRead from memory address (%x) the word: (%x)\n", address + 1,
            read_mem);
   }
-#endif // SIMULATION
+#endif // #ifndef VERILATOR
+#endif // #ifdef SIMULATION
 
   uart16550_sendfile("test.log", 12, "Test passed!");
   printf("Exit...\n");

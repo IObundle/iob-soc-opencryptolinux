@@ -61,7 +61,12 @@ UTARGETS+=build_iob_soc_opencryptolinux_software
 
 TEMPLATE_LDS=src/$@.lds
 
-IOB_SOC_OPENCRYPTOLINUX_CFLAGS ?=-Os -nostdlib -march=rv32imac -mabi=ilp32 --specs=nano.specs -Wcast-align=strict
+# define simulator in uppercase
+ifneq ($(SIMULATOR),)
+SIM_DEFINE=-D$(shell echo $(SIMULATOR) | tr  '[:lower:]' '[:upper:]')
+endif
+
+IOB_SOC_OPENCRYPTOLINUX_CFLAGS ?=-Os -nostdlib -march=rv32imac -mabi=ilp32 --specs=nano.specs -Wcast-align=strict $(SIM_DEFINE)
 
 IOB_SOC_OPENCRYPTOLINUX_INCLUDES=-I. -Isrc 
 
