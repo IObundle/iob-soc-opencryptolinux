@@ -1,5 +1,6 @@
 #include "bsp.h"
 #include "clint.h"
+#include "iob-eth.h"
 #include "iob-spi.h"
 #include "iob-spidefs.h"
 #include "iob-spiplatform.h"
@@ -9,7 +10,6 @@
 #include "iob_soc_opencryptolinux_system.h"
 #include "plic.h"
 #include "printf.h"
-#include "iob-eth.h"
 #include <string.h>
 
 #include "riscv-csr.h"
@@ -29,9 +29,10 @@ static void irq_entry(void) __attribute__((interrupt("machine")));
 // Global to hold current timestamp
 static volatile uint64_t timestamp = 0;
 
-void clear_cache(){
+void clear_cache() {
   // Delay to ensure all data is written to memory
-  for ( unsigned int i = 0; i < 10; i++)asm volatile("nop");
+  for (unsigned int i = 0; i < 10; i++)
+    asm volatile("nop");
   // Flush VexRiscv CPU internal cache
   asm volatile(".word 0x500F" ::: "memory");
 }
@@ -40,13 +41,14 @@ void clear_cache(){
 uint32_t uart_recvfile_ethernet(char *file_name) {
 
   uart16550_puts(UART_PROGNAME);
-  uart16550_puts (": requesting to receive file by ethernet\n");
+  uart16550_puts(": requesting to receive file by ethernet\n");
 
-  //send file receive by ethernet request
-  uart16550_putc (0x13);
+  // send file receive by ethernet request
+  uart16550_putc(0x13);
 
-  //send file name (including end of string)
-  uart16550_puts(file_name); uart16550_putc(0);
+  // send file name (including end of string)
+  uart16550_puts(file_name);
+  uart16550_putc(0);
 
   // receive file size
   uint32_t file_size = uart16550_getc();
@@ -59,7 +61,6 @@ uint32_t uart_recvfile_ethernet(char *file_name) {
 
   return file_size;
 }
-
 
 // copy src to dst
 // return number of copied chars (excluding '\0')
@@ -93,6 +94,7 @@ int main() {
   char pass_string[] = "Test passed!";
   uint_xlen_t irq_entry_copy;
   int i;
+  int failed = 0;
 
   // init uart
   uart16550_init(UART0_BASE, FREQ / (16 * BAUD));
@@ -106,9 +108,9 @@ int main() {
   char buffer[5096];
   // Receive data from console via Ethernet
   uint32_t file_size = uart_recvfile_ethernet("../src/eth_example.txt");
-  eth_rcv_file(buffer,file_size);
+  eth_rcv_file(buffer, file_size);
   uart16550_puts("\nFile received from console via ethernet:\n");
-  for(i=0; i<file_size; i++)
+  for (i = 0; i < file_size; i++)
     uart16550_putc(buffer[i]);
 #endif
 
@@ -154,31 +156,59 @@ int main() {
   } else {
     printf("\nDifferent word from memory\nRead: (%x), Programmed: (%x)\n",
            read_mem, word);
+    failed = 1;
   }
 
   address = 0x0;
   read_mem = 1;
   printf("\nTesting dual output fast read\n");
-  read_mem = spiflash_readfastDualOutput(address + 1, 0);
+  read_mem = spiflash_readfastDualOutput(address, 0);
   printf("\nRead from memory address (%x) the word: (%x)\n", address, read_mem);
+  word = read_mem;
 
   read_mem = 2;
   printf("\nTesting quad output fast read\n");
-  read_mem = spiflash_readfastQuadOutput(address + 1, 0);
-  printf("\nRead 2 from memory address (%x) the word: (%x)\n", address + 1,
-         read_mem);
+  read_mem = spiflash_readfastQuadOutput(address, 0);
+  if (read_mem == word) {
+    printf(
+        "\nQuadFastOutput Read (%x) got same word as Expected (%x)\nSuccess\n",
+        address, read_mem);
+  } else {
+    printf("\nQuadFastOutput Read (%x) Different word from memory\nRead: (%x), "
+           "Read: (%x),Expected: (%x)\n",
+           address, read_mem, word);
+    failed = 1;
+  }
 
   read_mem = 3;
   printf("\nTesting dual input output fast read 0xbb\n");
-  read_mem = spiflash_readfastDualInOutput(address + 1, 0);
-  printf("\nRead 2 from memory address (%x) the word: (%x)\n", address + 2,
-         read_mem);
+  read_mem = spiflash_readfastDualInOutput(address, 0);
+  if (read_mem == word) {
+    printf("\nDualFastInOutput Read (%x) got same word as Expected "
+           "(%x)\nSuccess\n",
+           address, read_mem);
+  } else {
+    printf(
+        "\nDualFastInOutput Read (%x) Different word from memory\nRead: (%x), "
+        "Read: (%x),Expected: (%x)\n",
+        address, read_mem, word);
+    failed = 1;
+  }
 
   read_mem = 4;
   printf("\nTesting quad input output fast read 0xeb\n");
-  read_mem = spiflash_readfastQuadInOutput(address + 1, 0);
-  printf("\nRead 2 from memory address (%x) the word: (%x)\n", address + 3,
-         read_mem);
+  read_mem = spiflash_readfastQuadInOutput(address, 0);
+  if (read_mem == word) {
+    printf("\nQuadFastInOutput Read (%x) got same word as Expected "
+           "(%x)\nSuccess\n",
+           address, read_mem);
+  } else {
+    printf(
+        "\nQuadFastInOutput Read (%x) Different word from memory\nRead: (%x), "
+        "Read: (%x),Expected: (%x)\n",
+        address, read_mem, word);
+    failed = 1;
+  }
 
   printf("\nRead Non volatile Register\n");
   unsigned nonVolatileReg = 0;
@@ -220,9 +250,19 @@ int main() {
   // Confirmation bit 0
   read_mem = 1;
   printf("\nTesting quad input output fast read with xip confirmation bit 0\n");
-  read_mem = spiflash_readfastQuadInOutput(address + 1, ACTIVEXIP);
-  printf("\nRead from memory address (%x) the word: (%x)\n", address + 1,
-         read_mem);
+  read_mem = spiflash_readfastQuadInOutput(address, ACTIVEXIP);
+  printf("\nRead from memory address (%x) the word: (%x)\n", address, read_mem);
+  if (read_mem == word) {
+    printf("\nQuadFastInOutput XIP Read (%x) got same word as Expected "
+           "(%x)\nSuccess\n",
+           address, read_mem);
+  } else {
+    printf("\nQuadFastInOutput XIP Read (%x) Different word from memory\nRead: "
+           "(%x), "
+           "Read: (%x),Expected: (%x)\n",
+           address, read_mem, word);
+    failed = 1;
+  }
 
   int xipEnabled = 10;
   xipEnabled = spiflash_terminateXipSequence();
@@ -233,17 +273,22 @@ int main() {
          "bits):(%x)\n",
          volconfigReg);
 
-  if (volconfigReg == 0xf3 || volconfigReg != 0xfb) {
+  // XIP Bit 0 -> XIP ON
+  if (((volconfigReg >> VOLCFG_XIP) & 0x1) == 0) {
     printf("\nAssuming Xip active, read from memory, confirmation bit 1\n");
     read_mem = 1;
-    read_mem = spiflash_readMemXip(address + 1, TERMINATEXIP);
-    printf("\nRead from memory address (%x) the word: (%x)\n", address + 1,
+    read_mem = spiflash_readMemXip(address, TERMINATEXIP);
+    printf("\nRead from memory address (%x) the word: (%x)\n", address,
            read_mem);
   }
 #endif // #ifndef VERILATOR
 #endif // #ifdef SIMULATION
 
-  uart16550_sendfile("test.log", 12, "Test passed!");
+  if (failed) {
+    uart16550_sendfile("test.log", 12, "Test failed!");
+  } else {
+    uart16550_sendfile("test.log", 12, "Test passed!");
+  }
   printf("Exit...\n");
   uart16550_finish();
 
