@@ -23,6 +23,8 @@
 
 #define MTIMER_SECONDS_TO_CLOCKS(SEC) ((uint64_t)(((SEC) * (FREQ))))
 
+#define NSAMPLES 16
+
 // Machine mode interrupt service routine
 static void irq_entry(void) __attribute__((interrupt("machine")));
 
@@ -143,7 +145,8 @@ int main() {
   // Read ID
   bytes = 4;
   readid = 0;
-  spiflash_executecommand(COMMANS, 0, 0, ((bytes * 8) << 8) | READ_ID, &readid);
+  spiflash_executecommand(COMMANS, 0, 0, ((bytes * 8) << 8) | READ_ID,
+  &readid);
 
   printf("\nREAD_ID: (%x)\n", readid);
   // Read from flash memory
@@ -163,20 +166,16 @@ int main() {
   read_mem = 1;
   printf("\nTesting dual output fast read\n");
   read_mem = spiflash_readfastDualOutput(address, 0);
-  printf("\nRead from memory address (%x) the word: (%x)\n", address, read_mem);
-  word = read_mem;
+  printf("\nRead from memory address (%x) the word: (%x)\n", address,
+  read_mem); word = read_mem;
 
   read_mem = 2;
   printf("\nTesting quad output fast read\n");
   read_mem = spiflash_readfastQuadOutput(address, 0);
   if (read_mem == word) {
-    printf(
-        "\nQuadFastOutput Read (%x) got same word as Expected (%x)\nSuccess\n",
-        address, read_mem);
+    printf("\nQuadFastOutput Read (%x) got same word as Expected (%x)\nSuccess\n", address, read_mem);
   } else {
-    printf("\nQuadFastOutput Read (%x) Different word from memory\nRead: (%x), "
-           "Read: (%x),Expected: (%x)\n",
-           address, read_mem, word);
+    printf("\nQuadFastOutput Read (%x) Different word from memory\nRead: (%x), Read: (%x),Expected: (%x)\n", address, read_mem, word);
     failed = 1;
   }
 
@@ -188,10 +187,7 @@ int main() {
            "(%x)\nSuccess\n",
            address, read_mem);
   } else {
-    printf(
-        "\nDualFastInOutput Read (%x) Different word from memory\nRead: (%x), "
-        "Read: (%x),Expected: (%x)\n",
-        address, read_mem, word);
+    printf( "\nDualFastInOutput Read (%x) Different word from memory\nRead: (%x), Read: (%x),Expected: (%x)\n", address, read_mem, word);
     failed = 1;
   }
 
@@ -203,10 +199,7 @@ int main() {
            "(%x)\nSuccess\n",
            address, read_mem);
   } else {
-    printf(
-        "\nQuadFastInOutput Read (%x) Different word from memory\nRead: (%x), "
-        "Read: (%x),Expected: (%x)\n",
-        address, read_mem, word);
+    printf("\nQuadFastInOutput Read (%x) Different word from memory\nRead: (%x), Read: (%x),Expected: (%x)\n", address, read_mem, word); 
     failed = 1;
   }
 
@@ -243,24 +236,17 @@ int main() {
 
   volconfigReg = 0;
   spiflash_readVolConfigReg(&volconfigReg);
-  printf(
-      "\nAfter xip bit write, Volatile Configuration Register (8 bits):(%x)\n",
-      volconfigReg);
+  printf("\nAfter xip bit write, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);
 
   // Confirmation bit 0
   read_mem = 1;
-  printf("\nTesting quad input output fast read with xip confirmation bit 0\n");
+  printf("\nTesting quad input output fast read with xip confirmation bit 0\n"); 
   read_mem = spiflash_readfastQuadInOutput(address, ACTIVEXIP);
-  printf("\nRead from memory address (%x) the word: (%x)\n", address, read_mem);
-  if (read_mem == word) {
-    printf("\nQuadFastInOutput XIP Read (%x) got same word as Expected "
-           "(%x)\nSuccess\n",
-           address, read_mem);
+  printf("\nRead from memory address (%x) the word: (%x)\n", address,
+  read_mem); if (read_mem == word) {
+    printf("\nQuadFastInOutput XIP Read (%x) got same word as Expected (%x)\nSuccess\n", address, read_mem);
   } else {
-    printf("\nQuadFastInOutput XIP Read (%x) Different word from memory\nRead: "
-           "(%x), "
-           "Read: (%x),Expected: (%x)\n",
-           address, read_mem, word);
+    printf("\nQuadFastInOutput XIP Read (%x) Different word from memory\nRead: (%x), Read: (%x),Expected: (%x)\n", address, read_mem, word);
     failed = 1;
   }
 
@@ -269,9 +255,7 @@ int main() {
   printf("\nAfter xip termination sequence: %d\n", xipEnabled);
   volconfigReg = 0;
   spiflash_readVolConfigReg(&volconfigReg);
-  printf("\nAfter xip termination sequence, Volatile Configuration Register (8 "
-         "bits):(%x)\n",
-         volconfigReg);
+  printf("\nAfter xip termination sequence, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);
 
   // XIP Bit 0 -> XIP ON
   if (((volconfigReg >> VOLCFG_XIP) & 0x1) == 0) {
@@ -281,6 +265,28 @@ int main() {
     printf("\nRead from memory address (%x) the word: (%x)\n", address,
            read_mem);
   }
+
+  printf("Testing program flash\n");
+  char prog_data[NSAMPLES] = {0};
+  char *char_data = NULL;
+  unsigned int read_data[NSAMPLES] = {0};
+  int sample = 0;
+  for (sample = 0; sample < NSAMPLES; sample++) {
+    prog_data[sample] = sample;
+  }
+  spiflash_memProgram(prog_data, NSAMPLES, 0x104);
+  for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
+    read_data[sample>>2] = spiflash_readmem(0x104 + sample);
+  }
+  // check prog vs read data
+  char_data = (char *)read_data;
+  for (sample = 0; sample < NSAMPLES; sample++) {
+    if (prog_data[sample] != char_data[sample]) {
+      printf("Error: data[%x] = %08x != read_data[%x] = %08x\n", sample, prog_data[sample], sample, char_data[sample]);
+      failed = 1;
+    }
+  }
+
 #endif // #ifndef VERILATOR
 #endif // #ifdef SIMULATION
 
