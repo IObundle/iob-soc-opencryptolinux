@@ -32,6 +32,10 @@ sim-test:
 	nix-shell --run "make setup INIT_MEM=0"
 	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
 
+sim-test-spi:
+	nix-shell --run "make -C submodules/SPI/ clean build-setup && make -C submodules/iob_spi_master_V0.10/ sim-run"
+	nix-shell --run "make -C submodules/SPI/ clean"
+
 fpga-run:
 	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM)'
 	nix-shell --run 'make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX)'
