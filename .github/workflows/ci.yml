@@ -51,7 +51,7 @@ jobs:
       
   iverilog-baremetal:
     runs-on: self-hosted
-    timeout-minutes: 60
+    timeout-minutes: 90
     # run even if previous job failed
     if: ${{ !cancelled() }}
 
