@@ -17,6 +17,7 @@ from iob_uart16550 import iob_uart16550
 from iob_uart import iob_uart
 from iob_spi_master import iob_spi_master
 from iob_eth import iob_eth
+from N25Qxxx import N25Qxxx
 from axil2iob import axil2iob
 from iob_reset_sync import iob_reset_sync
 from iob_ram_sp import iob_ram_sp
@@ -130,6 +131,8 @@ class iob_soc_opencryptolinux(iob_soc):
                 cls.versatType,
                 # iob_spi_master,
                 iob_eth,
+                iob_spi_master,
+                (N25Qxxx, {"purpose": "simulation"}),
                 (iob_uart, {"purpose": "simulation"}),
             ]
             + extra_submodules
@@ -599,5 +602,125 @@ endif
                         "port": "",
                         "bits": [],
                     },
+                ),
+            ]
+        if iob_spi_master in cls.submodule_list:
+            cls.peripheral_portmap += [
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "avalid_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "address_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "wdata_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "wstrb_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "rdata_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "rvalid_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "ready_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "SS",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "SCLK",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "MISO",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "MOSI",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "WP_N",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "HOLD_N",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
                 ),
             ]
