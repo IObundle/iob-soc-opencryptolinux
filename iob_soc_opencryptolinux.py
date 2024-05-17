@@ -176,7 +176,7 @@ endif
         if cls.is_top_module:
             # Set ethernet MAC address
             append_str_config_build_mk(
-                """
+                f"""
 ### Set Ethernet environment variables
 #Mac address of pc interface connected to ethernet peripheral (based on board name)
 $(if $(findstring sim,$(MAKECMDGOALS))$(SIMULATOR),$(eval BOARD=))
@@ -191,6 +191,8 @@ export RMAC_ADDR
 #Set correct environment if running on IObundle machines
 ifneq ($(filter pudim-flan sericaia,$(shell hostname)),)
 IOB_CONSOLE_PYTHON_ENV ?= /opt/pyeth3/bin/python
+else
+IOB_CONSOLE_PYTHON_ENV ?= ../{cls.name}/submodules/ETHERNET/scripts/pyRawWrapper/pyRawWrapper
 endif
                 """,
                 cls.build_dir,
