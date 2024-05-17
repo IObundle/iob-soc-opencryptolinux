@@ -192,7 +192,7 @@ export RMAC_ADDR
 ifneq ($(filter pudim-flan sericaia,$(shell hostname)),)
 IOB_CONSOLE_PYTHON_ENV ?= /opt/pyeth3/bin/python
 else
-IOB_CONSOLE_PYTHON_ENV ?= ../{cls.name}/submodules/ETHERNET/scripts/pyRawWrapper/pyRawWrapper
+IOB_CONSOLE_PYTHON_ENV ?= {__class__.setup_dir}/submodules/ETHERNET/scripts/pyRawWrapper/pyRawWrapper
 endif
                 """,
                 cls.build_dir,
