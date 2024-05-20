@@ -703,7 +703,7 @@ void ConfigSimulateDatabus(bool value);
 // Needed by PC-EMUL to correctly simulate the design, embedded compiler should remove these symbols from firmware because not used by them 
 static const char* acceleratorTypeName = "CryptoAlgos";
 static bool isSimpleAccelerator = true;
-static bool acceleratorSupportsDMA = true;
+static bool acceleratorSupportsDMA = false;
 
 static const int staticStart = 0x56 * sizeof(iptr);
 static const int delayStart = 0x64 * sizeof(iptr);
@@ -896,7 +896,7 @@ extern volatile AcceleratorState* accelState;
 #define ACCEL_TOP_State_s7_reg_currentValue accelState->TOP_State_s7_reg_currentValue
 
 typedef enum{
-SHA = 0,ReadWriteAES256 = 1,McEliece = 2} MergeType;
+MergeType_SHA = 0,MergeType_ReadWriteAES256 = 1,MergeType_McEliece = 2} MergeType;
 
 #ifdef __cplusplus
 extern "C" {

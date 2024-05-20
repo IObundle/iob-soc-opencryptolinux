@@ -11,6 +11,8 @@ include $(LIB_DIR)/setup.mk
 INIT_MEM ?= 0
 RUN_LINUX ?= 1
 USE_EXTMEM := 1
+RUN_VERSAT ?= 1
+VCD ?= 0
 
 ifeq ($(INIT_MEM),1)
 SETUP_ARGS += INIT_MEM
@@ -32,10 +34,18 @@ sim-test:
 	nix-shell --run "make setup INIT_MEM=0"
 	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
 
+sim-run:
+	nix-shell --run "make setup INIT_MEM=1 VCD=$(VCD)"
+	nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator VCD=$(VCD)"
+
 fpga-run:
 	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM)'
 	nix-shell --run 'make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX)'
 	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
+
+fpga-run-only:
+	cp -r ./software/src ../$(CORE)_V*/software
+	make -C ../$(CORE)_V*/ fpga-fw-build fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
 
 fpga-connect:
 	nix-shell --run 'make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX)'
