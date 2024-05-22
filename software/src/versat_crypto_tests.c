@@ -37,8 +37,8 @@ int VersatSHATests(){
   printf("\n\n=======================================================\n");
   printf("SHA tests: %d passed out of %d\n\n",result.goodTests,result.tests);
   printf("  Average cycles (only counting passing tests) (not seconds)\n");
-  printf("    Versat:  %d\n",result.versatTimeAccum / result.goodTests);
-  printf("  Software: %d\n",result.softwareTimeAccum / result.goodTests);
+  printf("    Versat: %-7d\n",result.versatTimeAccum / result.goodTests);
+  printf("  Software: %-7d\n",result.softwareTimeAccum / result.goodTests);
   printf("=======================================================\n\n");
 
   return (result.goodTests == result.tests) ? 0 : 1;
@@ -59,8 +59,8 @@ int VersatAESTests(){
   printf("\n\n=======================================================\n");
   printf("AES tests: %d passed out of %d\n\n",result.goodTests,result.tests);
   printf("  Average cycles (only counting passing tests)\n");
-  printf("    Versat:  %d\n",result.versatTimeAccum / result.goodTests);
-  printf("  Software: %d\n",result.softwareTimeAccum / result.goodTests);
+  printf("    Versat: %-7d\n",result.versatTimeAccum / result.goodTests);
+  printf("  Software: %-7d\n",result.softwareTimeAccum / result.goodTests);
   printf("=======================================================\n\n");
 
   return (result.goodTests == result.tests) ? 0 : 1;

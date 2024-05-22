@@ -185,7 +185,7 @@ TestState VersatCommonAESTests(String content){
     uint8_t software_result[AES_BLK_SIZE] = {};
 
     int start = GetTime();
-    VersatAES(versat_result,plain,key);
+    ECB256(key,plain,versat_result);
     int middle = GetTime();
     
     struct AES_ctx ctx;

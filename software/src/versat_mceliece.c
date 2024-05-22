@@ -183,10 +183,11 @@ int Versat_pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, in
     int mark = MarkArena();
 
     // Init needed values for versat later on.  
-    vec = (McElieceConfig*) accelConfig;
-    matAddr = (void*) TOP_mat_addr;
+    CryptoAlgosConfig* topConfig = (CryptoAlgosConfig*) accelConfig;
+    vec = (McElieceConfig*) &topConfig->eliece;
+    matAddr = (void*) TOP_eliece_mat_addr;
 
-    ActivateMergedAccelerator(McEliece);
+    //ActivateMergedAccelerator(McEliece);
 
     ConfigureSimpleVReadBare(&vec->row);
 
