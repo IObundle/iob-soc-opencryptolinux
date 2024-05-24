@@ -59,28 +59,6 @@ uint32_t uart_recvfile_ethernet(char *file_name) {
   return file_size;
 }
 
-void spi_read_all_regs(){
-  unsigned int status_reg = 0, lock_reg = 0, flag_reg = 0;
-  unsigned int non_vol_cfg = 0, vol_cfg = 0, enh_vol_cfg = 0;
-  unsigned int ext_addr = 0;
-
-  spiflash_readStatusReg(&status_reg);
-  spiflash_readLockReg(&lock_reg);
-  spiflash_readFlagReg(&flag_reg);
-  spiflash_readNonVolConfigReg(&non_vol_cfg);
-  spiflash_readVolConfigReg(&vol_cfg);
-  spiflash_readEnhancedVolConfigReg(&enh_vol_cfg);
-  spiflash_readExtendedAddrReg(&ext_addr);
-
-  printf("\nStatus Reg: (%x)\n", status_reg);
-  printf("Lock Reg: (%x)\n", lock_reg);
-  printf("Flag Reg: (%x)\n", flag_reg);
-  printf("NonVol Cfg Reg: (%x)\n", non_vol_cfg);
-  printf("Vol Cfg Reg: (%x)\n", vol_cfg);
-  printf("Enhanced Vol Cfg Reg: (%x)\n", enh_vol_cfg);
-  printf("Extended Addr Reg: (%x)\n", ext_addr);
-}
-
 int main() {
   int run_linux = 0;
   int file_size;
@@ -110,63 +88,77 @@ int main() {
     uart16550_puts(": Waiting for Console ACK.\n");
   }
 
-// #ifndef VERILATOR
-//   // Init printf
-//   printf_init(&uart16550_putc);
-//   // init spit flash controller
-//   spiflash_init(SPI0_BASE);
-//   printf("\nResetting flash registers...\n");
-//   spiflash_resetmem();
-//   // Read ID
-//   // Manufacturer ID
-//   unsigned int readid[5] = {0}, id_bytes = 0;
-//   for (id_bytes = 0; id_bytes < 20; id_bytes += 4) {
-//     spiflash_executecommand(COMMANS, 0, id_bytes, ((4 * 8) << 8) | READ_ID,
-//                             &(readid[id_bytes / 4]));
-//   }
-//   printf("\nMANUFACTURER ID: (%x)\n", (readid[0] & 0xFF));
-//   printf("DEVICE ID: (%x)\n", (readid[0] & 0xFFFF00) >> 8);
-//   printf("UNIQUE ID:\n");
-//   printf("\tData to follow: (%x)\n", (readid[0] & 0xFFFFFF00) >> 3*8);
-//   printf("\tExt Device ID: (%x)\n", (readid[1] & 0xFFFF));
-//   printf("\tCustom Factory data[0-1]: (%x)\n", readid[1] >> 2*8);
-//   printf("\tCustom Factory data[5-2]: (%x)\n", readid[2]);
-//   printf("\tCustom Factory data[9-6]: (%x)\n", readid[3]);
-//   printf("\tCustom Factory data[13-10]: (%x)\n", readid[4]);
-//
-//   printf("Testing program flash\n");
-//   char prog_data[NSAMPLES] = {0};
-//   char *char_data = NULL;
-//   unsigned int read_data[NSAMPLES] = {0};
-//   int sample = 0;
-//   int test_result = 0;
-//   for (sample = 0; sample < NSAMPLES; sample++) {
-//     prog_data[sample] = 0xFF - sample;
-//   }
-//
-//   spi_read_all_regs();
-//
-//   spiflash_memProgram(prog_data, NSAMPLES, 0x0);
-//   printf("After program\n");
-//
-//   spi_read_all_regs();
-//
-//   for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
-//     read_data[sample >> 2] = spiflash_readmem(0x0 + sample);
-//   }
-//   // check prog vs read data
-//   char_data = (char *)read_data;
-//   for (sample = 0; sample < NSAMPLES; sample++) {
-//     if (prog_data[sample] != char_data[sample]) {
-//       printf("Error: data[%x] = %02x != read_data[%x] = %02x\n", sample,
-//              prog_data[sample], sample, char_data[sample]);
-//       test_result = 1;
-//     }
-//   }
-//   if (test_result) {
-//     printf("Flash test failed!\n");
-//   }
-// #endif // ifndef VERILATOR
+#ifndef VERILATOR
+  // Init printf
+  printf_init(&uart16550_putc);
+  // init spit flash controller
+  spiflash_init(SPI0_BASE);
+  printf("\nResetting flash registers...\n");
+  spiflash_resetmem();
+
+  printf("Testing program flash\n");
+  char prog_data[NSAMPLES] = {0};
+  char *char_data = NULL;
+  unsigned int read_data[NSAMPLES] = {0};
+  unsigned int flash_addr = 0x0;
+  int sample = 0;
+  int flash_failed = 0;
+
+  // set samples to write
+  for (sample = 0; sample < NSAMPLES; sample++) {
+    prog_data[sample] = sample;
+  }
+
+  // Flash data before erase
+  printf("\nFlash data before erase:\n");
+  for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
+    read_data[sample >> 2] = spiflash_readmem(flash_addr + sample);
+  }
+  char_data = (char *)read_data;
+  for (sample = 0; sample < NSAMPLES; sample++) {
+    printf("\tflash[%x] = %02x\n", flash_addr + sample, char_data[sample]);
+  }
+
+  spiflash_erase_address_range(flash_addr, NSAMPLES);
+
+  // Flash data after erase
+  printf("\nFlash data after erase:\n");
+  for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
+    read_data[sample >> 2] = spiflash_readmem(flash_addr + sample);
+  }
+  char_data = (char *)read_data;
+  for (sample = 0; sample < NSAMPLES; sample++) {
+    printf("\tflash[%x] = %02x\n", flash_addr + sample, char_data[sample]);
+    if (char_data[sample] != 0xFF){
+        printf("Error: flash[%x] = %02x != 0xFF\n", flash_addr + sample, char_data[sample]);
+        flash_failed = 1;
+    }   
+  }
+
+  spiflash_memProgram(prog_data, NSAMPLES, 0x0);
+
+  printf("\nFlash data after program:\n");
+  for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
+    read_data[sample >> 2] = spiflash_readmem(0x0 + sample);
+  }
+  char_data = (char *)read_data;
+  for (sample = 0; sample < NSAMPLES; sample++) {
+    if (prog_data[sample] != char_data[sample]) {
+      printf("Error: expected[%x] = %02x != flash[%x] = %02x\n", flash_addr + sample,
+             prog_data[sample], flash_addr + sample, char_data[sample]);
+      flash_failed = 1;
+    } else {
+      printf("Valid: expected[%x] = %02x == flash[%x] = %02x\n", flash_addr + sample,
+             prog_data[sample], flash_addr + sample, char_data[sample]);
+    }
+  }
+
+  if (flash_failed) {
+    printf("ERROR: Flash test failed!\n");
+  } else {
+    printf("SUCCESS: Flash test passed!\n");
+  }
+#endif // ifndef VERILATOR
 
 #ifndef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
   // Init ethernet and printf (for ethernet)

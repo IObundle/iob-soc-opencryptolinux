@@ -25,7 +25,7 @@
 
 #define MTIMER_SECONDS_TO_CLOCKS(SEC) ((uint64_t)(((SEC) * (FREQ))))
 
-#define NSAMPLES 256
+#define NSAMPLES 16
 
 // Machine mode interrupt service routine
 static void irq_entry(void) __attribute__((interrupt("machine")));
@@ -101,28 +101,6 @@ int GetTime(){
   return clint_getTime(CLINT0_BASE);
 }
 
-void spi_read_all_regs(){
-  unsigned int status_reg = 0, lock_reg = 0, flag_reg = 0;
-  unsigned int non_vol_cfg = 0, vol_cfg = 0, enh_vol_cfg = 0;
-  unsigned int ext_addr = 0;
-
-  spiflash_readStatusReg(&status_reg);
-  spiflash_readLockReg(&lock_reg);
-  spiflash_readFlagReg(&flag_reg);
-  spiflash_readNonVolConfigReg(&non_vol_cfg);
-  spiflash_readVolConfigReg(&vol_cfg);
-  spiflash_readEnhancedVolConfigReg(&enh_vol_cfg);
-  spiflash_readExtendedAddrReg(&ext_addr);
-
-  printf("\nStatus Reg: (%x)\n", status_reg);
-  printf("Lock Reg: (%x)\n", lock_reg);
-  printf("Flag Reg: (%x)\n", flag_reg);
-  printf("NonVol Cfg Reg: (%x)\n", non_vol_cfg);
-  printf("Vol Cfg Reg: (%x)\n", vol_cfg);
-  printf("Enhanced Vol Cfg Reg: (%x)\n", enh_vol_cfg);
-  printf("Extended Addr Reg: (%x)\n", ext_addr);
-}
-
 int main() {
   char pass_string[] = "Test passed!";
   uint_xlen_t irq_entry_copy;
@@ -147,9 +125,9 @@ int main() {
     uart16550_putc(buffer[i]);
 #endif
 
-//#ifndef SIMULATION
-  // InitializeCryptoSide(VERSAT0_BASE);
-//#endif
+#ifndef SIMULATION
+  InitializeCryptoSide(VERSAT0_BASE);
+#endif
 
   printf("\n\n\nHello world!\n\n\n");
 
@@ -159,99 +137,15 @@ int main() {
 
   // Tests are too big and slow to perform during simulation.
   // Comment out the source files in sw_build.mk to also reduce binary size and speedup simulation.
-// #ifndef SIMULATION
-//   test_result |= VersatSHATests();
-//   test_result |= VersatAESTests();
-//   test_result |= VersatMcElieceTests();
-// #else
-//   test_result |= VersatSimpleSHATests();
-//   test_result |= VersatSimpleAESTests();
-// #endif
+#ifndef SIMULATION
+  test_result |= VersatSHATests();
+  test_result |= VersatAESTests();
+  test_result |= VersatMcElieceTests();
+#else
+  test_result |= VersatSimpleSHATests();
+  test_result |= VersatSimpleAESTests();
+#endif
 
-  //
-  // Test FPGA SPI Flash controller
-  //
-
-  // init spit flash controller
-  spiflash_init(SPI0_BASE);
-  printf("\nResetting flash registers...\n");
-  spiflash_resetmem();
-  // Read Identifications
-  // Manufacturer ID | Device ID | Unique ID
-  unsigned int readid[5] = {0}, id_bytes = 0;
-  for (id_bytes = 0; id_bytes < 20; id_bytes += 4) {
-    spiflash_executecommand(COMMANS, 0, id_bytes, ((4 * 8) << 8) | READ_ID,
-                            &(readid[id_bytes / 4]));
-  }
-  printf("\nMANUFACTURER ID: (%x)\n", (readid[0] & 0xFF));
-  printf("DEVICE ID: (%x)\n", (readid[0] & 0xFFFF00) >> 8);
-  printf("UNIQUE ID:\n");
-  printf("\tData to follow: (%x)\n", (readid[0] & 0xFFFFFF00) >> 3*8);
-  printf("\tExt Device ID: (%x)\n", (readid[1] & 0xFFFF));
-  printf("\tCustom Factory data[0-1]: (%x)\n", readid[1] >> 2*8);
-  printf("\tCustom Factory data[5-2]: (%x)\n", readid[2]);
-  printf("\tCustom Factory data[9-6]: (%x)\n", readid[3]);
-  printf("\tCustom Factory data[13-10]: (%x)\n", readid[4]);
-
-  printf("Testing program flash\n");
-  char prog_data[NSAMPLES] = {0};
-  char *char_data = NULL;
-  unsigned int read_data[NSAMPLES] = {0};
-  unsigned int flash_addr = 0;
-  int sample = 0;
-  // int test_result = 0;
-  for (sample = 0; sample < NSAMPLES; sample++) {
-    prog_data[sample] = sample;
-    // prog_data[sample] = sample;
-  }
-
-  spi_read_all_regs();
-
-  printf("\nBefore erase\n");
-  for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
-    read_data[sample >> 2] = spiflash_readmem(flash_addr + sample);
-  }
-  // check prog vs read data
-  char_data = (char *)read_data;
-  for (sample = 0; sample < NSAMPLES; sample++) {
-    printf("\tread_data[%x] = %02x\n", sample, char_data[sample]);
-  }
-
-  spiflash_erase_address_range(flash_addr, NSAMPLES);
-
-  printf("\nAfter erase\n");
-  for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
-    read_data[sample >> 2] = spiflash_readmem(flash_addr + sample);
-  }
-  // check prog vs read data
-  char_data = (char *)read_data;
-  for (sample = 0; sample < NSAMPLES; sample++) {
-    printf("\tread_data[%x] = %02x\n", sample, char_data[sample]);
-  }
-
-  spiflash_memProgram(prog_data, NSAMPLES, flash_addr);
-  printf("\nAfter program\n");
-
-  spi_read_all_regs();
-
-  for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
-    read_data[sample >> 2] = spiflash_readmem(flash_addr + sample);
-  }
-  // check prog vs read data
-  char_data = (char *)read_data;
-  for (sample = 0; sample < NSAMPLES; sample++) {
-    if (prog_data[sample] != char_data[sample]) {
-      printf("Error: data[%x] = %02x != read_data[%x] = %02x\n", sample,
-             prog_data[sample], sample, char_data[sample]);
-      test_result = 1;
-    } else {
-      printf("Valid: data[%x] = %02x == read_data[%x] = %02x\n", sample,
-             prog_data[sample], sample, char_data[sample]);
-    }
-  }
-  if (test_result) {
-    printf("Flash test failed!\n");
-  }
 #ifdef SIMULATION
 #ifndef VERILATOR
   unsigned int word = 0xA3A2A1A0;
