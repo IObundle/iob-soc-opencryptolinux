@@ -25,7 +25,7 @@
 
 #define MTIMER_SECONDS_TO_CLOCKS(SEC) ((uint64_t)(((SEC) * (FREQ))))
 
-#define NSAMPLES 16
+#define NSAMPLES 256
 
 // Machine mode interrupt service routine
 static void irq_entry(void) __attribute__((interrupt("machine")));
@@ -197,22 +197,45 @@ int main() {
   char prog_data[NSAMPLES] = {0};
   char *char_data = NULL;
   unsigned int read_data[NSAMPLES] = {0};
+  unsigned int flash_addr = 0;
   int sample = 0;
   // int test_result = 0;
   for (sample = 0; sample < NSAMPLES; sample++) {
-    prog_data[sample] = 0xFF;
+    prog_data[sample] = sample;
     // prog_data[sample] = sample;
   }
 
   spi_read_all_regs();
 
-  spiflash_memProgram(prog_data, NSAMPLES, 0x0);
+  printf("\nBefore erase\n");
+  for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
+    read_data[sample >> 2] = spiflash_readmem(flash_addr + sample);
+  }
+  // check prog vs read data
+  char_data = (char *)read_data;
+  for (sample = 0; sample < NSAMPLES; sample++) {
+    printf("\tread_data[%x] = %02x\n", sample, char_data[sample]);
+  }
+
+  spiflash_erase_address_range(flash_addr, NSAMPLES);
+
+  printf("\nAfter erase\n");
+  for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
+    read_data[sample >> 2] = spiflash_readmem(flash_addr + sample);
+  }
+  // check prog vs read data
+  char_data = (char *)read_data;
+  for (sample = 0; sample < NSAMPLES; sample++) {
+    printf("\tread_data[%x] = %02x\n", sample, char_data[sample]);
+  }
+
+  spiflash_memProgram(prog_data, NSAMPLES, flash_addr);
   printf("\nAfter program\n");
 
   spi_read_all_regs();
 
   for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
-    read_data[sample >> 2] = spiflash_readmem(0x0 + sample);
+    read_data[sample >> 2] = spiflash_readmem(flash_addr + sample);
   }
   // check prog vs read data
   char_data = (char *)read_data;
@@ -221,6 +244,9 @@ int main() {
       printf("Error: data[%x] = %02x != read_data[%x] = %02x\n", sample,
              prog_data[sample], sample, char_data[sample]);
       test_result = 1;
+    } else {
+      printf("Valid: data[%x] = %02x == read_data[%x] = %02x\n", sample,
+             prog_data[sample], sample, char_data[sample]);
     }
   }
   if (test_result) {

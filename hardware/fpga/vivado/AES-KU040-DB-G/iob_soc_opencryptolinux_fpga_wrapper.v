@@ -78,8 +78,9 @@ module iob_soc_opencryptolinux_fpga_wrapper (
    wire       ETH_Clk;
 
    //eth clock
-   IBUFG rxclk_buf (
+   BUFGCE_1 rxclk_buf (
       .I(ENET_RX_CLK),
+      .CE(1'b1),
       .O(ETH_Clk)
    );
    ODDRE1 ODDRE1_inst (
