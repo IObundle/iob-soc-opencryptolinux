@@ -99,7 +99,6 @@ int main() {
   eth_init(ETH0_BASE, &clear_cache);
   eth_wait_phy_rst();
 
-#ifndef SIMULATION
   char buffer[5096];
   // Receive data from console via Ethernet
   uint32_t file_size = uart_recvfile_ethernet("../src/eth_example.txt");
@@ -107,7 +106,6 @@ int main() {
   uart16550_puts("\nFile received from console via ethernet:\n");
   for(i=0; i<file_size; i++)
     uart16550_putc(buffer[i]);
-#endif
 
   printf("\n\n\nHello world!\n\n\n");
 
