@@ -19,6 +19,9 @@ endif
 setup:
 	make build-setup SETUP_ARGS="$(SETUP_ARGS)"
 
+sim-run:
+	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) && make -C ../$(CORE)_V*/ sim-run SIMULATOR=$(SIMULATOR)'
+
 sim-test-linux:
 	nix-shell --run "make clean"
 	nix-shell --run "make setup INIT_MEM=1"
@@ -56,4 +59,4 @@ test-linux-fpga-connect: build_dir_name
 	-ln -s minicom_test1.txt $(BUILD_DIR)/hardware/fpga/minicom_linux_script.txt
 	make fpga-connect RUN_LINUX=1
 
-.PHONY: sim-test fpga-test test-all test-linux-fpga-connect
+.PHONY: setup sim-run sim-test fpga-test test-all test-linux-fpga-connect
