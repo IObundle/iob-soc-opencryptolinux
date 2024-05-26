@@ -4,13 +4,15 @@
 
 #include <stdio.h>
 
-Arena globalArenaInst = {};
+//Arena globalArenaInst = {};
 Arena* globalArena = NULL;
 
+#if 0
 void InitGlobalArena(int size){
   globalArenaInst = InitArena(size);
   globalArena = &globalArenaInst;
 }
+#endif
 
 Arena InitArena(int size){
   Arena arena = {};

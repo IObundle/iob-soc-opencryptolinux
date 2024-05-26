@@ -204,7 +204,8 @@ int Versat_pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, in
 
     unsigned char** mat = PushArray(PK_NROWS,unsigned char*);
     for(int i = 0; i < PK_NROWS; i++){
-        mat[i] = PushArray(SYS_N / 8,unsigned char); // This guarantees that each row is properly aligned to a 32 bit boundary.
+        
+        //mat[i] = PushArray(SYS_N / 8,unsigned char); // This guarantees that each row is properly aligned to a 32 bit boundary.
     }
 
     unsigned char mask;

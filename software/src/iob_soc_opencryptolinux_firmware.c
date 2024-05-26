@@ -156,7 +156,7 @@ int main() {
   testResult |= VersatMcElieceTests();
 #else
   testResult |= VersatSimpleSHATests();
-  //testResult |= VersatSimpleAESTests();
+  testResult |= VersatSimpleAESTests();
 #endif
 
   if(testResult){

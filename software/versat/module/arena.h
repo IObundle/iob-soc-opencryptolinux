@@ -10,7 +10,7 @@ typedef struct{
 
 extern Arena* globalArena;
 
-void InitGlobalArena(int size);
+//void InitGlobalArena(int size);
 Arena InitArena(int size);
 void* PushBytes(Arena* arena,int size);
 void* PushAndZeroBytes(Arena* arena,int size);
