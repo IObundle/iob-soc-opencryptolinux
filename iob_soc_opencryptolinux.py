@@ -178,15 +178,18 @@ endif
             append_str_config_build_mk(
                 f"""
 ### Set Ethernet environment variables
-#Mac address of pc interface connected to ethernet peripheral (based on board name)
+#Eth interface address of pc connected to ethernet peripheral (based on board name)
 $(if $(findstring sim,$(MAKECMDGOALS))$(SIMULATOR),$(eval BOARD=))
 ifeq ($(BOARD),AES-KU040-DB-G)
-RMAC_ADDR ?=989096c0632c
+ETH_IF ?=eno1
 endif
 ifeq ($(BOARD),CYCLONEV-GT-DK)
-RMAC_ADDR ?=309c231e624b
+ETH_IF ?=enp3s0
 endif
-RMAC_ADDR ?=000000000000
+ETH_IF ?=eth10
+export ETH_IF
+# Set a MAC address for console (randomly generated)
+RMAC_ADDR ?=88431eafa897
 export RMAC_ADDR
 #Set correct environment if running on IObundle machines
 ifneq ($(filter pudim-flan sericaia,$(shell hostname)),)
