@@ -18,6 +18,22 @@
 
 #define NSAMPLES 16
 
+// Set SPI Support:
+// Simulation: Enabled, except for Verilator
+// FPGA: Disabled, except for AMD
+#ifdef SIMULATION
+#   ifdef VERILATOR
+        // no SPI support
+#   else
+#       define SPI_SUPPORT
+#   endif // ifndef VERILATOR
+#else // ifdef SIMULATION: FPGA case
+#   ifdef AMD
+#       define SPI_SUPPORT
+#   endif // ifdef AMD
+        // no SPI support
+#endif // ifdef SIMULATION
+
 // Ethernet utility functions
 // NOTE: These functions are not compatible with malloc() and free().
 //      These are specifically made for use with the current iob-eth.c drivers.
@@ -93,7 +109,7 @@ int main() {
   // Init ethernet and printf (for ethernet)
   printf_init(&uart16550_putc);
 
-#ifndef VERILATOR
+#ifdef SPI_SUPPORT
   // init spit flash controller
   spiflash_init(SPI0_BASE);
   printf("\nResetting flash registers...\n");
@@ -161,7 +177,7 @@ int main() {
   } else {
     printf("SUCCESS: Flash test passed!\n");
   }
-#endif // ifndef VERILATOR
+#endif // ifdef SPI_SUPPORT
 
   eth_init(ETH0_BASE, &clear_cache);
   // Use custom memory alloc/free functions to ensure it allocates in external
