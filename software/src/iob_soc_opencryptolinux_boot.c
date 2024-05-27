@@ -88,9 +88,12 @@ int main() {
     uart16550_puts(": Waiting for Console ACK.\n");
   }
 
-#ifndef VERILATOR
-  // Init printf
+
+#ifndef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
+  // Init ethernet and printf (for ethernet)
   printf_init(&uart16550_putc);
+
+#ifndef VERILATOR
   // init spit flash controller
   spiflash_init(SPI0_BASE);
   printf("\nResetting flash registers...\n");
@@ -160,9 +163,6 @@ int main() {
   }
 #endif // ifndef VERILATOR
 
-#ifndef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
-  // Init ethernet and printf (for ethernet)
-  printf_init(&uart16550_putc);
   eth_init(ETH0_BASE, &clear_cache);
   // Use custom memory alloc/free functions to ensure it allocates in external
   // memory

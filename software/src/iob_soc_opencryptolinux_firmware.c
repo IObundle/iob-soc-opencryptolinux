@@ -125,9 +125,7 @@ int main() {
     uart16550_putc(buffer[i]);
 #endif
 
-#ifndef SIMULATION
   InitializeCryptoSide(VERSAT0_BASE);
-#endif
 
   printf("\n\n\nHello world!\n\n\n");
 
