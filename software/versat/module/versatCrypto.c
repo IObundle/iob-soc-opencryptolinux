@@ -109,6 +109,12 @@ typedef enum{
 
 #define MAX_VERSAT_BUFFERS 2
 
+typedef enum{
+  AESType_ECB,
+  AESType_CBC,
+  AESType_CTR
+} AESType;
+
 typedef struct{
   PhysicalAllocator alloc;
   PhysicalBuffer buffers[MAX_VERSAT_BUFFERS];
@@ -124,11 +130,10 @@ typedef struct{
     } SHA;
 
     struct{
+      AESType type;
       uint8_t counter[16];
       uint8_t lastByteProcessed; // Needed to fix padding after decryption
-      bool useIV;
       bool is256;
-      bool isCTR;
     } AES;
   };
 } VersatCrypto;
@@ -152,7 +157,7 @@ static PhysicalBuffer AllocateBuffer(PhysicalAllocator alloc){
     buffer = (PhysicalBuffer){};
     printf("Error at allocating buffer\n");
   } else {
-    printf("Allocated buffer of size: %d\n",attempSize);
+    //printf("Allocated buffer of size: %d\n",attempSize);
   }
 
   return buffer;
@@ -173,7 +178,6 @@ void InitVersatSHA(){
 
   versat.lastTypeActivated = VersatType_SHA;
 
-  printf("Init versat SHA\n");
   CryptoAlgosConfig* config = (CryptoAlgosConfig*) accelConfig;
   SHAConfig* sha = &config->sha;
 
@@ -312,23 +316,29 @@ void HideDataVersatBuffer(VersatBuffer* input){
 
 // Because our code might hide data inside the buffers, need to unhide it again afterwards
 void NormalizeVersatBuffer(VersatBuffer* input){
+#if 0
   printf("V:%p\n",&versat);
   fflush(stdout);
 
   PrintBuffer(input);
+#endif
 
   int bufferIndex = GetIndex(input);
 
   int delta = input->mem - versat.buffers[bufferIndex].virtualMemBase;
 
+#if 0
   printf("D:%d %d\n",delta,bufferIndex);
   fflush(stdout);
+#endif
 
   input->mem = versat.buffers[bufferIndex].virtualMemBase;
   input->size += delta;
   input->maxSize = versat.buffers[bufferIndex].size;
 
+#if 0
   PrintBuffer(input);
+#endif
 }
 
 bool CheckBegin(){
@@ -419,9 +429,19 @@ VersatBuffer* ProcessSHA(VersatBuffer* input){
 
   // Since versat currently does not allow to process SHA on the background, simple use and reuse the same buffer.
   versat_crypto_hashblocks_sha256(buffer,input->mem,numberBlocks * 64);
-  versat.bytesProcessed += numberBlocks * 64;
 
-  input->size -= numberBlocks * 64;
+  int amountProcessed = numberBlocks * 64;
+  int amountLeft = input->size - amountProcessed;
+
+  input->size = amountLeft;
+  // Copy what's left to the start so that we can reuse the buffer
+  if(amountLeft != 0){
+    memcpy(input->mem,input->mem + amountProcessed,amountLeft * sizeof(char));
+    HideDataVersatBuffer(input);
+  }
+
+  versat.bytesProcessed += amountProcessed;
+
   HideDataVersatBuffer(input);
   
   return input;
@@ -437,7 +457,7 @@ static void store_bigendian_32(uint8_t *x, uint32_t u) {
   x[0] = (uint8_t) u;
 }
 
-void EndSHA(VersatBuffer* input,unsigned char digest[32]){
+void EndSHA(VersatBuffer* input,uint8_t digest[32]){
   VersatBuffer* lastBuffer = ProcessSHA(input);
 
   int index = GetIndex(lastBuffer);
@@ -800,7 +820,7 @@ void Encrypt(uint8_t* data,uint8_t* result,uint8_t* lastAddition){
   ActivateMergedAccelerator(MergeType_AESLastRound);
   config->aes.key_0.selectedOutput0 = numberRounds; 
 
-  if(versat.AES.useIV){
+  if(versat.AES.type == AESType_CBC){
     config->aes.lastResult_0.disabled = 0;
   }
 
@@ -824,7 +844,7 @@ void Encrypt(uint8_t* data,uint8_t* result,uint8_t* lastAddition){
   }
 }
 
-void Decrypt(uint8_t* data,uint8_t* result){
+void Decrypt(uint8_t* data,uint8_t* result,uint8_t* lastAddition){
   int numberRounds = 10;
   if(versat.AES.is256){
     numberRounds = 14;
@@ -853,14 +873,18 @@ void Decrypt(uint8_t* data,uint8_t* result){
   ActivateMergedAccelerator(MergeType_AESInvLastRound);
   config->aes.key_0.selectedOutput0 = 0;
 
-  if(versat.AES.useIV){
-    config->aes.lastResult_0.disabled = 0;
+  EndAccelerator();
+
+  if(lastAddition){
+    RegAddr* view = &aesAddr.aes.lastValToAdd_0;
+    for(int i = 0; i < 16; i++){
+      printf("%02x",lastAddition[i]);
+      VersatUnitWrite(view[i].addr,0,lastAddition[i]);
+    }
+    printf("\n");
   }
 
-  EndAccelerator();
   StartAccelerator();
-    
-  config->aes.lastResult_0.disabled = 1;
 
   EndAccelerator();
 
@@ -919,8 +943,6 @@ static VersatBuffer* BeginAES(uint8_t* key,uint8_t* iv,uint8_t* counter,bool is2
 
   versat.bytesProcessed = 0;
   versat.AES.is256 = is256;
-  versat.AES.useIV = false;
-  versat.AES.isCTR = (counter != NULL);
 
   if(isDecryption){
     InitVersatInvAES();
@@ -930,8 +952,12 @@ static VersatBuffer* BeginAES(uint8_t* key,uint8_t* iv,uint8_t* counter,bool is2
 
   ExpandKey(key);
 
-  if(iv){
-    LoadIV(iv);
+  if(versat.AES.type == AESType_CBC){
+    if(isDecryption){
+      memcpy(versat.AES.counter,iv,16);
+    } else {
+      LoadIV(iv);
+    }
   }
 
   if(counter){
@@ -942,14 +968,17 @@ static VersatBuffer* BeginAES(uint8_t* key,uint8_t* iv,uint8_t* counter,bool is2
 }
 
 VersatBuffer* BeginAES_ECB(uint8_t* key,bool is256,bool isDecryption){
+  versat.AES.type = AESType_ECB;
   return BeginAES(key,NULL,NULL,is256,isDecryption);
 }
 
 VersatBuffer* BeginAES_CBC(uint8_t* key,uint8_t* iv,bool is256,bool isDecryption){
+  versat.AES.type = AESType_CBC;
   return BeginAES(key,iv,NULL,is256,isDecryption);
 }
 
 VersatBuffer* BeginAES_CTR(uint8_t* key,uint8_t* initialCounter,bool is256){
+  versat.AES.type = AESType_CTR;
   return BeginAES(key,NULL,initialCounter,is256,false);
 }
 
@@ -961,24 +990,35 @@ VersatBuffer* ProcessAES(VersatBuffer* input,uint8_t* output,int* outputOffset){
 
   NormalizeVersatBuffer(input);
 
+  int size = input->size;
   int counter = 0;
-  while(input->size >= 16){
-    if(versat.AES.isCTR){
+  while(size >= 16){
+    if(versat.AES.type == AESType_CTR){
       Encrypt(versat.AES.counter,output + counter,input->mem + counter);
       // TODO: Increment counter
     } else if(versat.lastTypeActivated == VersatType_AES){
       Encrypt(input->mem + counter,output + counter,NULL);
+    } else if(versat.AES.type == AESType_CBC){ // CBC
+      Decrypt(input->mem + counter,output + counter,versat.AES.counter);
+      memcpy(versat.AES.counter,input->mem + counter,16);
     } else {
-      Decrypt(input->mem + counter,output + counter);
+      Decrypt(input->mem + counter,output + counter,NULL);
     }
 
     counter += 16;
-    input->size -= 16;
+    size -= 16;
   }
 
   versat.bytesProcessed += counter;
 
-  HideDataVersatBuffer(input);
+  int amountLeft = input->size - counter;
+
+  input->size = size;
+  // Copy what's left to the start so that we can reuse the buffer
+  if(amountLeft != 0){
+    memcpy(input->mem,input->mem + counter,amountLeft * sizeof(char));
+    HideDataVersatBuffer(input);
+  }
 
   if(counter > 0){
     versat.AES.lastByteProcessed = output[counter-1];
@@ -1019,12 +1059,12 @@ int EndAES(VersatBuffer* input,uint8_t* output,/* out */ int* outputOffset){
       lastBuffer->mem[lastBuffer->size++] = paddingToAdd;
     }
 
-    if(versat.AES.isCTR){
+    if(versat.AES.type == AESType_CTR){
       Encrypt(versat.AES.counter,ajustedOutput,lastBuffer->mem);
       // TODO: Increment counter
       if(processTwoBlocks) Encrypt(versat.AES.counter,ajustedOutput + 16,lastBuffer->mem + 16);
     } else if(versat.lastTypeActivated == VersatType_AES){
-      Encrypt(lastBuffer->mem + 0,ajustedOutput,NULL);
+      Encrypt(lastBuffer->mem,ajustedOutput,NULL);
       if(processTwoBlocks) 
         Encrypt(lastBuffer->mem + 16,ajustedOutput + 16,NULL);
     } else {
@@ -1219,11 +1259,8 @@ int Versat_pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, in
   matAddr = (void*) TOP_eliece_mat_addr;
 
   int index = GetVersatValidBuffer();
-  printf("Buffer index: %d\n",index);
   PhysicalBuffer* physical = &versat.buffers[index];
  
-  printf("Buffer stats: %p %d\n",physical->virtualMemBase,physical->size);
-
   Arena matArenaInst = {};
   Arena* matArena = &matArenaInst;
   matArena->ptr = physical->virtualMemBase;
@@ -1241,9 +1278,6 @@ int Versat_pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, in
   vec->mat.dutyA = SINT + 1;
   vec->mat.perB = SINT + 1;
   vec->mat.dutyB = SINT + 1;
-
-  printf("pk3\n");
-  fflush(stdout);
 
   uint64_t buf[ 1 << GFBITS ];
 
@@ -1336,9 +1370,6 @@ int Versat_pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, in
     }
   }
 
-  printf("pk4\n");
-  fflush(stdout);
-
   // gaussian elimination
   for (i = 0; i < (PK_NROWS + 7) / 8; i++) {
     for (j = 0; j < 8; j++) {
@@ -1398,9 +1429,6 @@ int Versat_pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, in
     }
   }
 
-  printf("pk5\n");
-  fflush(stdout);
-
   for (i = 0; i < PK_NROWS; i++) {
     memcpy(pk + i * PK_ROW_BYTES, mat[i] + PK_NROWS / 8, PK_ROW_BYTES);
   }
@@ -1425,28 +1453,18 @@ int VersatMcEliece
   uint32_t perm[ 1 << GFBITS ]; // random permutation as 32-bit integers
   int16_t pi[ 1 << GFBITS ]; // random permutation
 
-  printf("I1\n");
-  fflush(stdout);
-
   randombytes(seed + 1, 32);
-
-  printf("I2\n");
-  fflush(stdout);
 
   while (1) {
     rp = &r[ sizeof(r) - 32 ];
     skp = sk;
 
-    printf("I3\n");
-    fflush(stdout);
     // expanding and updating the seed
     shake(r, sizeof(r), seed, 33);
     memcpy(skp, seed + 1, 32);
     skp += 32 + 8;
     memcpy(seed + 1, &r[ sizeof(r) - 32 ], 32);
 
-    printf("I4\n");
-    fflush(stdout);
     // generating irreducible polynomial
     rp -= sizeof(f);
 
@@ -1454,14 +1472,10 @@ int VersatMcEliece
       f[i] = load_gf(rp + i * 2);
     }
 
-    printf("I5\n");
-    fflush(stdout);
     if (genpoly_gen(irr, f)) {
       continue;
     }
 
-    printf("I6\n");
-    fflush(stdout);
     for (i = 0; i < SYS_T; i++) {
       store_gf(skp + i * 2, irr[i]);
     }
@@ -1471,14 +1485,10 @@ int VersatMcEliece
     // generating permutation
     rp -= sizeof(perm);
 
-    printf("I7\n");
-    fflush(stdout);
     for (i = 0; i < (1 << GFBITS); i++) {
       perm[i] = load4(rp + i * 4);
     }
 
-    printf("I8\n");
-    fflush(stdout);
     if (Versat_pk_gen(pk, skp - IRR_BYTES, perm, pi,temp)) {
       continue;
     }

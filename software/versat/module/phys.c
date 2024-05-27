@@ -11,6 +11,10 @@
 #include <asm/uaccess.h>
 #include <asm/io.h>
 
+// Disable all prints
+#undef printk
+#define printk(...) ((void)0)
+
 // TODO: Do not know if this module supports concurrent access. I believe it does because no use of shared memory but have not tested it.
 
 static struct class* class;

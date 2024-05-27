@@ -28,7 +28,7 @@ VersatBuffer* BeginSHA(); // Returns one buffer that can be used to load data.
 
 // If buffer is not disivible by 64 bytes, prints an error.
 VersatBuffer* ProcessSHA(VersatBuffer* input); // Returns a valid buffer that can be used by program to load more data
-void EndSHA(VersatBuffer* input,unsigned char digest[32]); // Fills digest
+void EndSHA(VersatBuffer* input,uint8_t digest[32]); // Fills digest
 
 #define AES_KEY_SIZE     16
 #define AES_256_KEY_SIZE 32

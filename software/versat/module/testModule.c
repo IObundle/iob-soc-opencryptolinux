@@ -10,7 +10,7 @@
 #include "arena.h"
 #include "versatCrypto.h"
 
-#if 1
+#include "api.h"
 
 #undef SHA 
 #undef AES
@@ -46,35 +46,6 @@ void clear_cache(){
   for ( unsigned int i = 0; i < 10; i++)asm volatile("nop");
   // Flush VexRiscv CPU internal cache
   asm volatile(".word 0x500F" ::: "memory");
-}
-
-char* SearchAndAdvance(char* ptr,String str){
-  char* firstChar = strstr(ptr,str.str);
-  if(firstChar == NULL){
-   return NULL;
-  }
-
-  char* advance = firstChar + str.size;
-  return advance;
-}
-
-int ParseNumber(char* ptr){
-  int count = 0;
-
-  while(ptr != NULL){
-   char ch = *ptr;
-
-   if(ch >= '0' && ch <= '9'){
-    count *= 10;
-    count += ch - '0';
-    ptr += 1;
-    continue;
-   }
-
-   break;
-  }
-
-  return count;
 }
 
 static char HexToInt(char ch){
@@ -130,171 +101,45 @@ char* GetHexadecimal(const char* text,char* buffer,int str_size){
   return buffer;
 }
 
-#ifdef SHA
-
-static TestState VersatCommonSHATests(Arena* test,String content){
-  TestState result = {};
-
-  int mark = MarkArena(test);
-
-  static const int HASH_SIZE = (256/8);
-
-  char* ptr = content.str;
-  while(1){
-   int testMark = MarkArena(test);
-
-   ptr = SearchAndAdvance(ptr,STRING("LEN = "));
-   if(ptr == NULL){
-    break;
-   }
-
-   int len = ParseNumber(ptr);
-
-   ptr = SearchAndAdvance(ptr,STRING("MSG = "));
-   if(ptr == NULL){ // Note: It's only a error if any check after the first one fails, because we are assuming that if the first passes then that must mean that the rest should pass as well.
-    result.earlyExit = 1;
-    break;
-   }
-
-   VersatBuffer* buffer = BeginSHA();
-
-   int bytes = HexStringToHex(buffer->mem,ptr);
-   buffer->size = len / 8;
-
-   printf("S: %d\n",buffer->size);
-   unsigned char versat_digest[32] = {};
-   EndSHA(buffer,versat_digest);
-
-   char versat_buffer[2048];
-   GetHexadecimal((char*) versat_digest,versat_buffer, HASH_SIZE);
-
-   printf("Versat: %s\n",versat_buffer);
-
-   result.tests += 1;
-   PopArena(test,testMark);
-  }
-
-  PopArena(test,mark);
-
-  return result;
-}
-
-#endif // SHA
-
-#ifdef AES
-
-TestState VersatCommonAESTests(Arena* test,String content){
-  TestState result = {};
-
-  int mark = MarkArena(test);
-
-  printf("1\n");
-  fflush(stdout);
-
-  char* ptr = content.str;
-  while(1){
-   int testMark = MarkArena(test);
-
-   printf("2\n");
-   fflush(stdout);
-   ptr = SearchAndAdvance(ptr,STRING("COUNT = "));
-   if(ptr == NULL){
-    break;
-   }
-
-   int count = ParseNumber(ptr);
-
-   ptr = SearchAndAdvance(ptr,STRING("KEY = "));
-   if(ptr == NULL){
-    result.earlyExit = 1;
-    break;
-   }
-
-   uint8_t key[AES_256_KEY_SIZE] = {};
-   HexStringToHex(key,ptr);
-
-   ptr = SearchAndAdvance(ptr,STRING("PLAINTEXT = "));
-   if(ptr == NULL){
-    result.earlyExit = 1;
-    break;
-   }
-  
-   uint8_t plain[AES_256_BLK_SIZE] = {};
-   HexStringToHex(plain,ptr);
-
-   uint8_t versat_result[AES_256_BLK_SIZE * 2 + 1] = {};
-
-   printf("3\n");
-   fflush(stdout);
-   VersatBuffer* buffer = BeginAES_ECB(key,true,false);
-   HexStringToHex(buffer->mem,ptr);
-   buffer->size = 16;
-
-   printf("4\n");
-   fflush(stdout);
-   int outputSize = 0;
-   int fileSize = EndAES(buffer,versat_result,&outputSize);
-
-   printf("AES: %d %d\n",outputSize,fileSize);
-
-   char versat_buffer[2048];
-   GetHexadecimal((char*) versat_result,versat_buffer, AES_256_BLK_SIZE);
-   printf("  Versat:   %s\n",versat_buffer);
-
-   result.tests += 1;
-   PopArena(test,testMark);
-  }
-
-  PopArena(test,mark);
-
-  return result;
-}
-
-#endif // AES
-
-#ifdef McEliece
-#include "api.h"
-#endif // McEliece
-
-#endif
-
 void ConfigEnableDMA(bool value);
 int VersatMcEliece(unsigned char *pk,unsigned char *sk,Arena* temp);
 
-#include <argp.h>
-  
 typedef struct{
   const char* algorithm;
   bool encrypt;
   bool decrypt;
   
   const char* key;
-  const char* seed;
   const char* iv;
   const char* inputFile;
   const char* outputFile;
+  const char* privateFile;
+  const char* publicFile;
+  const char* seed;
 } Options;
 
 error_t parse(int key, char *arg, struct argp_state *state){
   Options* options = (Options*) state->input;
   
   switch(key){
-  case ARGP_KEY_INIT: printf("Init\n"); break;
-  case ARGP_KEY_SUCCESS: printf("Success\n"); break;
-  case ARGP_KEY_ERROR: printf("Error\n"); break;
-  case ARGP_KEY_ARGS: printf("Args\n"); break;
-  case ARGP_KEY_END: printf("End\n"); break;
-  case ARGP_KEY_NO_ARGS: printf("No Args\n"); break;
-  case ARGP_KEY_FINI: printf("Fini\n"); break;
-    
+  case ARGP_KEY_INIT:    break;
+  case ARGP_KEY_SUCCESS: break;
+  case ARGP_KEY_ERROR:   break;
+  case ARGP_KEY_ARGS:    break;
+  case ARGP_KEY_END:     break;
+  case ARGP_KEY_NO_ARGS: break;
+  case ARGP_KEY_FINI:    break;
+
   case ARGP_KEY_ARG: options->algorithm = arg; break;
   case 'e': options->encrypt = true; break;
   case 'd': options->decrypt = true; break;
   case 'k': options->key = arg; break;
   case 'v': options->iv = arg; break;
-  case 's': options->seed = arg; break;
   case 'i': options->inputFile = arg; break;
   case 'o': options->outputFile = arg; break;
+  case 'P': options->privateFile = arg; break;
+  case 'p': options->publicFile = arg; break;
+  case 's': options->seed = arg; break;
   default: return ARGP_ERR_UNKNOWN;
   }
 
@@ -312,6 +157,12 @@ typedef enum {
   AESType_ECB,
   AESType_CTR
 } AESType;
+
+typedef enum{
+  McElieceType_GEN,
+  McElieceType_ENC,
+  McElieceType_DEC
+} McElieceType;
 
 bool CheckCorrectHex(const char* str,int expectedLength){
   for(int i = 0; i < expectedLength; i++){
@@ -351,18 +202,44 @@ bool FillBufferFromFile(VersatBuffer* buffer,int fileFd){
   }
 }
 
+int OpenReadFile(const char* filepath){
+  int fd = open(filepath,O_RDONLY,0);
+
+  if(fd == -1){
+    printf("Problem opening file: %s\n",filepath);
+    exit(-1);
+  }
+
+  return fd;
+}
+
+int OpenWriteFile(const char* filepath){
+  int fd = open(filepath,O_WRONLY | O_CREAT,S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+
+  if(fd == -1){
+    printf("Problem opening file: %s\n",filepath);
+    exit(-1);
+  }
+
+  return fd;
+
+}
+
 int main(int argc,char** argv){
   if(!InitVersat()){
     return -1;
   }
 
   const struct argp_option options[] = {
-    {.name = NULL,.key = 0,.arg = NULL,.flags = 0,.doc = "Configuration:",.group = 0},
+    {.name = NULL,.key = 0,.arg = NULL,.flags = 0,.doc = "AES:",.group = 0},
     {.name = "Encrypt",.key = 'e',.arg = NULL,.flags = 0,.doc = "",.group = 0},
     {.name = "Decrypt",.key = 'd',.arg = NULL,.flags = 0,.doc = "",.group = 0},
-    {.name = "Key",.key = 'k',.arg = "hex",.flags = 0,.doc = "Key used for AES in Hex",.group = 0},
-    {.name = "IV",.key = 'v',.arg = "hex",.flags = 0,.doc = "IV or initial counter for AES in Hex",.group = 0},
-    {.name = "Seed",.key = 's',.arg = "hex",.flags = 0,.doc = "Seed for McEliece in Hex",.group = 0},
+    {.name = "Key",.key = 'k',.arg = "hex",.flags = 0,.doc = "Key used for AES in Hex (32 chars for 128, 64 chars for 256)",.group = 0},
+    {.name = "IV",.key = 'v',.arg = "hex",.flags = 0,.doc = "IV or initial counter for AES in Hex (32 chars)",.group = 0},
+    {.name = NULL,.key = 0,.arg = NULL,.flags = 0,.doc = "McEliece:",.group = 0},
+    {.name = "PrivateFile",.key = 'P',.arg = "name",.flags = 0,.doc = "File to output private key or to input private key",.group = 0},
+    {.name = "PublicFile",.key = 'p',.arg = "name",.flags = 0,.doc = "File to output public key or to input public key",.group = 0},
+    {.name = "Seed",.key = 's',.arg = "hex",.flags = 0,.doc = "Seed for McEliece in Hex (96 chars)",.group = 0},
     {.name = NULL,.key = 0,.arg = NULL,.flags = 0,.doc = "Input/Output:",.group = 0},
     {.name = "InputFile",.key = 'i',.arg = "name",.flags = 0,.doc = "",.group = 0},
     {.name = "OutputFile",.key = 'o',.arg = "name",.flags = 0,.doc = "",.group = 0},
@@ -421,6 +298,7 @@ int main(int argc,char** argv){
     return -1;
   }
 
+  McElieceType mcType;
   switch(algorithm){
   case AlgorithmType_SHA:{
     if(OPT.inputFile == NULL){
@@ -429,8 +307,26 @@ int main(int argc,char** argv){
     }
   } break;
   case AlgorithmType_McEliece:{
-    if(OPT.outputFile == NULL){
-      printf("Need output file for McEliece\n");
+    if(OPT.privateFile == NULL && OPT.publicFile == NULL){
+      printf("Need either privateFile, publicFile or both for McEliece\n");
+      return -1;
+    }
+
+    if(OPT.privateFile && OPT.publicFile){
+      mcType = McElieceType_GEN;
+    } else if(OPT.publicFile){
+      mcType = McElieceType_ENC;
+    } else if(OPT.privateFile){
+      mcType = McElieceType_DEC;
+    }
+
+    if(mcType == McElieceType_ENC && OPT.outputFile == NULL){
+      printf("McEliece needs an output file when performing encapsulation\n");
+      return -1;
+    }
+
+    if(mcType == McElieceType_DEC && OPT.inputFile == NULL){
+      printf("McEliece needs an output file when performing decapsulation\n");
       return -1;
     }
 
@@ -498,25 +394,54 @@ int main(int argc,char** argv){
   int inputFd = -1;
   int outputFd = -1;
 
-  if(algorithm == AlgorithmType_AES || algorithm == AlgorithmType_SHA){
-    inputFd = open(OPT.inputFile,O_RDONLY,0);
+  int privateFd = -1;
+  int publicFd = -1;
 
-    if(inputFd == -1){
-      printf("Problem opening file: %s\n",OPT.inputFile);
-      return -1;
-    }
+  if(algorithm == AlgorithmType_AES || algorithm == AlgorithmType_SHA || (algorithm == AlgorithmType_McEliece && mcType == McElieceType_DEC)){
+    inputFd = OpenReadFile(OPT.inputFile);
   }
 
-  if(algorithm == AlgorithmType_AES || algorithm == AlgorithmType_McEliece){
-    outputFd = open(OPT.outputFile,O_WRONLY | O_CREAT,S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+  if(algorithm == AlgorithmType_AES || (algorithm == AlgorithmType_McEliece && mcType == McElieceType_ENC)){
+    outputFd = OpenWriteFile(OPT.outputFile);
+  }
 
-    if(outputFd == -1){
-      printf("Problem opening file: %s\n",OPT.outputFile);
-      return -1;
+  if(algorithm == AlgorithmType_McEliece){
+    switch(mcType){
+      case McElieceType_GEN:{
+        privateFd = OpenWriteFile(OPT.privateFile);
+        publicFd = OpenWriteFile(OPT.publicFile);
+      } break;
+      case McElieceType_ENC:{
+        publicFd = OpenReadFile(OPT.publicFile);
+      } break;
+      case McElieceType_DEC:{
+        privateFd = OpenReadFile(OPT.privateFile);
+      } break;
     }
   }
 
   switch(algorithm){
+  case AlgorithmType_SHA:{
+    VersatBuffer* buffer = BeginSHA();
+
+    uint8_t* digest = PushArray(test,32 + 1,uint8_t);
+
+    while(1){
+      if(FillBufferFromFile(buffer,inputFd)){
+        EndSHA(buffer,digest);
+        break;
+      } else {
+        buffer = ProcessSHA(buffer);
+      }
+    }
+
+    uint8_t* digestBuffer = PushArray(test,64 + 1,uint8_t);
+    char* res = GetHexadecimal(digest,digestBuffer,32);
+
+    digestBuffer[64] = '\0';
+
+    printf("%s",res);
+  } break;
   case AlgorithmType_AES:{
     VersatBuffer* buffer = NULL;
 
@@ -565,90 +490,89 @@ int main(int argc,char** argv){
       }
 
       if(end){
-        ftruncate(outputFd,totalFileSize);
+        //TODO: ftruncate(outputFd,totalFileSize);
         break;
       }
     }
   } break;
-  }
+  case AlgorithmType_McEliece:{
+    switch(mcType){
+    case McElieceType_GEN:{
+      uint8_t seed[49];
+      HexStringToHex(seed,OPT.seed);
 
-#if 0
-  int fileToRead = open("test.txt",O_RDONLY,0);
-  if(fileToRead == -1){
-    printf("Failed to open input file: %s",path);
-    return -1;
-  }
+      nist_kat_init(seed, NULL, 256);
 
-  bool AES = true;
+      uint8_t* public_key = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES,uint8_t);
+      uint8_t* secret_key = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES,uint8_t);
 
-  if(AES){
-    uint8_t key[AES_256_KEY_SIZE] = {};
-    VerstBuffer* buffer = BeginAES_ECB(key,false,false);
+      VersatMcEliece(public_key, secret_key,test);
 
-    while(1){
-      int amountRead = read(fileToRead,buffer->mem,buffer->maxSize);
+      ssize_t res = write(publicFd,public_key,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES);
+      res |= write(privateFd,secret_key,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES);
 
-      if(amountRead == 0){
-        break;
+      if(res < 0){
+        printf("There was an error writing to the file\n");
+        return -1;
+      }
+    } break;
+    case McElieceType_ENC:{
+      uint8_t* chiperText = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_CIPHERTEXTBYTES,uint8_t);
+      uint8_t* publicKey = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES,uint8_t);
+      uint8_t* sharedKey = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_BYTES,uint8_t);
+
+      ssize_t readAmount = read(publicFd,publicKey,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES);
+      if(readAmount != PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES){
+        printf("McEliece public key was not correct size\n");
+        return -1;
+      }
+      PQCLEAN_MCELIECE348864_CLEAN_crypto_kem_enc(chiperText,sharedKey,publicKey);
+
+      {
+        ssize_t res = write(outputFd,chiperText,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_CIPHERTEXTBYTES);
+        if(res < 0){
+          printf("There was an error writing to the file\n");
+          return -1;        
+        }
       }
 
-      buffer->size += amountRead;
+      char* sharedKeyBuffer = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_BYTES * 2 + 1,char);
+      char* res = GetHexadecimal(sharedKey,sharedKeyBuffer,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_BYTES);
+      sharedKeyBuffer[PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_BYTES * 2] = '\0';
 
-      int outputOffset = 0;
-      buffer = ProcessAES(buffer,output,&outputOffset);
+      printf("%s",res);
+    } break;
+    case McElieceType_DEC:{
+      uint8_t* chiperText = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_CIPHERTEXTBYTES,uint8_t);
+      uint8_t* privateKey = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES,uint8_t);
+      uint8_t* sharedKey = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_BYTES,uint8_t);
+
+      {
+        ssize_t readAmount = read(privateFd,privateKey,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES);
+        if(readAmount != PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES){
+          printf("McEliece public key was not correct size\n");
+          return -1;
+        }
+      }
+      {
+        ssize_t readAmount = read(inputFd,chiperText,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_CIPHERTEXTBYTES);
+        if(readAmount != PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES){
+          printf("McEliece public key was not correct size\n");
+          return -1;
+        }
+      }
+
+      PQCLEAN_MCELIECE348864_CLEAN_crypto_kem_dec(sharedKey,chiperText,privateKey);
+
+      char* sharedKeyBuffer = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_BYTES * 2 + 1,char);
+      char* res = GetHexadecimal(sharedKey,sharedKeyBuffer,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_BYTES);
+      sharedKeyBuffer[PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_BYTES * 2] = '\0';
+
+      printf("%s",res);
+    } break;
     }
+  } break;
   }
-#endif
-
-#ifdef AES
-{
-  String content = STRING("COUNT = 0\nKEY = CC22DA787F375711C76302BEF0979D8EDDF842829C2B99EF3DD04E23E54CC24B\nPLAINTEXT = CCC62C6B0A09A671D64456818DB29A4D\n");
-  printf("%.*s",content.size,content.str);
-  VersatCommonAESTests(test,content);
-  printf("Good: DF8634CA02B13A125B786E1DCE90658B\n");
-}
-#endif // AES
-
-#ifdef SHA
-{
-  String content = STRING("LEN = 128\nMSG = 0A27847CDC98BD6F62220B046EDD762B\n");
-  printf("%.*s",content.size,content.str);
-  VersatCommonSHATests(test,content); // 80C25EC1600587E7F28B18B1B18E3CDC89928E39CAB3BC25E4D4A4C139BCEDC4
-  printf("Good: 80C25EC1600587E7F28B18B1B18E3CDC89928E39CAB3BC25E4D4A4C139BCEDC4\n");
-}
-#endif // SHA
-
-#ifdef McEliece
-   unsigned char seed[49];
-   HexStringToHex(seed,"061550234D158C5EC95595FE04EF7A25767F2E24CC2BC479D09D86DC9ABCFDE7056A8C266F9EF97ED08541DBD2E1FFA1");
-
-   nist_kat_init(seed, NULL, 256);
-
-   unsigned char* public_key = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES,unsigned char);
-   unsigned char* secret_key = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES,unsigned char);
-
-   VersatMcEliece(public_key, secret_key,test);
-
-   unsigned char* public_key_hex = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES * 2 + 1,char);
-   unsigned char* secret_key_hex = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES * 2 + 1,char);
-
-   GetHexadecimal(public_key,public_key_hex,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES);
-   GetHexadecimal(secret_key,secret_key_hex,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES);
-
-   // C5ED9AF0EEA0D4ADEA66D1A2A2F614E0
-   // 5B815C890117893D8BB8E886F63A78CE
-
-   printf("  Got Public (first 32 chars):      %s\n",public_key_hex);
-   printf("  Got Secret (first 32 chars):      %s\n",secret_key_hex);
-
-#endif // McEliece
 
   return 0;
 }
-
-/*
-
-TODO: Currently versat DMA is being disabled because of physical memory 
-    Affects AES.
-    
-*/ 
