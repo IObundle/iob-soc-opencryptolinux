@@ -8,17 +8,10 @@
 #include <argp.h>
 
 #include "arena.h"
+#include "versat_accel.h"
 #include "versatCrypto.h"
 
 #include "api.h"
-
-#undef SHA 
-#undef AES
-#undef McEliece
-
-//#define SHA
-//#define AES
-//#define McEliece
 
 #undef  ARRAY_SIZE
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
@@ -29,15 +22,6 @@ typedef struct{
 } String;
 
 #define STRING(str) (String){str,strlen(str)}
-
-typedef struct {
-  int initTime;
-  int tests;
-  int goodTests;
-  int versatTimeAccum;
-  int softwareTimeAccum;
-  int earlyExit;
-} TestState;
 
 void nist_kat_init(unsigned char *entropy_input, unsigned char *personalization_string, int security_strength);
 
@@ -101,7 +85,6 @@ char* GetHexadecimal(const char* text,char* buffer,int str_size){
   return buffer;
 }
 
-void ConfigEnableDMA(bool value);
 int VersatMcEliece(unsigned char *pk,unsigned char *sk,Arena* temp);
 
 typedef struct{
@@ -326,7 +309,7 @@ int main(int argc,char** argv){
     }
 
     if(mcType == McElieceType_DEC && OPT.inputFile == NULL){
-      printf("McEliece needs an output file when performing decapsulation\n");
+      printf("McEliece needs an input file when performing decapsulation\n");
       return -1;
     }
 
@@ -490,7 +473,7 @@ int main(int argc,char** argv){
       }
 
       if(end){
-        //TODO: ftruncate(outputFd,totalFileSize);
+        ftruncate(outputFd,totalFileSize);
         break;
       }
     }
@@ -550,14 +533,14 @@ int main(int argc,char** argv){
       {
         ssize_t readAmount = read(privateFd,privateKey,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES);
         if(readAmount != PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES){
-          printf("McEliece public key was not correct size\n");
+          printf("McEliece private key was not correct size\n");
           return -1;
         }
       }
       {
         ssize_t readAmount = read(inputFd,chiperText,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_CIPHERTEXTBYTES);
-        if(readAmount != PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES){
-          printf("McEliece public key was not correct size\n");
+        if(readAmount != PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_CIPHERTEXTBYTES){
+          printf("McEliece cipherText was not correct size\n");
           return -1;
         }
       }

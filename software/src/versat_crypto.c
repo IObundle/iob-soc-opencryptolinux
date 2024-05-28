@@ -16,6 +16,38 @@
 
 void clear_cache();
 
+static char HexToInt(char ch){
+   if('0' <= ch && ch <= '9'){
+      return (ch - '0');
+   } else if('a' <= ch && ch <= 'f'){
+      return ch - 'a' + 10;
+   } else if('A' <= ch && ch <= 'F'){
+      return ch - 'A' + 10;
+   } else {
+      return 0x7f;
+   }
+}
+
+// Make sure that buffer is capable of storing the whole thing. Returns number of bytes inserted
+int HexStringToHex(char* buffer,const char* str){
+   int inserted = 0;
+   for(int i = 0; ; i += 2){
+      char upper = HexToInt(str[i]);
+      char lower = HexToInt(str[i+1]);
+
+      if(upper >= 16 || lower >= 16){
+         if(upper < 16){ // Upper is good but lower is not
+            printf("Warning: HexString was not divisible by 2\n");
+         }
+         break;
+      }
+
+      buffer[inserted++] = upper * 16 + lower;
+   }
+
+   return inserted;
+}
+
 const uint8_t sbox[256] = {
    0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
    0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
@@ -167,7 +199,7 @@ const uint8_t mul14[] = {
 };
 
 void FillLookupTable(LookupTableAddr addr,const uint8_t* mem,int size){
-   VersatMemoryCopy(addr.addr,(int*) mem,size * sizeof(uint8_t));
+   VersatMemoryCopy(addr.addr,mem,size * sizeof(uint8_t));
 }
 
 void FillKeySchedule(GenericKeySchedule256Addr addr){
@@ -215,7 +247,7 @@ void FillInvMainRound(FullAESRoundsAddr addr){
    FillInvMixColumns(addr.invMixColumns);
 }
 
-void ExpandKey128(uint8_t* key){
+void ExpandKey128(const uint8_t* key){
    CryptoAlgosConfig* config = (CryptoAlgosConfig*) accelConfig;
 
    CryptoAlgosAddr addr = ACCELERATOR_TOP_ADDR_INIT;
@@ -245,7 +277,7 @@ void ExpandKey128(uint8_t* key){
   config->aes.key_0.disabled = 1;
 }
 
-void Encrypt(uint8_t* data,uint8_t* result){
+void Encrypt(const uint8_t* data,uint8_t* result){
    CryptoAlgosConfig* config = (CryptoAlgosConfig*) accelConfig;
 
    CryptoAlgosAddr addr = ACCELERATOR_TOP_ADDR_INIT;
@@ -280,7 +312,7 @@ void Encrypt(uint8_t* data,uint8_t* result){
    }
 }
 
-void Decrypt(uint8_t* data,uint8_t* result){
+void Decrypt(const uint8_t* data,uint8_t* result){
    CryptoAlgosConfig* config = (CryptoAlgosConfig*) accelConfig;
 
    CryptoAlgosAddr addr = ACCELERATOR_TOP_ADDR_INIT;
@@ -315,7 +347,7 @@ void Decrypt(uint8_t* data,uint8_t* result){
    }
 }
 
-void ExpandKey256(uint8_t* key){
+void ExpandKey256(const uint8_t* key){
    CryptoAlgosConfig* config = (CryptoAlgosConfig*) accelConfig;
 
    CryptoAlgosAddr addr = ACCELERATOR_TOP_ADDR_INIT;
@@ -352,7 +384,7 @@ void ExpandKey256(uint8_t* key){
   config->aes.key_0.disabled = 1;
 }
 
-void Encrypt256(uint8_t* data,uint8_t* result){
+void Encrypt256(const uint8_t* data,uint8_t* result){
    CryptoAlgosConfig* config = (CryptoAlgosConfig*) accelConfig;
 
    CryptoAlgosAddr addr = ACCELERATOR_TOP_ADDR_INIT;
@@ -386,7 +418,7 @@ void Encrypt256(uint8_t* data,uint8_t* result){
    }
 }
 
-void Decrypt256(uint8_t* data,uint8_t* result){
+void Decrypt256(const uint8_t* data,uint8_t* result){
    CryptoAlgosConfig* config = (CryptoAlgosConfig*) accelConfig;
 
    CryptoAlgosAddr addr = ACCELERATOR_TOP_ADDR_INIT;
@@ -467,7 +499,7 @@ void PrintResult(uint8_t* buffer){
    }   
 }
 
-void ECB128(uint8_t* key,uint8_t* plaintext,uint8_t* result){
+void AES_ECB128(const uint8_t* key,const uint8_t* plaintext,uint8_t* result){
    InitAES();
 
    ExpandKey128(key);
@@ -475,7 +507,7 @@ void ECB128(uint8_t* key,uint8_t* plaintext,uint8_t* result){
    Encrypt(plaintext,result);
 }
 
-#if 0
+#if 1
 void ECB128(const char* key,const char* plaintext,const char* expected){
    uint8_t keyBuffer[16];
    uint8_t dataBuffer[32];
@@ -518,21 +550,13 @@ void ECB128(const char* key,const char* plaintext,const char* expected){
 
 #include "versat_crypto_tests.h"
 
-void ECB256(uint8_t* key,uint8_t* plaintext,uint8_t* result){
-   //int after1 = GetTime();
-
+void AES_ECB256(const uint8_t* key,const uint8_t* plaintext,uint8_t* result){
    ExpandKey256(key);
 
-   //int after2 = GetTime();
-
    Encrypt256(plaintext,result);
-
-   //int after3 = GetTime();
-
-   //printf("%d %d\n",after2 - after1,after3 - after2);
 }
 
-#if 0
+#if 1
 void ECB256(const char* key,const char* plaintext,const char* expected){
    uint8_t keyBuffer[32];
    uint8_t dataBuffer[32];
@@ -1079,38 +1103,6 @@ void VersatAES(uint8_t *result, uint8_t *cypher, uint8_t *key){
 
    CTR128(key128,counter,plaintext,"874d6191b620e3261bef6864990db6ce 9806f66b7970fdff8617187bb9fffdff");
    CTR256(key256,counter,plaintext,"601ec313775789a5b7a7f504bbf3d228 f443e3ca4d62b59aca84e990cacaf5c5");
-}
-
-static char HexToInt(char ch){
-   if('0' <= ch && ch <= '9'){
-      return (ch - '0');
-   } else if('a' <= ch && ch <= 'f'){
-      return ch - 'a' + 10;
-   } else if('A' <= ch && ch <= 'F'){
-      return ch - 'A' + 10;
-   } else {
-      return 0x7f;
-   }
-}
-
-// Make sure that buffer is capable of storing the whole thing. Returns number of bytes inserted
-int HexStringToHex(char* buffer,const char* str){
-   int inserted = 0;
-   for(int i = 0; ; i += 2){
-      char upper = HexToInt(str[i]);
-      char lower = HexToInt(str[i+1]);
-
-      if(upper >= 16 || lower >= 16){
-         if(upper < 16){ // Upper is good but lower is not
-            printf("Warning: HexString was not divisible by 2\n");
-         }
-         break;
-      }
-
-      buffer[inserted++] = upper * 16 + lower;
-   }
-
-   return inserted;
 }
 
 static uint32_t initialStateValues[] = {0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19};

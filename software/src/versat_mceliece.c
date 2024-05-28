@@ -28,6 +28,8 @@
 // When mat is allocated in such a way that rows are guaranteed to be aligned
 #define CAST_PTR(TYPE,PTR) ((TYPE) ((void*) (PTR)))
 
+void clear_cache();
+
 static McElieceConfig* vec;
 static void* matAddr;
 
@@ -65,7 +67,7 @@ void PrintFullRow(unsigned char* view){
 
 void ReadRow(uint32_t* row){
     for (int i = 0; i < SINT; i++){
-        row[i] = VersatUnitRead((iptr) matAddr,i);
+        row[i] = VersatUnitRead(matAddr,i);
     }
 }
 
@@ -186,8 +188,6 @@ int Versat_pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, in
     CryptoAlgosConfig* topConfig = (CryptoAlgosConfig*) accelConfig;
     vec = (McElieceConfig*) &topConfig->eliece;
     matAddr = (void*) TOP_eliece_mat_addr;
-
-    //ActivateMergedAccelerator(McEliece);
 
     ConfigureSimpleVReadBare(&vec->row);
 

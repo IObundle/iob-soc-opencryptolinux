@@ -251,7 +251,7 @@ bool InitVersat(){
   versat.interface[1].maxSize = versat.buffers[1].size;
 
   // Start off in the SHA state
-  InitVersatSHA();
+  // InitVersatSHA();
 
   return true;
 }
@@ -390,15 +390,17 @@ static char* GetHexadecimal(const char* text,char* buffer,int str_size){
 static size_t versat_crypto_hashblocks_sha256(PhysicalBuffer* physBuffer,const uint8_t *in, size_t inlen){
   while (inlen >= 64) {
     char buffer[128];
-    //GetHexadecimal((char*) in,buffer, 64);
-    //printf("Called with %p %ld\n",in,inlen);
-    //printf("%s\n",buffer);
-
     ACCEL_TOP_sha_MemRead_ext_addr = (iptr) ConvertVirtToPhys(*physBuffer,in);
+
+    for(int i = 0; i < 64; i++){
+      printf("%02x",in[i]);
+    }
+    printf("\n");
 
     // Loads data + performs work
     clear_cache();
     RunAccelerator(1);
+    clear_cache();
 
     if(!versat.SHA.initialStateValuesLoaded){
       VersatUnitWrite(TOP_sha_State_s_0_reg_addr,0,initialStateValues[0]);
@@ -427,7 +429,6 @@ VersatBuffer* ProcessSHA(VersatBuffer* input){
   NormalizeVersatBuffer(input);  
   int numberBlocks = input->size / 64;
 
-  // Since versat currently does not allow to process SHA on the background, simple use and reuse the same buffer.
   versat_crypto_hashblocks_sha256(buffer,input->mem,numberBlocks * 64);
 
   int amountProcessed = numberBlocks * 64;
@@ -507,9 +508,9 @@ void EndSHA(VersatBuffer* input,uint8_t digest[32]){
 
   // Flush last valid data
   clear_cache();
-  //printf("Before run %x\n",VersatUnitRead(TOP_sha_State_s_0_reg_addr,0));
   RunAccelerator(1);
-  //printf("After run %x\n",VersatUnitRead(TOP_sha_State_s_0_reg_addr,0));
+
+  clear_cache();
 
   store_bigendian_32(&digest[0*4],(uint32_t) VersatUnitRead(TOP_sha_State_s_0_reg_addr,0));
   store_bigendian_32(&digest[1*4],(uint32_t) VersatUnitRead(TOP_sha_State_s_1_reg_addr,0));
@@ -878,10 +879,8 @@ void Decrypt(uint8_t* data,uint8_t* result,uint8_t* lastAddition){
   if(lastAddition){
     RegAddr* view = &aesAddr.aes.lastValToAdd_0;
     for(int i = 0; i < 16; i++){
-      printf("%02x",lastAddition[i]);
       VersatUnitWrite(view[i].addr,0,lastAddition[i]);
     }
-    printf("\n");
   }
 
   StartAccelerator();
@@ -1054,7 +1053,7 @@ int EndAES(VersatBuffer* input,uint8_t* output,/* out */ int* outputOffset){
     int totalPaddingSize = (processTwoBlocks ? 32 : 16);
     uint8_t paddingToAdd = totalPaddingSize - finalSize;
 
-    // PKCS#5 padding
+    // PKCS#7 padding
     for(; lastBuffer->size < totalPaddingSize;){
       lastBuffer->mem[lastBuffer->size++] = paddingToAdd;
     }
@@ -1296,8 +1295,6 @@ int Versat_pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, in
   gf* g = PushArray(temp,SYS_T + 1,gf);
   gf* L = PushArray(temp,SYS_N,gf); // support
   gf* inv = PushArray(temp,SYS_N,gf);
-
-  //
 
   g[ SYS_T ] = 1;
 

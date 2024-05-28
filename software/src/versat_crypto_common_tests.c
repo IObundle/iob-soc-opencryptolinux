@@ -6,6 +6,7 @@
 #include "printf.h"
 #include "iob-eth.h"
 
+#include "versat_accel.h"
 #include "versat_crypto.h"
 #include "crypto/aes.h"
 #include "crypto/sha2.h"
@@ -15,10 +16,11 @@
 #include "string.h"
 
 void versat_init(int);
+void AES_ECB256(const uint8_t* key,const uint8_t* plaintext,uint8_t* result);
 
 void InitializeCryptoSide(int versatAddress){
   versat_init(versatAddress);
-  
+  ConfigEnableDMA(true);  
   InitArena(16*1024*1024); // 16 megabytes should suffice. Arena memory used by crypto algorithms, both by software and Versat impl.
 }
 
@@ -186,7 +188,7 @@ TestState VersatCommonAESTests(String content){
     uint8_t software_result[AES_BLK_SIZE] = {};
 
     int start = GetTime();
-    ECB256(key,plain,versat_result);
+    AES_ECB256(key,plain,versat_result);
     int middle = GetTime();
     
     struct AES_ctx ctx;

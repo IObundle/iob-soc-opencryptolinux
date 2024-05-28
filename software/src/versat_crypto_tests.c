@@ -10,6 +10,10 @@
 #include "api.h"
 #include "arena.h"
 void nist_kat_init(unsigned char *entropy_input, unsigned char *personalization_string, int security_strength);
+int HexStringToHex(char* buffer,const char* str);
+int VersatMcEliece(unsigned char *pk,unsigned char *sk);
+char* GetHexadecimal(const char* text,char* buffer,int str_size);
+void AES_ECB256(const uint8_t* key,const uint8_t* plaintext,uint8_t* result);
 
 //#include "string.h"
 

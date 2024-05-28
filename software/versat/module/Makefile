@@ -8,7 +8,6 @@ SRC+=arena.c
 SRC+=versatCrypto.c 
 SRC+=$(wildcard McEliece/*.c)
 SRC+=$(wildcard McEliece/common/*.c)
-#SRC+=iob-versat.c versat_crypto.c
 
 # Need to use nix-shell started from the OS submodules to compile
 all: test module
