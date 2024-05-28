@@ -103,7 +103,7 @@ class iob_soc_opencryptolinux(iob_soc):
     def _create_submodules_list(cls, extra_submodules=[]):
         """Create submodules list with dependencies of this module"""
 
-        VERSAT_SPEC = f"{cls.setup_dir}/software/versat/versatSpec.txt"
+        VERSAT_SPEC = f"{__class__.setup_dir}/software/versat/versatSpec.txt"
         VERSAT_EXTRA_UNITS = os.path.realpath(
             os.path.join(os.path.dirname(__file__), "hardware/src/units")
         )
@@ -176,7 +176,7 @@ class iob_soc_opencryptolinux(iob_soc):
         shutil.copy2(src_file, dst)
 
         shutil.copytree(
-            f"{cls.setup_dir}/hardware/src/units",
+            f"{__class__.setup_dir}/hardware/src/units",
             f"{cls.build_dir}/hardware/src",
             dirs_exist_ok=True,
         )
