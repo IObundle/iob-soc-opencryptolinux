@@ -175,8 +175,14 @@ class iob_soc_opencryptolinux(iob_soc):
         src_file = f"{__class__.setup_dir}/scripts/check_if_run_linux.py"
         shutil.copy2(src_file, dst)
 
-        shutil.copy2(f"{__class__.setup_dir}/software/versat/module/versat.ko", f"{cls.build_dir}/software")
-        shutil.copy2(f"{__class__.setup_dir}/software/versat/module/exampleTransfer.sh", f"{cls.build_dir}/software")
+        shutil.copy2(
+            f"{__class__.setup_dir}/software/versat/module/versat.ko",
+            f"{cls.build_dir}/software",
+        )
+        shutil.copy2(
+            f"{__class__.setup_dir}/software/versat/module/exampleTransfer.sh",
+            f"{cls.build_dir}/software",
+        )
 
         shutil.copytree(
             f"{__class__.setup_dir}/hardware/src/units",
