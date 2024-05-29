@@ -423,7 +423,7 @@ int main(int argc,char** argv){
 
     digestBuffer[64] = '\0';
 
-    printf("%s",res);
+    printf("%s\n",res);
   } break;
   case AlgorithmType_AES:{
     VersatBuffer* buffer = NULL;
