@@ -20,7 +20,37 @@ expect {
     timeout 300
 }
 
-print "\n[minicom] Done"
+send "root"
+
+expect {
+    "#"
+    timeout 10
+}
+
+send "ls"
+
+expect {
+    "#"
+    timeout 10
+}
+
+send "rz"
+! sz ../../software/crypto
+
+send "rz"
+! sz ../../software/versat.ko
+
+send "rz"
+! sz ../../software/exampleTransfer.sh
+
+send "./exampleTransfer.sh"
+
+expect {
+    "#"
+    timeout 300
+}
+
+print "\n[minicom] Done Test"
 
 # Exit minicom
 ! kill `cut -f4 -d' ' /proc/$PPID/stat`

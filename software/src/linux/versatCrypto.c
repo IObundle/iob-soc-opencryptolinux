@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -27,7 +28,11 @@ typedef struct{
 
 PhysicalAllocator OpenPhysicalAllocator(){
   PhysicalAllocator res = {};
-  res.fd = open("/dev/phys",O_RDWR | O_SYNC);
+  res.fd = open("/dev/versat",O_RDWR | O_SYNC);
+  if(res.fd < 0){
+    printf("Failed to open /dev/versat");
+    exit(-1);
+  }
   return res;
 }
 
@@ -391,11 +396,6 @@ static size_t versat_crypto_hashblocks_sha256(PhysicalBuffer* physBuffer,const u
   while (inlen >= 64) {
     char buffer[128];
     ACCEL_TOP_sha_MemRead_ext_addr = (iptr) ConvertVirtToPhys(*physBuffer,in);
-
-    for(int i = 0; i < 64; i++){
-      printf("%02x",in[i]);
-    }
-    printf("\n");
 
     // Loads data + performs work
     clear_cache();
