@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 import shutil
 import math
 
@@ -16,9 +17,11 @@ from iob_uart16550 import iob_uart16550
 from iob_uart import iob_uart
 from iob_spi_master import iob_spi_master
 from iob_eth import iob_eth
+from N25Qxxx import N25Qxxx
 from axil2iob import axil2iob
 from iob_reset_sync import iob_reset_sync
 from iob_ram_sp import iob_ram_sp
+from iob_versat import CreateVersatClass
 
 
 class iob_soc_opencryptolinux(iob_soc):
@@ -38,6 +41,20 @@ class iob_soc_opencryptolinux(iob_soc):
             cls.peripherals.append(iob_uart16550("UART0", "Default UART interface"))
         if iob_spi_master in cls.submodule_list:
             cls.peripherals.append(iob_spi_master("SPI0", "SPI master peripheral"))
+        # Instantiate versat
+        if cls.versatType in cls.submodule_list:
+            cls.versat = cls.versatType(
+                "VERSAT0",
+                "Versat accelerator",
+                parameters={
+                    "AXI_ID_W": "AXI_ID_W",
+                    "AXI_LEN_W": "AXI_LEN_W",
+                    "AXI_ADDR_W": "AXI_ADDR_W",
+                    "AXI_DATA_W": "AXI_DATA_W",
+                },
+            )
+            cls.peripherals.append(cls.versat)
+
         if iob_eth in cls.submodule_list:
             cls.peripherals.append(
                 iob_eth(
@@ -86,6 +103,16 @@ class iob_soc_opencryptolinux(iob_soc):
     @classmethod
     def _create_submodules_list(cls, extra_submodules=[]):
         """Create submodules list with dependencies of this module"""
+
+        VERSAT_SPEC = f"{__class__.setup_dir}/software/versat/versatSpec.txt"
+        VERSAT_EXTRA_UNITS = os.path.realpath(
+            os.path.join(os.path.dirname(__file__), "hardware/src/units")
+        )
+
+        cls.versatType = CreateVersatClass(
+            False, VERSAT_SPEC, "CryptoAlgos", VERSAT_EXTRA_UNITS, cls.build_dir
+        )
+
         super()._create_submodules_list(
             [
                 {"interface": "peripheral_axi_wire"},
@@ -101,8 +128,11 @@ class iob_soc_opencryptolinux(iob_soc):
                 axil2iob,
                 iob_reset_sync,
                 iob_ram_sp,
+                cls.versatType,
                 # iob_spi_master,
                 iob_eth,
+                iob_spi_master,
+                (N25Qxxx, {"purpose": "simulation"}),
                 (iob_uart, {"purpose": "simulation"}),
             ]
             + extra_submodules
@@ -147,6 +177,15 @@ class iob_soc_opencryptolinux(iob_soc):
             shutil.copy2(src_file, dst)
         src_file = f"{__class__.setup_dir}/scripts/check_if_run_linux.py"
         shutil.copy2(src_file, dst)
+
+        shutil.copy2(f"{__class__.setup_dir}/software/versat/module/versat.ko", f"{cls.build_dir}/software")
+        shutil.copy2(f"{__class__.setup_dir}/software/versat/module/exampleTransfer.sh", f"{cls.build_dir}/software")
+
+        shutil.copytree(
+            f"{__class__.setup_dir}/hardware/src/units",
+            f"{cls.build_dir}/hardware/src",
+            dirs_exist_ok=True,
+        )
 
         # Override periphs_tmp.h of iob-soc with one specific for opencryptolinux
         create_periphs_tmp(
@@ -566,5 +605,125 @@ endif
                         "port": "",
                         "bits": [],
                     },
+                ),
+            ]
+        if iob_spi_master in cls.submodule_list:
+            cls.peripheral_portmap += [
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "avalid_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "address_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "wdata_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "wstrb_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "rdata_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "rvalid_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "ready_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "SS",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "SCLK",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "MISO",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "MOSI",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "WP_N",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "HOLD_N",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
                 ),
             ]

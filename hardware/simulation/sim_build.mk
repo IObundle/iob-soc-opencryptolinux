@@ -12,11 +12,13 @@ ifeq ($(SIMULATOR),verilator)
 # verilator top module
 VTOP:=iob_soc_opencryptolinux_sim_wrapper
 
+VSRC_TMP:=$(filter-out ./src/N25Qxxx.v,$(VSRC))
+VSRC=$(VSRC_TMP)
 endif
 
 CONSOLE_CMD ?=../../scripts/console.py -L
 
-GRAB_TIMEOUT ?= 3600
+GRAB_TIMEOUT ?= 7200
 
 TEST_LIST+=test1
 test1:
