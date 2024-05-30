@@ -1,5 +1,6 @@
 # Add iob_soc_opencryptolinux software as a build dependency
 HEX+=iob_soc_opencryptolinux_boot.hex iob_soc_opencryptolinux_firmware.hex
+HEX+=boot_flow
 
 ROOT_DIR :=../..
 include $(ROOT_DIR)/software/sw_build.mk
@@ -23,3 +24,5 @@ GRAB_TIMEOUT ?= 7200
 TEST_LIST+=test1
 test1:
 	make -C ../../ fw-clean SIMULATOR=$(SIMULATOR) && make -C ../../ sim-clean SIMULATOR=$(SIMULATOR) && make run SIMULATOR=$(SIMULATOR)
+
+.PHONY: boot_flow
