@@ -58,11 +58,7 @@ TestState VersatCommonSHATests(String content){
 
   int mark = MarkArena();
 
-  int start = GetTime();
   InitVersatSHA();
-  int end = GetTime();
-
-  result.initTime = end - start;
 
   static const int HASH_SIZE = (256/8);
 
@@ -101,11 +97,8 @@ TestState VersatCommonSHATests(String content){
       software_digest[i] = 0;
     }
 
-    int start = GetTime();
     VersatSHA(versat_digest,message,len / 8);
-    int middle = GetTime();
     sha256(software_digest,message,len / 8);
-    int end = GetTime();
 
     bool good = true;
     for(int i = 0; i < 256; i++){
@@ -116,8 +109,6 @@ TestState VersatCommonSHATests(String content){
     }
 
     if(good){
-      result.versatTimeAccum += middle - start;
-      result.softwareTimeAccum += end - middle;
       result.goodTests += 1;
     } else {
       char versat_buffer[2048];
@@ -187,15 +178,12 @@ TestState VersatCommonAESTests(String content){
     uint8_t versat_result[AES_BLK_SIZE] = {};
     uint8_t software_result[AES_BLK_SIZE] = {};
 
-    int start = GetTime();
     AES_ECB256(key,plain,versat_result);
-    int middle = GetTime();
     
     struct AES_ctx ctx;
     AES_init_ctx(&ctx,key);
     memcpy(software_result,plain,AES_BLK_SIZE);
     AES_ECB_encrypt(&ctx,software_result);
-    int end = GetTime();
 
     bool good = true;
     for(int i = 0; i < AES_BLK_SIZE; i++){
@@ -206,8 +194,6 @@ TestState VersatCommonAESTests(String content){
     }
 
     if(good){
-      result.versatTimeAccum += middle - start;
-      result.softwareTimeAccum += end - middle;
       result.goodTests += 1;
     } else {
       char versat_buffer[2048];

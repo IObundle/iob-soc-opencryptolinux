@@ -131,7 +131,7 @@ class iob_soc_opencryptolinux(iob_soc):
                 cls.versatType,
                 # iob_spi_master,
                 iob_eth,
-                iob_spi_master,
+                #iob_spi_master,
                 (N25Qxxx, {"purpose": "simulation"}),
                 (iob_uart, {"purpose": "simulation"}),
             ]
