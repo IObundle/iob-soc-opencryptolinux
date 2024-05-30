@@ -85,6 +85,7 @@ IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/printf.c
 # NOTE(Ruben): To speed up simulation, we do not include or simulate crypto code in simulation. It greatly increases binary size and some tests would take forever. Better to run all tests in fpga-run.
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/versat_crypto.c
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/crypto/aes.c
+IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/opencryptoUtils.c
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/versat_crypto_common_tests.c
 ifeq ($(SIMULATION),1)
 IOB_SOC_OPENCRYPTOLINUX_FW_SRC+=src/versat_simple_crypto_tests.c
