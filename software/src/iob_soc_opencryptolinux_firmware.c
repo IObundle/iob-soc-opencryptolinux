@@ -132,18 +132,6 @@ int main() {
   // Global interrupt disable
   csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
 
-
-  // Tests are too big and slow to perform during simulation.
-  // Comment out the source files in sw_build.mk to also reduce binary size and speedup simulation.
-#ifndef SIMULATION
-  test_result |= VersatSHATests();
-  test_result |= VersatAESTests();
-  test_result |= VersatMcElieceTests();
-#else
-  test_result |= VersatSimpleSHATests();
-  test_result |= VersatSimpleAESTests();
-#endif
-
 #ifdef SIMULATION
 #ifndef VERILATOR
   unsigned int word = 0xA3A2A1A0;
@@ -313,6 +301,17 @@ int main() {
 
 #endif // #ifndef VERILATOR
 #endif // #ifdef SIMULATION
+
+  // Tests are too big and slow to perform during simulation.
+  // Comment out the source files in sw_build.mk to also reduce binary size and speedup simulation.
+#ifndef SIMULATION
+  test_result |= VersatSHATests();
+  test_result |= VersatAESTests();
+  test_result |= VersatMcElieceTests();
+#else
+  test_result |= VersatSimpleSHATests();
+  test_result |= VersatSimpleAESTests();
+#endif
 
   if (test_result) {
     uart16550_sendfile("test.log", 12, "Test failed!");

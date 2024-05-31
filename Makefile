@@ -9,7 +9,7 @@ LIB_DIR:=submodules/IOBSOC/submodules/LIB
 include $(LIB_DIR)/setup.mk
 
 INIT_MEM ?= 0
-RUN_LINUX ?= 1
+RUN_LINUX ?= 0
 USE_EXTMEM := 1
 BOOT_FLOW ?= CONSOLE_TO_EXTMEM
 
@@ -46,6 +46,10 @@ fpga-connect:
 	nix-shell --run 'make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX)'
 	# Should run under 'bash', running with 'fish' as a shell gives an error
 	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) BOOT_FLOW=$(BOOT_FLOW)
+
+fpga-run-only:
+	cp -r ./software/src ../$(CORE)_V*/software
+	make -C ../$(CORE)_V*/ fpga-fw-build fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
 
 fpga-test:
 	make clean setup fpga-run INIT_MEM=0

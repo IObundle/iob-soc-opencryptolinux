@@ -3,7 +3,7 @@
 # Set 5min timeout
 # runscript has 2min timeout by default:
 # check `timeout` in: https://linux.die.net/man/1/runscript
-timeout 300
+timeout 600
 
 print "\n[minicom] Waiting to receive test.log..."
 # expect has default timeout of 60 seconds
@@ -20,7 +20,30 @@ expect {
     timeout 300
 }
 
-print "\n[minicom] Done"
+send "root"
+
+expect {
+    "#"
+    timeout 10
+}
+
+send "rz"
+! sz ../../software/crypto
+
+send "rz"
+! sz ../../software/versat.ko
+
+send "rz"
+! sz ../../software/exampleTransfer.sh
+
+send "./exampleTransfer.sh"
+
+expect {
+    "#"
+    timeout 300
+}
+
+print "\n[minicom] Done Test"
 
 # Exit minicom
 ! kill `cut -f4 -d' ' /proc/$PPID/stat`

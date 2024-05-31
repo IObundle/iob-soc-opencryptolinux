@@ -10,6 +10,10 @@
 #include "api.h"
 #include "arena.h"
 void nist_kat_init(unsigned char *entropy_input, unsigned char *personalization_string, int security_strength);
+int HexStringToHex(char* buffer,const char* str);
+int VersatMcEliece(unsigned char *pk,unsigned char *sk);
+char* GetHexadecimal(const char* text,char* buffer,int str_size);
+void AES_ECB256(const uint8_t* key,const uint8_t* plaintext,uint8_t* result);
 
 //#include "string.h"
 
@@ -37,8 +41,8 @@ int VersatSHATests(){
   printf("\n\n=======================================================\n");
   printf("SHA tests: %d passed out of %d\n\n",result.goodTests,result.tests);
   printf("  Average cycles (only counting passing tests) (not seconds)\n");
-  printf("    Versat:  %d\n",result.versatTimeAccum / result.goodTests);
-  printf("  Software: %d\n",result.softwareTimeAccum / result.goodTests);
+  printf("    Versat: %-7d\n",result.versatTimeAccum / result.goodTests);
+  printf("  Software: %-7d\n",result.softwareTimeAccum / result.goodTests);
   printf("=======================================================\n\n");
 
   return (result.goodTests == result.tests) ? 0 : 1;
@@ -59,8 +63,8 @@ int VersatAESTests(){
   printf("\n\n=======================================================\n");
   printf("AES tests: %d passed out of %d\n\n",result.goodTests,result.tests);
   printf("  Average cycles (only counting passing tests)\n");
-  printf("    Versat:  %d\n",result.versatTimeAccum / result.goodTests);
-  printf("  Software: %d\n",result.softwareTimeAccum / result.goodTests);
+  printf("    Versat: %-7d\n",result.versatTimeAccum / result.goodTests);
+  printf("  Software: %-7d\n",result.softwareTimeAccum / result.goodTests);
   printf("=======================================================\n\n");
 
   return (result.goodTests == result.tests) ? 0 : 1;

@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module xunitF #(
-         parameter DELAY_W = 32,
+         parameter DELAY_W = 7,
          parameter DATA_W = 32
               )
     (
