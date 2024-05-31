@@ -9,6 +9,7 @@
 #include "iob_soc_opencryptolinux_periphs.h"
 #include "iob_soc_opencryptolinux_system.h"
 #include "printf.h"
+#include <stdio.h>
 #include <string.h>
 
 #define PROGNAME "IOb-Bootloader"
@@ -16,23 +17,8 @@
 #define DC1 17 // Device Control 1 (used to indicate end of bootloader)
 #define EXT_MEM 0x80000000
 
-#define NSAMPLES 16
-
-// Set SPI Support:
-// Simulation: Enabled, except for Verilator
-// FPGA: Disabled, except for AMD
-#ifdef SIMULATION
-#   ifdef VERILATOR
-        // no SPI support
-#   else
-#       define SPI_SUPPORT
-#   endif // ifndef VERILATOR
-#else // ifdef SIMULATION: FPGA case
-#   ifdef AMD
-#       define SPI_SUPPORT
-#   endif // ifdef AMD
-        // no SPI support
-#endif // ifdef SIMULATION
+#define FLASH_FILE_SIZE_OFFSET 0x0   // sector 0, subsector 0
+#define FLASH_FIRMWARE_OFFSET 0x1000 // sector 0, subsector 1
 
 // Ethernet utility functions
 // NOTE: These functions are not compatible with malloc() and free().
@@ -75,130 +61,17 @@ uint32_t uart_recvfile_ethernet(char *file_name) {
   return file_size;
 }
 
-int main() {
-  int run_linux = 0;
-  int file_size;
-  char *prog_start_addr;
-
-  // init uart
-  uart16550_init(UART0_BASE, FREQ / (16 * BAUD));
-
-  // connect with console
-  do {
-    if (uart16550_txready())
-      uart16550_putc((char)ENQ);
-  } while (!uart16550_rxready());
-
-  // welcome message
-  uart16550_puts(PROGNAME);
-  uart16550_puts(": connected!\n");
-
-  uart16550_puts(PROGNAME);
-  uart16550_puts(": DDR in use and program runs from DDR\n");
-
-  // address to copy firmware to
-  prog_start_addr = (char *)(EXT_MEM);
-
-  while (uart16550_getc() != ACK) {
-    uart16550_puts(PROGNAME);
-    uart16550_puts(": Waiting for Console ACK.\n");
-  }
-
-
-#ifndef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
-  // Init ethernet and printf (for ethernet)
-  printf_init(&uart16550_putc);
-
-#ifdef SPI_SUPPORT
-  // init spit flash controller
-  spiflash_init(SPI0_BASE);
-  printf("\nResetting flash registers...\n");
-  spiflash_resetmem();
-
-  printf("Testing program flash\n");
-  char prog_data[NSAMPLES] = {0};
-  char *char_data = NULL;
-  unsigned int read_data[NSAMPLES] = {0};
-  unsigned int flash_addr = 0x0;
-  int sample = 0;
-  int flash_failed = 0;
-
-  // set samples to write
-  for (sample = 0; sample < NSAMPLES; sample++) {
-    prog_data[sample] = sample;
-  }
-
-  // Flash data before erase
-  printf("\nFlash data before erase:\n");
-  for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
-    read_data[sample >> 2] = spiflash_readmem(flash_addr + sample);
-  }
-  char_data = (char *)read_data;
-  for (sample = 0; sample < NSAMPLES; sample++) {
-    printf("\tflash[%x] = %02x\n", flash_addr + sample, char_data[sample]);
-  }
-
-  spiflash_erase_address_range(flash_addr, NSAMPLES);
-
-  // Flash data after erase
-  printf("\nFlash data after erase:\n");
-  for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
-    read_data[sample >> 2] = spiflash_readmem(flash_addr + sample);
-  }
-  char_data = (char *)read_data;
-  for (sample = 0; sample < NSAMPLES; sample++) {
-    printf("\tflash[%x] = %02x\n", flash_addr + sample, char_data[sample]);
-    if (char_data[sample] != 0xFF){
-        printf("Error: flash[%x] = %02x != 0xFF\n", flash_addr + sample, char_data[sample]);
-        flash_failed = 1;
-    }   
-  }
-
-  spiflash_memProgram(prog_data, NSAMPLES, 0x0);
-
-  printf("\nFlash data after program:\n");
-  for (sample = 0; sample < NSAMPLES; sample = sample + 4) {
-    read_data[sample >> 2] = spiflash_readmem(0x0 + sample);
-  }
-  char_data = (char *)read_data;
-  for (sample = 0; sample < NSAMPLES; sample++) {
-    if (prog_data[sample] != char_data[sample]) {
-      printf("Error: expected[%x] = %02x != flash[%x] = %02x\n", flash_addr + sample,
-             prog_data[sample], flash_addr + sample, char_data[sample]);
-      flash_failed = 1;
-    } else {
-      printf("Valid: expected[%x] = %02x == flash[%x] = %02x\n", flash_addr + sample,
-             prog_data[sample], flash_addr + sample, char_data[sample]);
-    }
-  }
-
-  if (flash_failed) {
-    printf("ERROR: Flash test failed!\n");
-  } else {
-    printf("SUCCESS: Flash test passed!\n");
-  }
-#endif // ifdef SPI_SUPPORT
-
-  eth_init(ETH0_BASE, &clear_cache);
-  // Use custom memory alloc/free functions to ensure it allocates in external
-  // memory
-  eth_init_mem_alloc(&mem_alloc, &mem_free);
-  // Wait for PHY reset to finish
-  eth_wait_phy_rst();
-
-  file_size = uart16550_recvfile("../iob_soc_opencryptolinux_mem.config",
-                                 prog_start_addr);
-  // compute_mem_load_txt
+int compute_mem_load_txt(char file_name_array[4][50],
+                         long int file_address_array[4], char *file_start_addr,
+                         uint32_t file_size) {
   int state = 0;
   int file_name_count = 0;
   int file_count = 0;
-  char file_name_array[4][50];
-  long int file_address_array[4];
   char hexChar = 0;
   int hexDecimal = 0;
   int i = 0;
   for (i = 0; i < file_size; i++) {
-    hexChar = *(prog_start_addr + i);
+    hexChar = *(file_start_addr + i);
     // uart16550_puts(&hexChar); /* Used for debugging. */
     if (state == 0) {
       if (hexChar == ' ') {
@@ -231,19 +104,172 @@ int main() {
     }
   }
 
+  return file_count;
+}
+
+void console_get_files(int file_count, long int file_address_array[4],
+                       char *file_start_addr, char file_name_array[4][50],
+                       int file_sizes[4]) {
+  int i = 0;
+  char *file_addr = NULL;
   for (i = 0; i < file_count; i++) {
-    prog_start_addr = (char *)(EXT_MEM + file_address_array[i]);
+    file_addr = (char *)(file_start_addr + file_address_array[i]);
     // Receive data from console via Ethernet
 #ifndef SIMULATION
-    file_size = uart_recvfile_ethernet(file_name_array[i]);
-    eth_rcv_file(prog_start_addr, file_size);
+    file_sizes[i] = uart_recvfile_ethernet(file_name_array[i]);
+    eth_rcv_file(file_addr, file_sizes[i]);
 #else
-    file_size = uart16550_recvfile(file_name_array[i], prog_start_addr);
+    file_sizes[i] = uart16550_recvfile(file_name_array[i], file_addr);
 #endif
+  }
+}
+
+void program_flash(int file_count, long int file_address_array[4],
+                   char *file_start_addr, int file_sizes[4]) {
+  int i = 0;
+  unsigned int flash_addr = 0x0;
+  char *prog_data = NULL;
+  int next_subsector = 0;
+
+  // erase SPI Flash
+  flash_addr = FLASH_FILE_SIZE_OFFSET;
+  spiflash_erase_address_range(flash_addr, 4 * file_count);
+
+  // store file sizes
+  prog_data = (char *)file_sizes;
+  spiflash_memProgram(prog_data, 4 * file_count, flash_addr);
+
+  for (i = 0; i < file_count; i++) {
+    flash_addr = FLASH_FIRMWARE_OFFSET + (next_subsector*SUBSECTOR_SIZE);
+    prog_data = file_start_addr + file_address_array[i];
+    spiflash_erase_address_range(flash_addr, file_sizes[i]);
+    printf("Program %d: addr: %p\tflash: %x\tsize: %d\n", i, prog_data,
+           flash_addr, file_sizes[i]);
+    spiflash_memProgram(prog_data, file_sizes[i], flash_addr);
+    printf("Program %d: complete\n", i);
+    next_subsector += (((file_sizes[i]+SUBSECTOR_SIZE-1)/SUBSECTOR_SIZE));
+  }
+}
+
+void read_flash(int file_count, long int file_address_array[4],
+                char *file_start_addr) {
+  int i = 0;
+  int sample = 0;
+  unsigned int *read_array = NULL;
+  unsigned int spi_data = 0;
+  unsigned int flash_file_start = 0;
+  int read_cnt = 0, read_total = 0;
+  int file_sizes[4] = {0};
+  int next_subsector = 0;
+
+  // get file sizes
+  for (sample = 0; sample < 4 * file_count; sample = sample + 4) {
+    file_sizes[sample >> 2] = spiflash_readmem(FLASH_FILE_SIZE_OFFSET + sample);
+  }
+
+  for (i = 0; i < file_count; i++) {
+    read_array = (unsigned int *)(file_start_addr + file_address_array[i]);
+    flash_file_start = FLASH_FIRMWARE_OFFSET + (next_subsector*SUBSECTOR_SIZE);
+    read_total = file_sizes[i] / 4;
+    read_cnt = 0;
+
+    printf("Read %d: flash: %x\tmem: %p\tsize: %d\n", i, flash_file_start,
+           read_array, file_sizes[i]);
+    for (sample = 0; sample < file_sizes[i]; sample = sample + 4) {
+      read_array[sample >> 2] = spiflash_readmem(flash_file_start + sample);
+      // progress every 10%
+      if (read_cnt % (read_total / 10) == 0) {
+        printf("\tRead %d: %d%%\n", i, read_cnt * 100 / read_total);
+      }
+      read_cnt++;
+    }
+    next_subsector += (((file_sizes[i]+SUBSECTOR_SIZE-1)/SUBSECTOR_SIZE));
+  }
+}
+
+int main() {
+  int run_linux = 0;
+  int file_size;
+  char *prog_start_addr;
+
+  // init uart
+  uart16550_init(UART0_BASE, FREQ / (16 * BAUD));
+
+  // connect with console
+  do {
+    if (uart16550_txready())
+      uart16550_putc((char)ENQ);
+  } while (!uart16550_rxready());
+
+  // welcome message
+  uart16550_puts(PROGNAME);
+  uart16550_puts(": connected!\n");
+
+  uart16550_puts(PROGNAME);
+  uart16550_puts(": DDR in use and program runs from DDR\n");
+
+  // address to copy firmware to
+  prog_start_addr = (char *)(EXT_MEM);
+
+  while (uart16550_getc() != ACK) {
+    uart16550_puts(PROGNAME);
+    uart16550_puts(": Waiting for Console ACK.\n");
+  }
+
+#ifndef IOB_SOC_OPENCRYPTOLINUX_INIT_MEM
+  // Init ethernet and printf (for ethernet)
+  printf_init(&uart16550_putc);
+
+  eth_init(ETH0_BASE, &clear_cache);
+  // Use custom memory alloc/free functions to ensure it allocates in external
+  // memory
+  eth_init_mem_alloc(&mem_alloc, &mem_free);
+  // Wait for PHY reset to finish
+  eth_wait_phy_rst();
+
+  char boot_flow[20] = {0};
+
+  file_size = uart16550_recvfile("boot.flow", boot_flow);
+  if (file_size > 20) {
+    printf("Error: boot.flow file size is too large\n");
+    return -1;
+  }
+
+  file_size = uart16550_recvfile("../iob_soc_opencryptolinux_mem.config",
+                                 prog_start_addr);
+
+  // compute_mem_load_txt
+  char file_name_array[4][50];
+  long int file_address_array[4];
+  int file_sizes[4] = {0};
+  int file_count = compute_mem_load_txt(file_name_array, file_address_array,
+                                        prog_start_addr, file_size);
+
+  if (!strcmp(boot_flow, "CONSOLE_TO_FLASH")) {
+    uart16550_puts(PROGNAME);
+    uart16550_puts(": CONSOLE_TO_FLASH\n");
+    // init spi flash controller
+    spiflash_init(SPI0_BASE);
+    // Read files from console
+    console_get_files(file_count, file_address_array, prog_start_addr,
+                      file_name_array, file_sizes);
+    program_flash(file_count, file_address_array, prog_start_addr, file_sizes);
+  } else if (!strcmp(boot_flow, "FLASH_TO_EXTMEM")) {
+    uart16550_puts(PROGNAME);
+    uart16550_puts(": FLASH_TO_EXTMEM\n");
+    // init spi flash controller
+    spiflash_init(SPI0_BASE);
+    read_flash(file_count, file_address_array, prog_start_addr);
+  } else {
+    uart16550_puts(PROGNAME);
+    uart16550_puts(": CONSOLE_TO_EXTMEM\n");
+    // Read files from console to external memory
+    console_get_files(file_count, file_address_array, prog_start_addr,
+                      file_name_array, file_sizes);
   }
 
   // Check if running Linux
-  for (i = 0; i < file_count; i++) {
+  for (int i = 0; i < file_count; i++) {
     if (!strcmp(file_name_array[i], "rootfs.cpio.gz")) {
 #ifdef SIMULATION
       // Running Linux: setup required dependencies

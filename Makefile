@@ -11,6 +11,7 @@ include $(LIB_DIR)/setup.mk
 INIT_MEM ?= 0
 RUN_LINUX ?= 1
 USE_EXTMEM := 1
+BOOT_FLOW ?= CONSOLE_TO_EXTMEM
 
 ifeq ($(INIT_MEM),1)
 SETUP_ARGS += INIT_MEM
@@ -39,12 +40,12 @@ sim-test-spi:
 fpga-run:
 	nix-shell --run 'make clean setup INIT_MEM=$(INIT_MEM) USE_EXTMEM=$(USE_EXTMEM)'
 	nix-shell --run 'make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX)'
-	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
+	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) BOOT_FLOW=$(BOOT_FLOW)
 
 fpga-connect:
 	nix-shell --run 'make -C ../$(CORE)_V*/ fpga-fw-build BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX)'
 	# Should run under 'bash', running with 'fish' as a shell gives an error
-	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
+	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) BOOT_FLOW=$(BOOT_FLOW)
 
 fpga-test:
 	make clean setup fpga-run INIT_MEM=0
@@ -58,6 +59,6 @@ test-all:
 test-linux-fpga-connect: build_dir_name
 	-rm $(BUILD_DIR)/hardware/fpga/test.log
 	-ln -s minicom_test1.txt $(BUILD_DIR)/hardware/fpga/minicom_linux_script.txt
-	make fpga-connect RUN_LINUX=1
+	make fpga-connect RUN_LINUX=1 BOOT_FLOW=$(BOOT_FLOW)
 
 .PHONY: sim-test fpga-test test-all test-linux-fpga-connect
