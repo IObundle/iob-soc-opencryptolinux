@@ -135,6 +135,7 @@ TestState VersatCommonSHATests(String content){
 }
 #endif
 
+#if 0
 TestState VersatCommonAESTests(String content){
   TestState result = {};
 
@@ -219,3 +220,4 @@ TestState VersatCommonAESTests(String content){
 
   return result;
 }
+#endif

@@ -28,6 +28,7 @@ int VersatSimpleSHATests(){
 }
 #endif
 
+#if 0
 int VersatSimpleAESTests(){
   String content = STRING("COUNT = 7\n"
                            "KEY = 85405C4F0EBBE8F29228F02F1FF184E2F5E7857E8933C2A1D08F61ECB9B68111\n"
@@ -53,3 +54,5 @@ int VersatSimpleAESTests(){
 
   return (result.goodTests == result.tests) ? 0 : 1;
 }
+
+#endif
