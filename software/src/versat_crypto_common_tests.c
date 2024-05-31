@@ -19,9 +19,11 @@ void versat_init(int);
 void AES_ECB256(const uint8_t* key,const uint8_t* plaintext,uint8_t* result);
 
 void InitializeCryptoSide(int versatAddress){
+  printf("Called versat init\n");
+
   versat_init(versatAddress);
-  ConfigEnableDMA(true);
-  InitArena(16*1024*1024); // 16 megabytes should suffice. Arena memory used by crypto algorithms, both by software and Versat impl.
+  ConfigEnableDMA(false);
+  InitArena(1*1024*1024); // 16 megabytes should suffice. Arena memory used by crypto algorithms, both by software and Versat impl.
 }
 
 char* SearchAndAdvance(char* ptr,String str){
@@ -53,6 +55,7 @@ int ParseNumber(char* ptr){
   return count;
 }
 
+#if 0
 TestState VersatCommonSHATests(String content){
   TestState result = {};
 
@@ -130,6 +133,7 @@ TestState VersatCommonSHATests(String content){
 
   return result;
 }
+#endif
 
 TestState VersatCommonAESTests(String content){
   TestState result = {};

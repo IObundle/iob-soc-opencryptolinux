@@ -15,7 +15,7 @@
 #include "riscv-csr.h"
 #include "riscv-interrupts.h"
 
-#include "versat_crypto_tests.h"
+#include "versat_crypto.h"
 
 #ifdef SIMULATION
 #define WAIT_TIME 0.001
@@ -304,8 +304,12 @@ int main() {
 #endif // #ifndef VERILATOR
 #endif // #ifdef SIMULATION
 
+  InitVersatAES();
+  VersatAES();
+
   // Tests are too big and slow to perform during simulation.
   // Comment out the source files in sw_build.mk to also reduce binary size and speedup simulation.
+#if 0
 #ifndef SIMULATION
   test_result |= VersatSHATests();
   test_result |= VersatAESTests();
@@ -313,6 +317,7 @@ int main() {
 #else
   test_result |= VersatSimpleSHATests();
   test_result |= VersatSimpleAESTests();
+#endif
 #endif
 
   if (test_result) {

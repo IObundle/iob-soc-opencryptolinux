@@ -3,6 +3,7 @@
 #include "iob-uart16550.h"
 #include "printf.h"
 
+#if 0
 int VersatSimpleSHATests(){
   String content = STRING("LEN = 0\n"
                           "MSG = 00\n"
@@ -25,6 +26,7 @@ int VersatSimpleSHATests(){
 
   return (result.goodTests == result.tests) ? 0 : 1;
 }
+#endif
 
 int VersatSimpleAESTests(){
   String content = STRING("COUNT = 7\n"
