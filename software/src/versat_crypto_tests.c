@@ -27,6 +27,7 @@ String PushFileFromEthernet(const char* filepath){
 }
 
 int VersatSHATests(){
+  int mark = MarkArena(globalArena);
   String content = PushFileFromEthernet("../../software/KAT/SHA256ShortMsg.rsp");
 
   TestState result = VersatCommonSHATests(content);
@@ -45,10 +46,12 @@ int VersatSHATests(){
   printf("  Software: %-7d\n",result.softwareTimeAccum / result.goodTests);
   printf("=======================================================\n\n");
 
+  PopArena(globalArena,mark);
   return (result.goodTests == result.tests) ? 0 : 1;
 }
 
 int VersatAESTests(){
+  int mark = MarkArena(globalArena);
   String content = PushFileFromEthernet("../../software/KAT/AESECB256.rsp");
 
   TestState result = VersatCommonAESTests(content);
@@ -67,6 +70,7 @@ int VersatAESTests(){
   printf("  Software: %-7d\n",result.softwareTimeAccum / result.goodTests);
   printf("=======================================================\n\n");
 
+  PopArena(globalArena,mark);
   return (result.goodTests == result.tests) ? 0 : 1;
 }
 

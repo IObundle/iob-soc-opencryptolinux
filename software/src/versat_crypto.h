@@ -20,6 +20,7 @@ void VersatSHA(uint8_t *out, const uint8_t *in, size_t inlen);
 
 void InitVersatAES();
 void VersatAES();
+void InitAES();
 
 // McEliece
 int VersatMcEliece(unsigned char *pk,unsigned char *sk);

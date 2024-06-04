@@ -534,22 +534,16 @@ void CTR(uint8_t* key,uint8_t* counter,uint8_t* data,uint8_t* encrypted,uint8_t*
    ExpandKey(key,is256);
    Encrypt(counterBuffer,encrypted,data,is256,false);
 
-{
-   uint32_t* view = (uint32_t*) (counterBuffer + 12);
+   uint32_t* view = ((uint32_t*) ((void*)(counterBuffer + 12)));
 
    *view = Swap(Swap(*view) + 1);
-}
 
    Encrypt(counterBuffer,encrypted + 16,data + 16,is256,false);
 
    memcpy(counterBuffer,counter,16 * sizeof(uint8_t));
    Encrypt(counterBuffer,decrypted,encrypted,is256,false);
 
-{
-   uint32_t* view = (uint32_t*) (counterBuffer + 12);
-
    *view = Swap(Swap(*view) + 1);
-}
 
    Encrypt(counterBuffer,decrypted + 16,encrypted + 16,is256,false);
 }
