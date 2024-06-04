@@ -33,6 +33,14 @@ static void irq_entry(void) __attribute__((interrupt("machine")));
 // Global to hold current timestamp
 static volatile uint64_t timestamp = 0;
 
+void clear_cache();
+uint32_t uart_recvfile_ethernet(const char *file_name);
+int string_copy(char *dst, char *src);
+int compare_str(char *str1, char *str2, int str_size);
+int GetTime();
+
+#if 0
+
 void clear_cache() {
   // Delay to ensure all data is written to memory
   for (unsigned int i = 0; i < 10; i++)
@@ -100,6 +108,8 @@ int compare_str(char *str1, char *str2, int str_size) {
 int GetTime(){
   return clint_getTime(CLINT0_BASE);
 }
+
+#endif
 
 int main() {
   char pass_string[] = "Test passed!";

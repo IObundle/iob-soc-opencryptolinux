@@ -27,7 +27,7 @@ String PushFileFromEthernet(const char* filepath){
 }
 
 int VersatSHATests(){
-  String content = PushFileFromEthernet("../../software/versat/tests/SHA256ShortMsg.rsp");
+  String content = PushFileFromEthernet("../../software/KAT/SHA256ShortMsg.rsp");
 
   TestState result = VersatCommonSHATests(content);
 
@@ -49,7 +49,7 @@ int VersatSHATests(){
 }
 
 int VersatAESTests(){
-  String content = PushFileFromEthernet("../../software/versat/tests/AESECB256.rsp");
+  String content = PushFileFromEthernet("../../software/KAT/AESECB256.rsp");
 
   TestState result = VersatCommonAESTests(content);
 
@@ -78,7 +78,7 @@ int VersatMcElieceTests(){
 
   int versatTimeAccum = 0;
 
-  String content = PushFileFromEthernet("../../software/versat/tests/McElieceRound4kat_kem.rsp");
+  String content = PushFileFromEthernet("../../software/KAT/McElieceRound4kat_kem.rsp");
   char* ptr = content.str;
   int goodTests = 0;
   int tests = 0;
@@ -168,7 +168,7 @@ int VersatMcElieceTests(){
   printf("\n\n=======================================================\n");
   printf("McEliece tests: %d passed out of %d\n",goodTests,tests);
   printf("  No time taken since software implementation is really\n");
-  printf("  slow, so we would just be wasting time. We are alredy\n");
+  printf("  slow, so we would just be wasting time. We are already\n");
   printf("  comparing solutions to a KAT.\n");
   printf("=======================================================\n\n");
   PopArena(globalArena,mark);

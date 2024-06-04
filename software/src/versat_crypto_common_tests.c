@@ -16,7 +16,7 @@
 #include "string.h"
 
 void versat_init(int);
-void AES_ECB256(const uint8_t* key,const uint8_t* plaintext,uint8_t* result);
+void AES_ECB256(uint8_t* key,uint8_t* data,uint8_t* encrypted);
 
 static Arena globalArenaInst = {};
 
@@ -150,6 +150,7 @@ TestState VersatCommonAESTests(String content){
   int mark = MarkArena(globalArena);
 
   InitVersatAES();
+  InitAES();
 
   char* ptr = content.str;
   while(1){

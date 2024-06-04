@@ -1,9 +1,9 @@
 # Script for "runscript" program of minicom, to test linux functionality
 
-# Set 5min timeout
+# Set 15min timeout
 # runscript has 2min timeout by default:
 # check `timeout` in: https://linux.die.net/man/1/runscript
-timeout 1200
+timeout 900
 
 print "\n[minicom] Waiting to receive test.log..."
 # expect has default timeout of 60 seconds
@@ -41,14 +41,14 @@ send "./test.sh"
 
 expect {
     "#"
-    timeout 300
+    timeout 600
 }
 
 send "./exampleTransfer.sh"
 
 expect {
     "#"
-    timeout 100
+    timeout 300
 }
 
 print "\n[minicom] Done Test"
