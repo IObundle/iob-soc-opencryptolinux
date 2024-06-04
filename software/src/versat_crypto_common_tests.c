@@ -18,10 +18,14 @@
 void versat_init(int);
 void AES_ECB256(const uint8_t* key,const uint8_t* plaintext,uint8_t* result);
 
+static Arena globalArenaInst = {};
+
 void InitializeCryptoSide(int versatAddress){
   versat_init(versatAddress);
   ConfigEnableDMA(true);
-  InitArena(16*1024*1024); // 16 megabytes should suffice. Arena memory used by crypto algorithms, both by software and Versat impl.
+
+  globalArenaInst = InitArena(16*1024*1024); // 16 megabytes should suffice. Arena memory used by crypto algorithms, both by software and Versat impl.
+  globalArena = &globalArenaInst; 
 }
 
 char* SearchAndAdvance(char* ptr,String str){
@@ -56,7 +60,7 @@ int ParseNumber(char* ptr){
 TestState VersatCommonSHATests(String content){
   TestState result = {};
 
-  int mark = MarkArena();
+  int mark = MarkArena(globalArena);
 
   int start = GetTime();
   InitVersatSHA();
@@ -68,7 +72,7 @@ TestState VersatCommonSHATests(String content){
 
   char* ptr = content.str;
   while(1){
-    int testMark = MarkArena();
+    int testMark = MarkArena(globalArena);
 
     ptr = SearchAndAdvance(ptr,STRING("LEN = "));
     if(ptr == NULL){
@@ -83,7 +87,7 @@ TestState VersatCommonSHATests(String content){
       break;
     }
 
-    unsigned char* message = PushArray(len,unsigned char);
+    unsigned char* message = PushArray(globalArena,len,unsigned char);
     int bytes = HexStringToHex(message,ptr);
 
     ptr = SearchAndAdvance(ptr,STRING("MD = "));
@@ -132,10 +136,10 @@ TestState VersatCommonSHATests(String content){
     }
 
     result.tests += 1;
-    PopArena(testMark);
+    PopArena(globalArena,testMark);
   }
 
-  PopArena(mark);
+  PopArena(globalArena,mark);
 
   return result;
 }
@@ -143,13 +147,13 @@ TestState VersatCommonSHATests(String content){
 TestState VersatCommonAESTests(String content){
   TestState result = {};
 
-  int mark = MarkArena();
+  int mark = MarkArena(globalArena);
 
   InitVersatAES();
 
   char* ptr = content.str;
   while(1){
-    int testMark = MarkArena();
+    int testMark = MarkArena(globalArena);
 
     ptr = SearchAndAdvance(ptr,STRING("COUNT = "));
     if(ptr == NULL){
@@ -164,7 +168,7 @@ TestState VersatCommonAESTests(String content){
       break;
     }
 
-    unsigned char* key = PushArray(32 + 1,unsigned char);
+    unsigned char* key = PushArray(globalArena,32 + 1,unsigned char);
     HexStringToHex(key,ptr);
 
     ptr = SearchAndAdvance(ptr,STRING("PLAINTEXT = "));
@@ -173,7 +177,7 @@ TestState VersatCommonAESTests(String content){
       break;
     }
   
-    unsigned char* plain = PushArray(16 + 1,unsigned char);
+    unsigned char* plain = PushArray(globalArena,16 + 1,unsigned char);
     HexStringToHex(plain,ptr);
 
     ptr = SearchAndAdvance(ptr,STRING("CIPHERTEXT = "));
@@ -222,10 +226,10 @@ TestState VersatCommonAESTests(String content){
     }
 
     result.tests += 1;
-    PopArena(testMark);
+    PopArena(globalArena,testMark);
   }
 
-  PopArena(mark);
+  PopArena(globalArena,mark);
 
   return result;
 }

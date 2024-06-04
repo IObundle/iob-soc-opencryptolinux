@@ -183,7 +183,15 @@ class iob_soc_opencryptolinux(iob_soc):
             f"{cls.build_dir}/software",
         )
         shutil.copy2(
-            f"{__class__.setup_dir}/software/versat/module/exampleTransfer.sh",
+            f"{__class__.setup_dir}/software/tests/exampleTransfer.sh",
+            f"{cls.build_dir}/software",
+        )
+        shutil.copy2(
+            f"{__class__.setup_dir}/software/tests/setupTest.sh",
+            f"{cls.build_dir}/software",
+        )
+        shutil.copy2(
+            f"{__class__.setup_dir}/software/tests/test.sh",
             f"{cls.build_dir}/software",
         )
 

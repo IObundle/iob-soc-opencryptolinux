@@ -58,11 +58,11 @@ EMUL_SRC+=$(wildcard src/*_emul.c)
 #            Embedded targets           #
 #########################################
 
-CRYPTO_SRC := src/iob-versat.c $(wildcard src/linux/*.c) $(wildcard src/linux/McEliece/*.c) $(wildcard src/linux/McEliece/common/*.c)
-CRYPTO_HDR := $(wildcard src/linux/*.h) $(wildcard src/linux/McEliece/*.h)
+CRYPTO_SRC := src/iob-versat.c $(wildcard src/linux/*.c) $(wildcard src/crypto/McEliece/*.c) $(wildcard src/crypto/McEliece/common/*.c)
+CRYPTO_HDR := $(wildcard src/linux/*.h) $(wildcard src/crypto/McEliece/*.h)
 
 crypto:
-	riscv64-unknown-linux-gnu-gcc -std=gnu99 -march=rv32imac -mabi=ilp32 -Wcast-align=strict -Os -s -ffunction-sections $(CRYPTO_SRC) -o crypto -Isrc/linux/McEliece -Isrc/linux/McEliece/common -Isrc/linux -Wl,-gc-sections -Wl,--strip-all
+	riscv64-unknown-linux-gnu-gcc -std=gnu99 -march=rv32imac -mabi=ilp32 -Wcast-align=strict -Os -s -ffunction-sections $(CRYPTO_SRC) -o crypto -Isrc/crypto/McEliece -Isrc/crypto/McEliece/common -Isrc/linux -Wl,-gc-sections -Wl,--strip-all
 
 build: $(UTARGETS) crypto
 %.elf: $(TEMPLATE_LDS) $(HDR) $(SRC)

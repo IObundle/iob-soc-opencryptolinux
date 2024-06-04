@@ -46,10 +46,6 @@ fpga-connect:
 	# Should run under 'bash', running with 'fish' as a shell gives an error
 	make -C ../$(CORE)_V*/ fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
 
-fpga-run-only:
-	cp -r ./software/src ../$(CORE)_V*/software
-	make -C ../$(CORE)_V*/ fpga-fw-build fpga-run BOARD=$(BOARD) RUN_LINUX=$(RUN_LINUX) 
-
 fpga-test:
 	make clean setup fpga-run INIT_MEM=0
 

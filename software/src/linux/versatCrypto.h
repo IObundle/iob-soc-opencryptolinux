@@ -19,7 +19,7 @@ typedef struct{
 // Must call End before calling another Begin, unless calling Begin for the first time.
 
 // SHA
-bool InitVersat();
+bool InitVersat(int maxBlockSize); // There is a minimum size of 64 bytes
 
 // To optimize performance try to send multiple buffers instead of a single buffer even if data fits into a single buffer.
 // Versat can process data while CPU is filling the next buffer.
