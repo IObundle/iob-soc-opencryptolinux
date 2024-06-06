@@ -54,7 +54,7 @@ echo "AES result:"
 cat aesGot.txt
 echo ""
 echo "Expected:"
-echo -e $EXPECTED_ENCRYPTED
+echo -e $EXPECTED_AES
 echo ""
 
 # Alice receives the encrypted message and uses her own key to decrypt it
