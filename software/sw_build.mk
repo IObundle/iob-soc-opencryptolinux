@@ -5,6 +5,17 @@
 ROOT_DIR ?=..
 # Local embedded makefile settings for custom bootloader and firmware targets.
 
+# Bootloader flow options:
+# 1. CONSOLE_TO_EXTMEM: default: load firmware from console to external memory
+# 2. CONSOLE_TO_FLASH: program flash with firmware
+# 3. FLASH_TO_EXTMEM: load firmware from flash to external memory 
+BOOT_FLOW ?= CONSOLE_TO_EXTMEM
+UTARGETS += boot_flow
+
+boot_flow:
+	echo -n "$(BOOT_FLOW)" > boot.flow
+	# -n to avoid newline
+
 #Function to obtain parameter named $(1) in verilog header file located in $(2)
 #Usage: $(call GET_MACRO,<param_name>,<vh_path>)
 GET_MACRO = $(shell grep "define $(1)" $(2) | rev | cut -d" " -f1 | rev)
@@ -56,7 +67,7 @@ fw_jump.bin iob_soc.dtb:
 		cp $(FPGA_TOOL)/$(BOARD)/$@ .;\
 	fi
 # Set targets as PHONY to ensure that they are copied even if $(BOARD) is changed
-.PHONY: fw_jump.bin iob_soc.dtb
+.PHONY: fw_jump.bin iob_soc.dtb boot_flow
 
 ../../software/%.bin:
 	make -C ../../ fw-build
@@ -107,6 +118,7 @@ IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=src/iob_soc_opencryptolinux_boot.c
 IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=$(filter-out %_emul.c, $(wildcard src/iob*uart*.c))
 IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=$(filter-out %_emul.c, $(wildcard src/iob*cache*.c))
 IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=$(filter-out %_emul.c, $(wildcard src/iob*eth*.c))
+IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=$(filter-out %_emul.c, $(wildcard src/iob*spi*.c))
 IOB_SOC_OPENCRYPTOLINUX_BOOT_SRC+=src/printf.c
 
 build_iob_soc_opencryptolinux_software: iob_soc_opencryptolinux_firmware iob_soc_opencryptolinux_boot

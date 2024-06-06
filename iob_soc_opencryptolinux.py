@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import sys
 import shutil
 import math
 
@@ -129,7 +128,6 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_reset_sync,
                 iob_ram_sp,
                 cls.versatType,
-                # iob_spi_master,
                 iob_eth,
                 iob_spi_master,
                 (N25Qxxx, {"purpose": "simulation"}),
@@ -220,10 +218,12 @@ class iob_soc_opencryptolinux(iob_soc):
             # Set custom ethernet CONSOLE_CMD
             contents.append(
                 f"""
+RUN_DEPS+=boot_flow
 GRAB_TIMEOUT = 900
 ### Launch minicom if running Linux
 # pass CI variable over ssh commands
 UFLAGS+=CI=$(CI)
+UFLAGS+=BOOT_FLOW=$(BOOT_FLOW)
 ifeq ($(shell grep -o rootfs.cpio.gz ../{cls.name}_mem.config),rootfs.cpio.gz)
 ifneq ($(wildcard minicom_linux_script.txt),)
 SCRIPT_STR:=-S minicom_linux_script.txt

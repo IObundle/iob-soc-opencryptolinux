@@ -30,7 +30,7 @@ jobs:
     if: ${{ !cancelled() }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       - name: run spi test
@@ -43,7 +43,7 @@ jobs:
     if: ${{ !cancelled() }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       - name: run uart16550 test
@@ -56,7 +56,7 @@ jobs:
     if: ${{ !cancelled() }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       - name: clean
@@ -73,7 +73,7 @@ jobs:
     if: ${{ !cancelled() }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       - name: clean
@@ -93,7 +93,7 @@ jobs:
     needs: [ verilator-baremetal ]
   
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       - name: test baremetal
@@ -110,13 +110,13 @@ jobs:
     needs: [ verilator-baremetal ]
   
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       - name: test baremetal
         run: make fpga-run RUN_LINUX=0 BOARD=AES-KU040-DB-G
       - name: test linux
-        run: make test-linux-fpga-connect BOARD=AES-KU040-DB-G
+        run: make test-linux-fpga-connect BOARD=AES-KU040-DB-G BOOT_FLOW=FLASH_TO_EXTMEM
 
 ##  doc:
 ##    runs-on: self-hosted
@@ -125,7 +125,7 @@ jobs:
 ##    needs: [ cyclonev, aes-ku040 ]
 ##  
 ##    steps:
-##      - uses: actions/checkout@v3
+##      - uses: actions/checkout@v4
 ##        with:
 ##          submodules: 'recursive'
 ##      - name: clean
