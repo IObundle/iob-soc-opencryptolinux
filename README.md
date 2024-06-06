@@ -46,6 +46,17 @@ make setup
 
 The first time it runs, `nix-shell` will automatically install all the required dependencies. This can take a couple of hours, but after that, you can enjoy IOb-SoC-OpenCryptoLinux and not worry about installing software tools.
 
+## Ethernet simulation
+The ethernet simulation requires setting up dummy interfaces with
+`eth-[SIMULATOR]` that require `sudo`:
+Setup the following interfaces with the commands:
+```bash
+sudo modprobe dummy
+sudo ip link add eth-icarus type dummy
+sudo ifconfig eth-icarus up
+sudo ip link add eth-verilator type dummy
+sudo ifconfig eth-verilator up
+```
   
 ## Dependencies
 
