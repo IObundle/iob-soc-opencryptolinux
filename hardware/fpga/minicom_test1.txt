@@ -37,19 +37,15 @@ expect {
     timeout 100
 }
 
-send "./test.sh"
+send "./test.sh && ./exampleTransfer.sh"
 
 expect {
     "#"
-    timeout 600
+    timeout 900
 }
 
-send "./exampleTransfer.sh"
-
-expect {
-    "#"
-    timeout 300
-}
+# send "sz test.log"
+# ! rz --overwrite
 
 print "\n[minicom] Done Test"
 
