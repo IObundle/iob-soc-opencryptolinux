@@ -182,7 +182,7 @@ int Versat_pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, in
     int i, j, k;
     int row, c;
 
-    int mark = MarkArena();
+    int mark = MarkArena(globalArena);
 
     // Init needed values for versat later on.  
     CryptoAlgosConfig* topConfig = (CryptoAlgosConfig*) accelConfig;
@@ -202,17 +202,17 @@ int Versat_pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, in
 
     uint64_t buf[ 1 << GFBITS ];
 
-    unsigned char** mat = PushArray(PK_NROWS,unsigned char*);
+    unsigned char** mat = PushArray(globalArena,PK_NROWS,unsigned char*);
     for(int i = 0; i < PK_NROWS; i++){
-        mat[i] = PushArray(SYS_N / 8,unsigned char); // This guarantees that each row is properly aligned to a 32 bit boundary.
+        mat[i] = PushArray(globalArena,SYS_N / 8,unsigned char); // This guarantees that each row is properly aligned to a 32 bit boundary.
     }
 
     unsigned char mask;
     unsigned char b;
 
-    gf* g = PushArray(SYS_T + 1,gf);
-    gf* L = PushArray(SYS_N,gf); // support
-    gf* inv = PushArray(SYS_N,gf);
+    gf* g = PushArray(globalArena,SYS_T + 1,gf);
+    gf* L = PushArray(globalArena,SYS_N,gf); // support
+    gf* inv = PushArray(globalArena,SYS_N,gf);
 
     //
 
@@ -233,7 +233,7 @@ int Versat_pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, in
 
     for (i = 1; i < (1 << GFBITS); i++) {
         if (uint64_is_equal_declassify(buf[i - 1] >> 31, buf[i] >> 31)) {
-            PopArena(mark);
+            PopArena(globalArena,mark);
             return -1;
         }
     }
@@ -320,7 +320,7 @@ int Versat_pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, in
             EndAccelerator();
 
             if ( uint64_is_zero_declassify((mat[ row ][ i ] >> j) & 1) ) { // return if not systematic
-               PopArena(mark);
+               PopArena(globalArena,mark);
                return -1;
             }
 
@@ -350,7 +350,7 @@ int Versat_pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, in
         memcpy(pk + i * PK_ROW_BYTES, mat[i] + PK_NROWS / 8, PK_ROW_BYTES);
     }
 
-    PopArena(mark);
+    PopArena(globalArena,mark);
     return 0;
 }
 

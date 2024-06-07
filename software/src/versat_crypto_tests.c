@@ -19,7 +19,7 @@ void AES_ECB256(const uint8_t* key,const uint8_t* plaintext,uint8_t* result);
 
 String PushFileFromEthernet(const char* filepath){
   uint32_t file_size = uart_recvfile_ethernet(filepath);
-  char* testFile = PushArray(file_size + 1,char);
+  char* testFile = PushArray(globalArena,file_size + 1,char);
   eth_rcv_file(testFile,file_size);
   testFile[file_size] = '\0';
 
@@ -27,7 +27,8 @@ String PushFileFromEthernet(const char* filepath){
 }
 
 int VersatSHATests(){
-  String content = PushFileFromEthernet("../../software/versat/tests/SHA256ShortMsg.rsp");
+  int mark = MarkArena(globalArena);
+  String content = PushFileFromEthernet("../../software/KAT/SHA256ShortMsg.rsp");
 
   TestState result = VersatCommonSHATests(content);
 
@@ -45,11 +46,13 @@ int VersatSHATests(){
   printf("  Software: %-7d\n",result.softwareTimeAccum / result.goodTests);
   printf("=======================================================\n\n");
 
+  PopArena(globalArena,mark);
   return (result.goodTests == result.tests) ? 0 : 1;
 }
 
 int VersatAESTests(){
-  String content = PushFileFromEthernet("../../software/versat/tests/AESECB256.rsp");
+  int mark = MarkArena(globalArena);
+  String content = PushFileFromEthernet("../../software/KAT/AESECB256.rsp");
 
   TestState result = VersatCommonAESTests(content);
 
@@ -67,23 +70,24 @@ int VersatAESTests(){
   printf("  Software: %-7d\n",result.softwareTimeAccum / result.goodTests);
   printf("=======================================================\n\n");
 
+  PopArena(globalArena,mark);
   return (result.goodTests == result.tests) ? 0 : 1;
 }
 
 int VersatMcElieceTests(){
-  int mark = MarkArena();
+  int mark = MarkArena(globalArena);
 
-  unsigned char* public_key = PushArray(PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES,unsigned char);
-  unsigned char* secret_key = PushArray(PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES,unsigned char);
+  unsigned char* public_key = PushArray(globalArena,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES,unsigned char);
+  unsigned char* secret_key = PushArray(globalArena,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES,unsigned char);
 
   int versatTimeAccum = 0;
 
-  String content = PushFileFromEthernet("../../software/versat/tests/McElieceRound4kat_kem.rsp");
+  String content = PushFileFromEthernet("../../software/KAT/McElieceRound4kat_kem.rsp");
   char* ptr = content.str;
   int goodTests = 0;
   int tests = 0;
   while(1){
-    int testMark = MarkArena();
+    int testMark = MarkArena(globalArena);
 
     ptr = SearchAndAdvance(ptr,STRING("COUNT = "));
     if(ptr == NULL){
@@ -126,8 +130,8 @@ int VersatMcElieceTests(){
     // Software only implementation is slow and we are already comparing to KAT anyway and so, for McEliece, we skipping software implementation test of McEliece.
     //PQCLEAN_MCELIECE348864_CLEAN_crypto_kem_keypair(public_key, secret_key);
 
-    unsigned char* public_key_hex = PushArray(PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES * 2 + 1,char);
-    unsigned char* secret_key_hex = PushArray(PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES * 2 + 1,char);
+    unsigned char* public_key_hex = PushArray(globalArena,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES * 2 + 1,char);
+    unsigned char* secret_key_hex = PushArray(globalArena,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES * 2 + 1,char);
 
     GetHexadecimal(public_key,public_key_hex,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES);
     GetHexadecimal(secret_key,secret_key_hex,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES);
@@ -158,7 +162,7 @@ int VersatMcElieceTests(){
     }
 
     tests += 1;
-    PopArena(testMark);
+    PopArena(globalArena,testMark);
 
     // McEliece takes a decent amount of time
     if(tests >= 2){
@@ -168,10 +172,10 @@ int VersatMcElieceTests(){
   printf("\n\n=======================================================\n");
   printf("McEliece tests: %d passed out of %d\n",goodTests,tests);
   printf("  No time taken since software implementation is really\n");
-  printf("  slow, so we would just be wasting time. We are alredy\n");
+  printf("  slow, so we would just be wasting time. We are already\n");
   printf("  comparing solutions to a KAT.\n");
   printf("=======================================================\n\n");
-  PopArena(mark);
+  PopArena(globalArena,mark);
 
   return (goodTests == tests) ? 0 : 1;
 }
