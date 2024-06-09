@@ -163,11 +163,6 @@ int VersatMcElieceTests(){
 
     tests += 1;
     PopArena(globalArena,testMark);
-
-    // McEliece takes a decent amount of time
-    if(tests >= 2){
-      break;
-    }
   }
   printf("\n\n=======================================================\n");
   printf("McEliece tests: %d passed out of %d\n",goodTests,tests);
