@@ -149,7 +149,6 @@ int pk_gen(unsigned char *pk, unsigned char *sk, const uint32_t *perm, int16_t *
             }
 
             if ( uint64_is_zero_declassify((mat[ row ][ i ] >> j) & 1) ) { // return if not systematic
-                printf("Early finish row:%d\n",row);
                 PopArena(globalArena,mark);
                 return -1;
             }
