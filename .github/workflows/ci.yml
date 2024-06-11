@@ -90,7 +90,7 @@ jobs:
     # run even if previous job failed
     if: ${{ !cancelled() }}
     # run after indicated job
-    needs: [ verilator-baremetal ]
+    needs: [ iverilog-baremetal ]
   
     steps:
       - uses: actions/checkout@v4
@@ -107,7 +107,7 @@ jobs:
     # run even if previous job failed
     if: ${{ !cancelled() }}
     # run after indicated job
-    needs: [ verilator-baremetal ]
+    needs: [ iverilog-baremetal ]
   
     steps:
       - uses: actions/checkout@v4
