@@ -64,7 +64,7 @@ endif
 CONSOLE_CMD ?=$(PYTHON_DIR)/console.py -s /dev/usb-uart
 
 #board client command
-GRAB_TIMEOUT ?= 600
+GRAB_TIMEOUT ?= 900
 BOARD_GRAB_CMD=../../scripts/board_client.py grab $(GRAB_TIMEOUT)
 
 #run fpga image

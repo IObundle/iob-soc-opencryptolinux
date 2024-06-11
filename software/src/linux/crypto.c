@@ -6,12 +6,16 @@
 #include <stdint.h>
 #include <string.h>
 #include <argp.h>
+#include <assert.h>
 
 #include "arena.h"
 #include "versat_accel.h"
 #include "versatCrypto.h"
 
 #include "api.h"
+
+#include "sha2.h"
+#include "aes.h"
 
 #undef  ARRAY_SIZE
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(arr[0]))
@@ -89,9 +93,8 @@ int VersatMcEliece(unsigned char *pk,unsigned char *sk,Arena* temp);
 
 typedef struct{
   const char* algorithm;
-  bool encrypt;
-  bool decrypt;
-  
+  int maxBlockSize;
+
   const char* key;
   const char* iv;
   const char* inputFile;
@@ -99,6 +102,10 @@ typedef struct{
   const char* privateFile;
   const char* publicFile;
   const char* seed;
+
+  bool encrypt;
+  bool decrypt;
+  bool software;
 } Options;
 
 error_t parse(int key, char *arg, struct argp_state *state){
@@ -116,6 +123,8 @@ error_t parse(int key, char *arg, struct argp_state *state){
   case ARGP_KEY_ARG: options->algorithm = arg; break;
   case 'e': options->encrypt = true; break;
   case 'd': options->decrypt = true; break;
+  case 't': options->software = true; break;
+  case 'b': options->maxBlockSize = atoi(arg); break; // Not safe but this is more of a test program
   case 'k': options->key = arg; break;
   case 'v': options->iv = arg; break;
   case 'i': options->inputFile = arg; break;
@@ -185,6 +194,29 @@ bool FillBufferFromFile(VersatBuffer* buffer,int fileFd){
   }
 }
 
+// Returns -1 if read exactly memSize, otherwise returns the actual amount of mem read (signaling end of file)
+int FillMemFromFile(void* mem,int memSize,int fileFd){
+  int amountRead = 0;
+  while(1){
+    ssize_t bytesRead = read(fileFd,mem + amountRead,memSize - amountRead);
+
+    if(bytesRead == -1){
+      printf("There was an error reading the file\n");
+      exit(-1);
+    }
+
+    if(bytesRead == 0){
+      return amountRead;
+    }
+
+    amountRead += bytesRead;
+
+    if(bytesRead >= memSize){
+      return -1;
+    }
+  }
+}
+
 int OpenReadFile(const char* filepath){
   int fd = open(filepath,O_RDONLY,0);
 
@@ -209,10 +241,6 @@ int OpenWriteFile(const char* filepath){
 }
 
 int main(int argc,char** argv){
-  if(!InitVersat()){
-    return -1;
-  }
-
   const struct argp_option options[] = {
     {.name = NULL,.key = 0,.arg = NULL,.flags = 0,.doc = "AES:",.group = 0},
     {.name = "Encrypt",.key = 'e',.arg = NULL,.flags = 0,.doc = "",.group = 0},
@@ -226,6 +254,8 @@ int main(int argc,char** argv){
     {.name = NULL,.key = 0,.arg = NULL,.flags = 0,.doc = "Input/Output:",.group = 0},
     {.name = "InputFile",.key = 'i',.arg = "name",.flags = 0,.doc = "",.group = 0},
     {.name = "OutputFile",.key = 'o',.arg = "name",.flags = 0,.doc = "",.group = 0},
+    {.name = "NoVersat",.key = 't',.arg = NULL,.flags = 0,.doc = "",.group = 0},
+    {.name = "MaxBlockSize",.key = 'b',.arg = "int",.flags = 0,.doc = "",.group = 0},
     {0}};
 
   const struct argp parser = {
@@ -239,12 +269,13 @@ int main(int argc,char** argv){
   };
 
   Options OPT = {};
+  OPT.maxBlockSize = 1024 * 1024;
   
   int index = 0;
   error_t result = argp_parse(&parser,argc,argv,0,&index,&OPT);
-  
+
   if(!OPT.algorithm){
-    printf("Need to speficy an algorithm\n");
+    printf("Need to specify an algorithm\n");
     return -1;
   }
 
@@ -367,9 +398,12 @@ int main(int argc,char** argv){
   } break;
   } 
 
+  if(!InitVersat(OPT.maxBlockSize)){
+    return -1;
+  }
   ConfigEnableDMA(false);
 
-  Arena testInst = InitArena(4 * 1024 * 1024);
+  Arena testInst = InitArena(4 * 1024 * 1024); // 4 Megabytes
   Arena* test = &testInst;
 
   globalArena = test; // Global arena is only used for allocations that are 100% stack based. There should not be any conflict having test and global acting the same
@@ -405,20 +439,39 @@ int main(int argc,char** argv){
 
   switch(algorithm){
   case AlgorithmType_SHA:{
-    VersatBuffer* buffer = BeginSHA();
-
     uint8_t* digest = PushArray(test,32 + 1,uint8_t);
+    uint8_t* digestBuffer = PushArray(test,64 + 1,uint8_t);
 
-    while(1){
-      if(FillBufferFromFile(buffer,inputFd)){
-        EndSHA(buffer,digest);
-        break;
-      } else {
-        buffer = ProcessSHA(buffer);
+    if(OPT.software){
+      sha256ctx context;
+      sha256_inc_init(&context);
+
+      assert(OPT.maxBlockSize % 64 == 0);
+
+      uint8_t* buffer = PushArray(test,OPT.maxBlockSize + 1,uint8_t);    
+
+      while(1){
+        int amount = FillMemFromFile(buffer,OPT.maxBlockSize,inputFd);
+        if(amount >= 0){
+          sha256_inc_finalize(digest,&context,buffer,amount);
+          break;
+        } else {
+        sha256_inc_blocks(&context,buffer,OPT.maxBlockSize);
+        }
+      }
+    } else {
+      VersatBuffer* buffer = BeginSHA();
+
+      while(1){
+        if(FillBufferFromFile(buffer,inputFd)){
+          EndSHA(buffer,digest);
+          break;
+        } else {
+          buffer = ProcessSHA(buffer);
+        }
       }
     }
 
-    uint8_t* digestBuffer = PushArray(test,64 + 1,uint8_t);
     char* res = GetHexadecimal(digest,digestBuffer,32);
 
     digestBuffer[64] = '\0';
@@ -426,56 +479,87 @@ int main(int argc,char** argv){
     printf("%s\n",res);
   } break;
   case AlgorithmType_AES:{
-    VersatBuffer* buffer = NULL;
-
     uint8_t key[AES_MAX_KEY_SIZE] = {};
     uint8_t ivOrCounter[AES_MAX_BLK_SIZE] = {};
     HexStringToHex(key,OPT.key);
 
-    switch(type){
-    case AESType_ECB:{
-      buffer = BeginAES_ECB(key,is256,OPT.decrypt);
-    }break;
-    case AESType_CTR:{
-      HexStringToHex(ivOrCounter,OPT.iv);
-      buffer = BeginAES_CTR(key,ivOrCounter,is256);
-    }break;
-    case AESType_CBC:{
-      HexStringToHex(ivOrCounter,OPT.iv);
-      buffer = BeginAES_CBC(key,ivOrCounter,is256,OPT.decrypt);
-    }break;
-    }
+    if(OPT.software){
+      // Only implement the 256 version of ECB. Baremetal tests correctness, we want to test performance.
+      aes256ctx ctx;
 
-    int mark = MarkArena(test);
-    while(1){
-      PopArena(test,mark);
+      aes256_ecb_keyexp(&ctx,key);
 
-      uint8_t* outputSpace = PushBytes(test,buffer->maxSize);
-      bool end = false;
-      if(FillBufferFromFile(buffer,inputFd)){
-        end = true;
+      uint8_t* input = PushArray(test,OPT.maxBlockSize + 1,uint8_t);    
+      uint8_t* output = PushArray(test,OPT.maxBlockSize + 1,uint8_t);    
+      while(1){
+        int amount = FillMemFromFile(input,OPT.maxBlockSize,inputFd);
+
+        bool end = false;
+        if(amount >= 0){
+          assert(amount % 16 == 0);
+          end = true;
+        }
+
+        aes256_ecb(output,input,OPT.maxBlockSize / 16,&ctx);
+        ssize_t res = write(outputFd,output,OPT.maxBlockSize);
+
+        if(res < 0){
+          printf("There was an error writing to the file\n");
+          return -1;
+        }
+
+        if(end){
+          break;
+        }
+      }
+    } else {
+      VersatBuffer* buffer = NULL;
+
+      switch(type){
+      case AESType_ECB:{
+        buffer = BeginAES_ECB(key,is256,OPT.decrypt);
+      }break;
+      case AESType_CTR:{
+        HexStringToHex(ivOrCounter,OPT.iv);
+        buffer = BeginAES_CTR(key,ivOrCounter,is256);
+      }break;
+      case AESType_CBC:{
+        HexStringToHex(ivOrCounter,OPT.iv);
+        buffer = BeginAES_CBC(key,ivOrCounter,is256,OPT.decrypt);
+      }break;
       }
 
-      int outputOffset = 0;
-      int totalFileSize = 0;
+      int mark = MarkArena(test);
+      while(1){
+        PopArena(test,mark);
 
-      if(end){
-        totalFileSize = EndAES(buffer,outputSpace,&outputOffset);
-      } else {
-        buffer = ProcessAES(buffer,outputSpace,&outputOffset);
-      }
+        uint8_t* outputSpace = PushBytes(test,buffer->maxSize);
+        bool end = false;
+        if(FillBufferFromFile(buffer,inputFd)){
+          end = true;
+        }
 
-      ssize_t res = write(outputFd,outputSpace,outputOffset);
+        int outputOffset = 0;
+        int totalFileSize = 0;
 
-      if(res < 0){
-        printf("There was an error writing to the file\n");
-        return -1;
-      }
+        if(end){
+          totalFileSize = EndAES(buffer,outputSpace,&outputOffset);
+        } else {
+          buffer = ProcessAES(buffer,outputSpace,&outputOffset);
+        }
 
-      if(end){
-        ftruncate(outputFd,totalFileSize);
-        break;
-      }
+        ssize_t res = write(outputFd,outputSpace,outputOffset);
+
+        if(res < 0){
+          printf("There was an error writing to the file\n");
+          return -1;
+        }
+
+        if(end){
+          ftruncate(outputFd,totalFileSize);
+          break;
+        }
+      }      
     }
   } break;
   case AlgorithmType_McEliece:{
@@ -489,7 +573,11 @@ int main(int argc,char** argv){
       uint8_t* public_key = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES,uint8_t);
       uint8_t* secret_key = PushArray(test,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES,uint8_t);
 
-      VersatMcEliece(public_key, secret_key,test);
+      if(OPT.software){
+        PQCLEAN_MCELIECE348864_CLEAN_crypto_kem_keypair(public_key,secret_key);
+      } else {
+        VersatMcEliece(public_key, secret_key,test);
+      }
 
       ssize_t res = write(publicFd,public_key,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_PUBLICKEYBYTES);
       res |= write(privateFd,secret_key,PQCLEAN_MCELIECE348864_CLEAN_CRYPTO_SECRETKEYBYTES);

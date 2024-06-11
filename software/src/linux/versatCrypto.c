@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include "arena.h"
 #include "versat.h"
@@ -145,24 +146,42 @@ typedef struct{
 
 static VersatCrypto versat = {};
 
-static PhysicalBuffer AllocateBuffer(PhysicalAllocator alloc){
+int GetNextPowerOf2(int start){
+  int begin = 1;
+  while(begin < start && begin > 0){ // Overflow can occur. Make sure we do not infinite loop
+    begin *= 2;
+  }
+
+  assert(begin > 0);
+
+  return begin;
+}
+
+static PhysicalBuffer AllocateBuffer(PhysicalAllocator alloc,int attempSize){
   PhysicalBuffer buffer = {};
-  int attempSize = 1024 * 1024; // Start at 1 Megabyte
-  while(attempSize >= 4096){
-    buffer = AllocatePhysicalBuffer(alloc,attempSize);      
+
+  int val = 0;
+  if(attempSize < 4096){
+    val = 4096;
+  } else {
+    val = GetNextPowerOf2(attempSize);
+  }
+
+  while(val >= 4096){
+    buffer = AllocatePhysicalBuffer(alloc,val);      
 
     if(PhysicalBufferError(buffer)){
-      attempSize /= 2;
+      val /= 2;
     } else {
       break;
     }
   }
 
-  if(attempSize < 4096){
+  if(val < 4096){
     buffer = (PhysicalBuffer){};
     printf("Error at allocating buffer\n");
   } else {
-    //printf("Allocated buffer of size: %d\n",attempSize);
+    buffer.size = attempSize; // We allocate power of 2 but we reduce the persived size in order to properly test the algorithms
   }
 
   return buffer;
@@ -213,7 +232,9 @@ void InitVersatSHA(){
   ACCEL_TOP_sha_Swap_enabled = 1;
 }
 
-bool InitVersat(){
+bool InitVersat(int maxBlockSize){
+  assert(maxBlockSize >= 64);
+
   int mem = open("/dev/mem",O_RDWR | O_SYNC);
   if(mem == -1){
     puts("Open mem failed\n");
@@ -238,13 +259,13 @@ bool InitVersat(){
     return false;
   }
 
-  versat.buffers[0] = AllocateBuffer(versat.alloc);
+  versat.buffers[0] = AllocateBuffer(versat.alloc,maxBlockSize);
   if(PhysicalBufferError(versat.buffers[0])){
     puts("Physical buffer failed\n");
     return false;
   }
 
-  versat.buffers[1] = AllocateBuffer(versat.alloc);
+  versat.buffers[1] = AllocateBuffer(versat.alloc,maxBlockSize);
   if(PhysicalBufferError(versat.buffers[1])){
     puts("Physical buffer failed\n");
     return false;
@@ -1066,8 +1087,6 @@ int EndAES(VersatBuffer* input,uint8_t* output,/* out */ int* outputOffset){
       Encrypt(lastBuffer->mem,ajustedOutput,NULL);
       if(processTwoBlocks) 
         Encrypt(lastBuffer->mem + 16,ajustedOutput + 16,NULL);
-    } else {
-      
     }
 
     FreeVersatBuffer(lastBuffer);

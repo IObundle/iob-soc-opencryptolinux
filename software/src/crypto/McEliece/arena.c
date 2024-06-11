@@ -2,43 +2,35 @@
 
 #include <stdlib.h>
 
-#include "printf.h"
+#include <stdio.h>
 
-typedef struct{
-  char* ptr;
-  int used;
-  int allocated;
-} Arena;
+//Arena globalArenaInst = {};
+Arena* globalArena = NULL;
 
-static Arena arena = {};
-
-void InitArena(int size){
-  if(arena.ptr){
-    printf("Arena already initialized\n");
-    return;
-  }
-
-  //arena.ptr = (char*) calloc(size,sizeof(char));
+Arena InitArena(int size){
+  Arena arena = {};
   arena.ptr = (char*) malloc(size * sizeof(char));
   arena.allocated = size;
+
+  return arena;
 }
 
-void* PushBytes(int size){
-  char* ptr = &arena.ptr[arena.used];
+void* PushBytes(Arena* arena,int size){
+  char* ptr = &arena->ptr[arena->used];
 
   size = (size + 3) & (~3); // Align to 4 byte boundary
-  arena.used += size;
+  arena->used += size;
 
-  if(arena.used > arena.allocated){
+  if(arena->used > arena->allocated){
     printf("Arena overflow\n");
-    printf("Size: %d,Used: %d, Allocated: %d\n",size,arena.used,arena.allocated);
+    printf("Size: %d,Used: %d, Allocated: %d\n",size,arena->used,arena->allocated);
   }
 
   return ptr;
 }
 
-void* PushAndZeroBytes(int size){
-  char* ptr = PushBytes(size);
+void* PushAndZeroBytes(Arena* arena,int size){
+  char* ptr = PushBytes(arena,size);
 
   for (int i = 0; i < size; i++) {
     ptr[i] = 0;
@@ -47,10 +39,10 @@ void* PushAndZeroBytes(int size){
   return ptr;
 }
 
-int MarkArena(){
-  return arena.used;
+int MarkArena(Arena* arena){
+  return arena->used;
 }
 
-void PopArena(int mark){
-  arena.used = mark;
+void PopArena(Arena* arena,int mark){
+  arena->used = mark;
 }

@@ -216,10 +216,10 @@ void controlbitsfrompermutation(unsigned char *out, const int16 *pi, long long w
     //PQCLEAN_VLA(int32, temp, (size_t)(2 * n));
     //PQCLEAN_VLA(int16, pi_test, (size_t)n);
 
-    int mark = MarkArena();
+    int mark = MarkArena(globalArena);
 
-    int32* temp = PushBytes(2 * n * sizeof(int32));
-    int16* pi_test = PushBytes(n * sizeof(int16));
+    int32* temp = PushBytes(globalArena,2 * n * sizeof(int32));
+    int16* pi_test = PushBytes(globalArena,n * sizeof(int16));
 
     int16 diff;
     int i;
@@ -261,5 +261,5 @@ void controlbitsfrompermutation(unsigned char *out, const int16 *pi, long long w
         }
     }
 
-    PopArena(mark);
+    PopArena(globalArena,mark);
 }   

@@ -22,7 +22,7 @@ static inline crypto_uint16 gf_is_zero_declassify(gf t) {
 }
 
 // Matrix Allocate
-#define MA(Y,X,TYPE) PushBytes(sizeof(TYPE) * (X) * (Y))
+#define MA(Y,X,TYPE) PushBytes(globalArena,sizeof(TYPE) * (X) * (Y))
 // Matrix Index
 
 #define MI(Y,X,ROWSIZE) ((Y) * (ROWSIZE) + (X)) 
@@ -34,7 +34,7 @@ static inline crypto_uint16 gf_is_zero_declassify(gf t) {
 int genpoly_gen(gf *out, gf *f) {
     int i, j, k, c;
 
-    int mark = MarkArena();
+    int mark = MarkArena(globalArena);
   
     gf* mat = MA(SYS_T + 1,SYS_T,gf); 
     //gf mat[ SYS_T + 1 ][ SYS_T ];
@@ -69,7 +69,7 @@ int genpoly_gen(gf *out, gf *f) {
         }
 
         if ( gf_is_zero_declassify(mat[MI(j,j,SYS_T)]) ) { // return if not systematic
-            PopArena(mark);
+            PopArena(globalArena,mark);
             return -1;
         }
 
@@ -94,7 +94,7 @@ int genpoly_gen(gf *out, gf *f) {
         out[i] = mat[MI(SYS_T,i,SYS_T)];
     }
 
-    PopArena(mark);
+    PopArena(globalArena,mark);
 
     return 0;
 }
