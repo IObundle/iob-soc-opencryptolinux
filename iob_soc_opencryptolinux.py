@@ -288,7 +288,7 @@ endif
 RMAC_ADDR ?=88431eafa897
 export RMAC_ADDR
 #Set correct environment if running on IObundle machines
-ifneq ($(filter pudim-flan sericaia,$(shell hostname)),)
+ifneq ($(filter feynman pudim-flan sericaia,$(shell hostname)),)
 IOB_CONSOLE_PYTHON_ENV ?= /opt/pyeth3/bin/python
 else
 IOB_CONSOLE_PYTHON_ENV ?= {__class__.setup_dir}/submodules/ETHERNET/scripts/pyRawWrapper/pyRawWrapper
