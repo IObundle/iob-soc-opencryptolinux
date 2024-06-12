@@ -57,6 +57,24 @@ sudo ifconfig eth-icarus up
 sudo ip link add eth-verilator type dummy
 sudo ifconfig eth-verilator up
 ```
+
+#### Make dummy interfaces permanent:
+1. Add `dummy` to `/etc/modules`
+2. Create `/etc/network/if-pre-up.d/dummy-eth-interfaces` with:
+```bash
+#!/usr/bin/env bash
+
+# Create eth-SIMULATOR dummy interfaces
+ip link add eth-icarus type dummy
+ifconfig eth-icarus up
+ip link add eth-verilator type dummy
+ifconfig eth-verilator up
+```
+3. Set script as executable:
+```bash
+# Set script as executable
+sudo chmod +x /etc/network/if-pre-up.d/dummy-eth-interfaces
+```
   
 ## Dependencies
 
