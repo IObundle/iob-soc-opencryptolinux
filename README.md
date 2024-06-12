@@ -75,6 +75,20 @@ ifconfig eth-verilator up
 # Set script as executable
 sudo chmod +x /etc/network/if-pre-up.d/dummy-eth-interfaces
 ```
+
+## Ethernet Receiver MAC Address
+The current ethernet setup uses a fake receiver MAC address (RMAC_ADDR) common
+for all simulators and boards. To receive ethernet packets for any destination
+address, the interface connected to the board needs to be in premiscuous mode.
+Check premiscuous mode with the command:
+```bash
+ip -d link
+# check for promiscuity 1
+```
+Set promiscuity to 1 with the command:
+```bash
+sudo ip link set [interface] promisc on
+```
   
 ## Dependencies
 

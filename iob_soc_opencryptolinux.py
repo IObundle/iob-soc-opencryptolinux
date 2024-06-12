@@ -278,11 +278,9 @@ ETH_IF ?= eth-$(SIMULATOR)
 $(if $(findstring sim,$(MAKECMDGOALS))$(SIMULATOR),$(eval BOARD=))
 ifeq ($(BOARD),AES-KU040-DB-G)
 ETH_IF ?=eno1
-RMAC_ADDR ?= 989096c0632c
 endif
 ifeq ($(BOARD),CYCLONEV-GT-DK)
 ETH_IF ?= enp0s31f6
-RMAC_ADDR ?= 309c231e624b
 endif
 # Set a MAC address for console (randomly generated)
 RMAC_ADDR ?=88431eafa897
