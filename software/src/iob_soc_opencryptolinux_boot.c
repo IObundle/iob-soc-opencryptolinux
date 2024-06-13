@@ -115,12 +115,8 @@ void console_get_files(int file_count, long int file_address_array[4],
   for (i = 0; i < file_count; i++) {
     file_addr = (char *)(file_start_addr + file_address_array[i]);
     // Receive data from console via Ethernet
-#ifndef SIMULATION
     file_sizes[i] = uart_recvfile_ethernet(file_name_array[i]);
     eth_rcv_file(file_addr, file_sizes[i]);
-#else
-    file_sizes[i] = uart16550_recvfile(file_name_array[i], file_addr);
-#endif
   }
 }
 
