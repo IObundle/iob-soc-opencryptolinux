@@ -35,7 +35,6 @@ include $(FPGA_TOOL)/build.mk
 #include the module's headers and sources
 VHDR += $(wildcard ../src/*.vh) $(wildcard ./src/*.vh)
 VSRC += $(wildcard ../src/*.v) $(wildcard ./src/*.v)
-VSRC += $(wildcard ../common_src/*.v)
 
 ifneq ($(wildcard $(FPGA_TOOL)/$(BOARD)/$(NAME)_fpga_wrapper.v),)
 VSRC+=$(FPGA_TOOL)/$(BOARD)/$(NAME)_fpga_wrapper.v
