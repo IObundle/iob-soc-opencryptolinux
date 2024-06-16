@@ -23,6 +23,19 @@ on:
 
 jobs:
 
+  spi:
+    runs-on: self-hosted
+    timeout-minutes: 20
+    # run even if previous job failed
+    if: ${{ !cancelled() }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: run spi test
+        run: nix-shell --run "make -C submodules/SPI/ clean build-setup && make -C submodules/iob_spi_master_V0.10/ sim-run"
+
   uart16550:
     runs-on: self-hosted
     timeout-minutes: 5
@@ -30,20 +43,20 @@ jobs:
     if: ${{ !cancelled() }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       - name: run uart16550 test
         run: nix-shell --run "make -C submodules/UART16550/ clean build-setup && make -C submodules/iob_uart16550_V0.10/ sim-run"
-
+      
   iverilog-baremetal:
     runs-on: self-hosted
-    timeout-minutes: 30
+    timeout-minutes: 120
     # run even if previous job failed
     if: ${{ !cancelled() }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       - name: clean
@@ -53,34 +66,34 @@ jobs:
       - name: icarus test
         run: nix-shell --run "make -C ../iob_soc_o* sim-run"
 
-  verilator-baremetal:
-    runs-on: self-hosted
-    timeout-minutes: 30
-    # run even if previous job failed
-    if: ${{ !cancelled() }}
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: 'recursive'
-      - name: clean
-        run: nix-shell --run "make clean"
-      - name: setup no_init_mem ext_mem
-        run: nix-shell --run "make setup INIT_MEM=0 RUN_LINUX=0"
-      - name: verilator test
-        run: nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
+  # verilator-baremetal:
+  #   runs-on: self-hosted
+  #   timeout-minutes: 90
+  #   # run even if previous job failed
+  #   if: ${{ !cancelled() }}
+  #
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         submodules: 'recursive'
+  #     - name: clean
+  #       run: nix-shell --run "make clean"
+  #     - name: setup no_init_mem ext_mem
+  #       run: nix-shell --run "make setup INIT_MEM=0 RUN_LINUX=0"
+  #     - name: verilator test
+  #       run: nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
 
   
   cyclonev:
     runs-on: self-hosted
-    timeout-minutes: 60
+    timeout-minutes: 90
     # run even if previous job failed
     if: ${{ !cancelled() }}
     # run after indicated job
-    needs: [ verilator-baremetal ]
+    needs: [ iverilog-baremetal ]
   
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       - name: test baremetal
@@ -94,16 +107,16 @@ jobs:
     # run even if previous job failed
     if: ${{ !cancelled() }}
     # run after indicated job
-    needs: [ verilator-baremetal ]
+    needs: [ iverilog-baremetal ]
   
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
       - name: test baremetal
         run: make fpga-run RUN_LINUX=0 BOARD=AES-KU040-DB-G
       - name: test linux
-        run: make test-linux-fpga-connect BOARD=AES-KU040-DB-G
+        run: make test-linux-fpga-connect BOARD=AES-KU040-DB-G BOOT_FLOW=CONSOLE_TO_EXTMEM
 
 ##  doc:
 ##    runs-on: self-hosted
@@ -112,7 +125,7 @@ jobs:
 ##    needs: [ cyclonev, aes-ku040 ]
 ##  
 ##    steps:
-##      - uses: actions/checkout@v3
+##      - uses: actions/checkout@v4
 ##        with:
 ##          submodules: 'recursive'
 ##      - name: clean

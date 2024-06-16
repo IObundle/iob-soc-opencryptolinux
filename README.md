@@ -46,6 +46,49 @@ make setup
 
 The first time it runs, `nix-shell` will automatically install all the required dependencies. This can take a couple of hours, but after that, you can enjoy IOb-SoC-OpenCryptoLinux and not worry about installing software tools.
 
+## Ethernet simulation
+The ethernet simulation requires setting up dummy interfaces with
+`eth-[SIMULATOR]` that require `sudo`:
+Setup the following interfaces with the commands:
+```bash
+sudo modprobe dummy
+sudo ip link add eth-icarus type dummy
+sudo ifconfig eth-icarus up
+sudo ip link add eth-verilator type dummy
+sudo ifconfig eth-verilator up
+```
+
+#### Make dummy interfaces permanent:
+1. Add `dummy` to `/etc/modules`
+2. Create `/etc/network/if-pre-up.d/dummy-eth-interfaces` with:
+```bash
+#!/usr/bin/env bash
+
+# Create eth-SIMULATOR dummy interfaces
+ip link add eth-icarus type dummy
+ifconfig eth-icarus up
+ip link add eth-verilator type dummy
+ifconfig eth-verilator up
+```
+3. Set script as executable:
+```bash
+# Set script as executable
+sudo chmod +x /etc/network/if-pre-up.d/dummy-eth-interfaces
+```
+
+## Ethernet Receiver MAC Address
+The current ethernet setup uses a fake receiver MAC address (RMAC_ADDR) common
+for all simulators and boards. To receive ethernet packets for any destination
+address, the interface connected to the board needs to be in premiscuous mode.
+Check premiscuous mode with the command:
+```bash
+ip -d link
+# check for promiscuity 1
+```
+Set promiscuity to 1 with the command:
+```bash
+sudo ip link set [interface] promisc on
+```
   
 ## Dependencies
 
@@ -270,3 +313,13 @@ export PATH=$PATH:/path/to/riscv/bin
 ```
 
 The above command should be added to your `~/.bashrc` file so you do not have to type it on every session.
+
+# Acknowledgement
+The [OpenCryptoLinux](https://nlnet.nl/project/OpenCryptoLinux/) project was funded through the NGI Assure Fund, a fund established by NLnet with financial support from the European Commission's Next Generation Internet programme, under the aegis of DG Communications Networks, Content and Technology under grant agreement No 957073.
+
+<table>
+    <tr>
+        <td align="center" width="50%"><img src="https://nlnet.nl/logo/banner.svg" alt="NLnet foundation logo" style="width:90%"></td>
+        <td align="center"><img src="https://nlnet.nl/image/logos/NGIAssure_tag.svg" alt="NGI Assure logo" style="width:90%"></td>
+    </tr>
+</table>

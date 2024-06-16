@@ -7,7 +7,8 @@ from iob_soc_opencryptolinux_create_periphs_tmp import (
     create_periphs_tmp,
     check_linux_build_macros,
 )
-from mk_configuration import append_str_config_build_mk
+
+from config_gen import append_str_config_build_mk
 
 from iob_soc import iob_soc
 from iob_vexriscv import iob_vexriscv
@@ -15,9 +16,11 @@ from iob_uart16550 import iob_uart16550
 from iob_uart import iob_uart
 from iob_spi_master import iob_spi_master
 from iob_eth import iob_eth
+from N25Qxxx import N25Qxxx
 from axil2iob import axil2iob
 from iob_reset_sync import iob_reset_sync
 from iob_ram_sp import iob_ram_sp
+from iob_versat import CreateVersatClass
 
 
 class iob_soc_opencryptolinux(iob_soc):
@@ -37,6 +40,20 @@ class iob_soc_opencryptolinux(iob_soc):
             cls.peripherals.append(iob_uart16550("UART0", "Default UART interface"))
         if iob_spi_master in cls.submodule_list:
             cls.peripherals.append(iob_spi_master("SPI0", "SPI master peripheral"))
+        # Instantiate versat
+        if cls.versatType in cls.submodule_list:
+            cls.versat = cls.versatType(
+                "VERSAT0",
+                "Versat accelerator",
+                parameters={
+                    "AXI_ID_W": "AXI_ID_W",
+                    "AXI_LEN_W": "AXI_LEN_W",
+                    "AXI_ADDR_W": "AXI_ADDR_W",
+                    "AXI_DATA_W": "AXI_DATA_W",
+                },
+            )
+            cls.peripherals.append(cls.versat)
+
         if iob_eth in cls.submodule_list:
             cls.peripherals.append(
                 iob_eth(
@@ -85,6 +102,16 @@ class iob_soc_opencryptolinux(iob_soc):
     @classmethod
     def _create_submodules_list(cls, extra_submodules=[]):
         """Create submodules list with dependencies of this module"""
+
+        VERSAT_SPEC = f"{__class__.setup_dir}/software/versat/versatSpec.txt"
+        VERSAT_EXTRA_UNITS = os.path.realpath(
+            os.path.join(os.path.dirname(__file__), "hardware/src/units")
+        )
+
+        cls.versatType = CreateVersatClass(
+            False, VERSAT_SPEC, "CryptoAlgos", VERSAT_EXTRA_UNITS, cls.build_dir
+        )
+
         super()._create_submodules_list(
             [
                 {"interface": "peripheral_axi_wire"},
@@ -100,8 +127,10 @@ class iob_soc_opencryptolinux(iob_soc):
                 axil2iob,
                 iob_reset_sync,
                 iob_ram_sp,
-                # iob_spi_master,
+                cls.versatType,
                 iob_eth,
+                iob_spi_master,
+                (N25Qxxx, {"purpose": "simulation"}),
                 (iob_uart, {"purpose": "simulation"}),
             ]
             + extra_submodules
@@ -120,7 +149,6 @@ class iob_soc_opencryptolinux(iob_soc):
 
     @classmethod
     def _post_setup(cls):
-        super()._post_setup()
         dst = f"{cls.build_dir}/software/src"
         src = f"{__class__.setup_dir}/submodules/OS/software/OS_build"
         files = ["rootfs.cpio.gz", "Image"]
@@ -129,12 +157,47 @@ class iob_soc_opencryptolinux(iob_soc):
             if os.path.isfile(src_file):
                 shutil.copy2(src_file, dst)
 
-        # Copy terminalMode script to scripts build directory
+        super()._post_setup()
+
+        # Copy scripts to scripts build directory
+        iob_soc_scripts = [
+            "terminalMode",
+            "makehex",
+            "hex_split",
+            "hex_join",
+            "board_client",
+            "console",
+            "console_ethernet",
+        ]
         dst = f"{cls.build_dir}/scripts"
-        src_file = f"{__class__.setup_dir}/submodules/IOBSOC/submodules/LIB/scripts/terminalMode.py"
-        shutil.copy2(src_file, dst)
+        for script in iob_soc_scripts:
+            src_file = f"{__class__.setup_dir}/submodules/IOBSOC/scripts/{script}.py"
+            shutil.copy2(src_file, dst)
         src_file = f"{__class__.setup_dir}/scripts/check_if_run_linux.py"
         shutil.copy2(src_file, dst)
+
+        shutil.copy2(
+            f"{__class__.setup_dir}/software/versat/module/versat.ko",
+            f"{cls.build_dir}/software",
+        )
+        shutil.copy2(
+            f"{__class__.setup_dir}/software/tests/exampleTransfer.sh",
+            f"{cls.build_dir}/software",
+        )
+        shutil.copy2(
+            f"{__class__.setup_dir}/software/tests/setupTest.sh",
+            f"{cls.build_dir}/software",
+        )
+        shutil.copy2(
+            f"{__class__.setup_dir}/software/tests/test.sh",
+            f"{cls.build_dir}/software",
+        )
+
+        shutil.copytree(
+            f"{__class__.setup_dir}/hardware/src/units",
+            f"{cls.build_dir}/hardware/src",
+            dirs_exist_ok=True,
+        )
 
         # Override periphs_tmp.h of iob-soc with one specific for opencryptolinux
         create_periphs_tmp(
@@ -145,33 +208,66 @@ class iob_soc_opencryptolinux(iob_soc):
         )
         check_linux_build_macros(cls, f"{__class__.setup_dir}/submodules/OS")
 
-        # Set variables in fpga_build.mk
-        with open(cls.build_dir + "/hardware/fpga/fpga_build.mk", "r") as file:
-            contents = file.readlines()
-        contents.append(
-            "#Lines below were auto generated by iob_soc_opencryptolinux.py\n"
-        )
-        # Set custom ethernet CONSOLE_CMD
-        contents.append(
-            f"""
+        if cls.is_top_module:
+            # Set variables in fpga_build.mk
+            with open(cls.build_dir + "/hardware/fpga/fpga_build.mk", "r") as file:
+                contents = file.readlines()
+            contents.append(
+                "#Lines below were auto generated by iob_soc_opencryptolinux.py\n"
+            )
+            # Set custom ethernet CONSOLE_CMD
+            contents.append(
+                f"""
+RUN_DEPS+=boot_flow
+GRAB_TIMEOUT = 900
 ### Launch minicom if running Linux
+# pass CI variable over ssh commands
+UFLAGS+=CI=$(CI)
+UFLAGS+=BOOT_FLOW=$(BOOT_FLOW)
 ifeq ($(shell grep -o rootfs.cpio.gz ../{cls.name}_mem.config),rootfs.cpio.gz)
 ifneq ($(wildcard minicom_linux_script.txt),)
 SCRIPT_STR:=-S minicom_linux_script.txt
 # Set TERM variable to linux-c-nc (needed to run in non-interactive mode https://stackoverflow.com/a/49077622)
 TERM_STR:=TERM=linux-c-nc
+# Give fake stdout to minicom on CI (continuous integration), as it does not have any available (based on https://www.linuxquestions.org/questions/linux-general-1/capuring-data-with-minicom-over-tty-interface-4175558631/#post5448734)
+# Run minicom process in background for Github Actions and wait for minicom to
+# finish so that board_client does not finish as soon as minicom goes to
+# background
+# Github Actions sets CI="true" (https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
+ifneq ($(CI),)
+FAKE_STDOUT:=> minicom2.log
+RUN_MINICOM_IN_BACKGROUND:= & wait $$!
+else
+FAKE_STDOUT:=
+RUN_MINICOM_IN_BACKGROUND:=
+endif
 endif
 # Set a capture file and print its contents (to work around minicom clearing the screen)
-LOG_STR:=-C minicom_out.log || cat minicom_out.log
+LOG_STR:=-C minicom_out.log $(FAKE_STDOUT) || cat minicom_out.log
 # Set HOME to current (fpga) directory (needed because minicom always reads the '.minirc.*' config file from HOME)
 HOME_STR:=HOME=$$(pwd)
 # Always exit with code 0 (since linux is terminated with CTRL-C)
-CONSOLE_CMD += && ($(HOME_STR) $(TERM_STR) minicom iobundle.dfl $(SCRIPT_STR) $(LOG_STR) || (exit 0))
+CONSOLE_CMD += && (($(HOME_STR) $(TERM_STR) minicom iobundle.dfl $(SCRIPT_STR) $(LOG_STR) || (exit 0)) $(RUN_MINICOM_IN_BACKGROUND) )
 endif
-        """
-        )
-        with open(cls.build_dir + "/hardware/fpga/fpga_build.mk", "w") as file:
-            file.writelines(contents)
+            """
+            )
+            with open(cls.build_dir + "/hardware/fpga/fpga_build.mk", "w") as file:
+                file.writelines(contents)
+
+            # Set ETH_IF in sim_build.mk
+            with open(cls.build_dir + "/hardware/simulation/sim_build.mk", "r") as file:
+                contents = file.readlines()
+
+            contents.insert(0, "\n")
+            contents.insert(
+                0,
+                """
+#Lines below were auto generated by iob_soc_opencryptolinux.py
+ETH_IF ?= eth-$(SIMULATOR)
+""",
+            )
+            with open(cls.build_dir + "/hardware/simulation/sim_build.mk", "w") as file:
+                file.writelines(contents)
 
         if cls.is_top_module:
             # Set ethernet MAC address
@@ -184,20 +280,18 @@ ifeq ($(BOARD),AES-KU040-DB-G)
 ETH_IF ?=eno1
 endif
 ifeq ($(BOARD),CYCLONEV-GT-DK)
-ETH_IF ?=enp3s0
+ETH_IF ?= enp0s31f6
 endif
-ETH_IF ?=eth10
-export ETH_IF
 # Set a MAC address for console (randomly generated)
 RMAC_ADDR ?=88431eafa897
 export RMAC_ADDR
 #Set correct environment if running on IObundle machines
-ifneq ($(filter pudim-flan sericaia,$(shell hostname)),)
+ifneq ($(filter feynman pudim-flan sericaia,$(shell hostname)),)
 IOB_CONSOLE_PYTHON_ENV ?= /opt/pyeth3/bin/python
 else
 IOB_CONSOLE_PYTHON_ENV ?= {__class__.setup_dir}/submodules/ETHERNET/scripts/pyRawWrapper/pyRawWrapper
 endif
-                """,
+                    """,
                 cls.build_dir,
             )
 
@@ -543,5 +637,125 @@ endif
                         "port": "",
                         "bits": [],
                     },
+                ),
+            ]
+        if iob_spi_master in cls.submodule_list:
+            cls.peripheral_portmap += [
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "avalid_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "address_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "wdata_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "wstrb_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "rdata_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "rvalid_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "iob_s_cache",
+                        "port": "ready_cache",
+                        "bits": [],
+                    },
+                    {"corename": "internal", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "SS",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "SCLK",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "MISO",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "MOSI",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "WP_N",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
+                ),
+                (
+                    {
+                        "corename": "SPI0",
+                        "if_name": "flash_if",
+                        "port": "HOLD_N",
+                        "bits": [],
+                    },
+                    {"corename": "external", "if_name": "spi", "port": "", "bits": []},
                 ),
             ]

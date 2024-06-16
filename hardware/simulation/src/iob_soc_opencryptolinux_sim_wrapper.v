@@ -198,4 +198,17 @@ module iob_soc_opencryptolinux_sim_wrapper (
   );
 `endif
 
+`ifndef VERILATOR
+   wire [31:0] Vcc = 'd1800;
+   N25Qxxx flash_memory (
+      .S(spi_SS),
+      .C_(spi_SCLK),
+      .HOLD_DQ3(spi_HOLD_N),
+      .DQ0(spi_MOSI),
+      .DQ1(spi_MISO),
+      .Vcc(Vcc),
+      .Vpp_W_DQ2(spi_WP_N)
+   );
+`endif // `ifndef VERILATOR
+
 endmodule

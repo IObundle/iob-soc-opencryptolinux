@@ -2,7 +2,6 @@
 
 `include "bsp.vh"
 `include "iob_soc_opencryptolinux_conf.vh"
-`include "iob_soc_opencryptolinux.vh"
 `include "iob_utils.vh"
 
 `include "iob_soc_opencryptolinux_periphs_swreg_def.vs"
@@ -108,7 +107,7 @@ module iob_soc_opencryptolinux #(
       .clint_resp    (slaves_resp[(N_SLAVES-2)*`RESP_W+:`RESP_W]),
       .plic_req      (slaves_req[(N_SLAVES-1)*`REQ_W+:`REQ_W]),
       .plic_resp     (slaves_resp[(N_SLAVES-1)*`RESP_W+:`RESP_W]),
-      .plicInterrupts({{31{1'b0}}, uart_interrupt_o}),
+      .plicInterrupts({{30{1'b0}}, uart_interrupt_o, 1'b0}),
       // Axi instruction bus
       `include "iBus_axi_m_portmap.vs"
       // Axi data bus
