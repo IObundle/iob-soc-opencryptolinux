@@ -24,6 +24,7 @@
 // NOTE: These functions are not compatible with malloc() and free().
 //      These are specifically made for use with the current iob-eth.c drivers.
 //      (These assume that there is only one block allocated at a time)
+//      It allocates a block with required size at the end of the external memory region.
 static void *mem_alloc(size_t size) {
   return (void *)(EXT_MEM | (1 << IOB_SOC_OPENCRYPTOLINUX_MEM_ADDR_W)) - size;
 }
