@@ -219,7 +219,7 @@ class iob_soc_opencryptolinux(iob_soc):
             contents.append(
                 f"""
 RUN_DEPS+=boot_flow
-GRAB_TIMEOUT = 900
+GRAB_TIMEOUT = 1200
 ### Launch minicom if running Linux
 # pass CI variable over ssh commands
 UFLAGS+=CI=$(CI)
