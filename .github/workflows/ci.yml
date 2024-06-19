@@ -66,22 +66,22 @@ jobs:
       - name: icarus test
         run: nix-shell --run "make -C ../iob_soc_o* sim-run"
 
-  # verilator-baremetal:
-  #   runs-on: self-hosted
-  #   timeout-minutes: 90
-  #   # run even if previous job failed
-  #   if: ${{ !cancelled() }}
-  #
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #       with:
-  #         submodules: 'recursive'
-  #     - name: clean
-  #       run: nix-shell --run "make clean"
-  #     - name: setup no_init_mem ext_mem
-  #       run: nix-shell --run "make setup INIT_MEM=0 RUN_LINUX=0"
-  #     - name: verilator test
-  #       run: nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
+  verilator-baremetal:
+    runs-on: self-hosted
+    timeout-minutes: 90
+    # run even if previous job failed
+    if: ${{ !cancelled() }}
+  
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: clean
+        run: nix-shell --run "make clean"
+      - name: setup no_init_mem ext_mem
+        run: nix-shell --run "make setup INIT_MEM=0 RUN_LINUX=0"
+      - name: verilator test
+        run: nix-shell --run "make -C ../iob_soc_o* sim-run SIMULATOR=verilator"
 
   
   cyclonev:

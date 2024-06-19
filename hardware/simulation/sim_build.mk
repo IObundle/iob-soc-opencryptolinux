@@ -10,6 +10,12 @@ VTOP:=iob_soc_opencryptolinux_tb
 # SOURCES
 ifeq ($(SIMULATOR),verilator)
 
+VSRC+=./src/iob_tasks.cpp
+
+ifeq ($(USE_ETHERNET),1)
+VSRC+=./src/iob_eth_swreg_emb_verilator.c ./src/iob_eth_driver_tb.cpp
+endif
+
 # verilator top module
 VTOP:=iob_soc_opencryptolinux_sim_wrapper
 
