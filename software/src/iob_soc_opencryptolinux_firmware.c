@@ -11,6 +11,10 @@
 #include "plic.h"
 #include "printf.h"
 #include <string.h>
+// For DMA demo
+#include "iob-dma.h"
+#include "iob-axistream-in.h"
+#include "iob-axistream-out.h"
 
 #include "riscv-csr.h"
 #include "riscv-interrupts.h"
@@ -32,6 +36,9 @@ static void irq_entry(void) __attribute__((interrupt("machine")));
 
 // Global to hold current timestamp
 static volatile uint64_t timestamp = 0;
+
+void send_axistream();
+void receive_axistream();
 
 void clear_cache() {
   // Delay to ensure all data is written to memory
@@ -115,6 +122,15 @@ int main() {
   eth_init(ETH0_BASE, &clear_cache);
   eth_wait_phy_rst();
 
+  // For DMA demo
+  // init dma
+  dma_init(DMA0_BASE);
+  // init axistream
+  IOB_AXISTREAM_IN_INIT_BASEADDR(AXISTREAMIN0_BASE);
+  IOB_AXISTREAM_OUT_INIT_BASEADDR(AXISTREAMOUT0_BASE);
+  IOB_AXISTREAM_IN_SET_ENABLE(1);
+  IOB_AXISTREAM_OUT_SET_ENABLE(1);
+
   char buffer[5096];
   // Receive data from console via Ethernet
   uint32_t file_size = uart_recvfile_ethernet("../src/eth_example.txt");
@@ -126,6 +142,10 @@ int main() {
   InitializeCryptoSide(VERSAT0_BASE);
 
   printf("\n\n\nHello world!\n\n\n");
+
+  // DMA demo
+  send_axistream();
+  receive_axistream();
 
   // Global interrupt disable
   csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
@@ -343,3 +363,59 @@ static void irq_entry(void) {
   }
 }
 #pragma GCC pop_options
+
+
+void send_axistream() {
+  uint8_t i;
+  uint8_t words_in_byte_stream = 4; 
+  // Allocate memory for byte stream
+  uint32_t *byte_stream = (uint32_t *)malloc(words_in_byte_stream*sizeof(uint32_t));
+  // Fill byte stream to send
+  byte_stream[0] = 0x03020100;
+  byte_stream[1] = 0x07060504;
+  byte_stream[2] = 0xbbaa0908;
+  byte_stream[3] = 0xffeeddcc;
+
+  // Print byte stream to send
+  uart16550_puts("Sending AXI stream bytes: ");
+  for (i = 0; i < words_in_byte_stream*4; i++)
+    printf("0x%02x ", ((uint8_t *)byte_stream)[i]);
+  uart16550_puts("\n");
+
+  // Send bytes to AXI stream output via DMA, except the last word.
+  uart16550_puts("Loading AXI words via DMA...\n");
+  iob_axis_out_reset();
+  IOB_AXISTREAM_OUT_SET_ENABLE(1);
+  IOB_AXISTREAM_OUT_SET_MODE(1);
+  IOB_AXISTREAM_OUT_SET_NWORDS(words_in_byte_stream);
+  dma_start_transfer(byte_stream, words_in_byte_stream-1, 0, 0);
+  // Send the last word with via SWregs with the TLAST signal.
+  uart16550_puts("Loading last AXI word via SWregs...\n\n");
+  IOB_AXISTREAM_OUT_SET_MODE(0);
+  iob_axis_write(byte_stream[words_in_byte_stream-1]);
+
+  free(byte_stream);
+}
+
+void receive_axistream() {
+  uint8_t i;
+  uint8_t n_received_words = IOB_AXISTREAM_IN_GET_NWORDS();
+  
+  // Allocate memory for byte stream
+  volatile uint32_t *byte_stream = (volatile uint32_t *)malloc((n_received_words)*sizeof(uint32_t));
+
+  // Transfer bytes from AXI stream input via DMA
+  uart16550_puts("Storing AXI words via DMA...\n");
+  IOB_AXISTREAM_IN_SET_MODE(1);
+  dma_start_transfer((uint32_t *)byte_stream, n_received_words, 1, 0);
+
+  clear_cache();
+
+  // Print byte stream received
+  uart16550_puts("Received AXI stream bytes: ");
+  for (i = 0; i < n_received_words*4; i++)
+    printf("0x%02x ", ((volatile uint8_t *)byte_stream)[i]);
+  uart16550_puts("\n\n");
+
+  free((uint32_t *)byte_stream);
+}

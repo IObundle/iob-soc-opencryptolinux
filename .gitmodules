@@ -19,3 +19,9 @@
 [submodule "submodules/ETHERNET"]
 	path = submodules/ETHERNET
 	url = git@github.com:IObundle/iob-eth.git
+[submodule "submodules/AXISTREAM"]
+	path = submodules/AXISTREAM
+	url = git@github.com:IObundle/iob-axis.git
+[submodule "submodules/DMA"]
+	path = submodules/DMA
+	url = git@github.com:IObundle/iob-dma.git
