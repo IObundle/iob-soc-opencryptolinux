@@ -69,4 +69,37 @@ test-linux-fpga-connect: build_dir_name
 	-ln -s minicom_test1.txt $(BUILD_DIR)/hardware/fpga/minicom_linux_script.txt
 	make fpga-connect RUN_LINUX=1 BOOT_FLOW=$(BOOT_FLOW)
 
-.PHONY: setup sim-run sim-test fpga-test test-all test-linux-fpga-connect
+dma-linux-fpga-connect: build_dir_name
+	-rm $(BUILD_DIR)/hardware/fpga/test.log
+	-ln -s minicom_dma_test.txt $(BUILD_DIR)/hardware/fpga/minicom_linux_script.txt
+	make fpga-connect RUN_LINUX=1 BOOT_FLOW=$(BOOT_FLOW)
+
+.PHONY: setup sim-run sim-test fpga-test test-all test-linux-fpga-connect dma-linux-fpga-connect
+
+LINUX_OS_DIR ?= submodules/OS
+
+MODULE_NAMES += iob_dma
+MODULE_NAMES += iob_axistream_in
+MODULE_NAMES += iob_axistream_out
+
+build-driver-headers:
+	@$(foreach module,$(MODULE_NAMES), \
+		./$(LINUX_OS_DIR)/scripts/drivers.py $(module) -o software/tests/dma/src/; \
+	)
+
+.PHONY: build-driver-headers
+
+INCLUDE = -I.
+SRC = *.c
+FLAGS = -Wall -O2
+FLAGS += -Werror
+#FLAGS += -static
+FLAGS += -march=rv32imac
+FLAGS += -mabi=ilp32
+BIN = ../dma_demo
+CC = riscv64-unknown-linux-gnu-gcc
+build-linux-dma-demo: build-driver-headers
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'cd software/tests/dma/src && \
+	$(CC) $(FLAGS) $(INCLUDE) -o $(BIN) $(SRC)'
+
+.PHONY: build-linux-dma-demo
