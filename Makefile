@@ -77,6 +77,15 @@ dma-linux-fpga-connect: build_dir_name
 .PHONY: setup sim-run sim-test fpga-test test-all test-linux-fpga-connect dma-linux-fpga-connect
 
 LINUX_OS_DIR ?= submodules/OS
+# Relative path from OS directory to OpenCryptoLinux (OCL) directory
+REL_OS2OCL :=`realpath . --relative-to=$(LINUX_OS_DIR)`
+
+build-linux-dts:
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/simulation/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/simulation OS_SOFTWARE_DIR=$(REL_OS2OCL)/software'
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G OS_SOFTWARE_DIR=$(REL_OS2OCL)/software'
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK OS_SOFTWARE_DIR=$(REL_OS2OCL)/software'
+
+.PHONY: build-linux-dts
 
 MODULE_NAMES += iob_dma
 MODULE_NAMES += iob_axistream_in
