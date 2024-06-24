@@ -28,9 +28,9 @@ expect {
 }
 
 send "rz"
-! sz ../../software/tests/dma
+! sz ../../software/tests/dma/dma_demo ../../software/tests/dma/runTest.sh ../../software/tests/dma/drivers/iob_dma.ko ../../software/tests/dma/drivers/iob_axistream_in.ko ../../software/tests/dma/drivers/iob_axistream_out.ko
 
-send "./dma/runTest.sh"
+send "./runTest.sh"
 
 expect {
     "#"
