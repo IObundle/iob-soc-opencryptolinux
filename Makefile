@@ -85,7 +85,12 @@ build-linux-dts:
 	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G OS_SOFTWARE_DIR=$(REL_OS2OCL)/software'
 	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK OS_SOFTWARE_DIR=$(REL_OS2OCL)/software'
 
-.PHONY: build-linux-dts
+build-linux-opensbi:
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-opensbi MACROS_FILE=$(REL_OS2OCL)/hardware/simulation/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/simulation'
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-opensbi MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G'
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-opensbi MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK'
+
+.PHONY: build-linux-dts build-linux-opensbi
 
 MODULE_NAMES += iob_dma
 MODULE_NAMES += iob_axistream_in
