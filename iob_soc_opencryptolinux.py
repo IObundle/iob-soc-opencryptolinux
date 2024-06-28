@@ -913,7 +913,7 @@ endif
                     "corename": "DMA0",
                     "if_name": "dma_input",
                     "port": "tvalid_i",
-                    "bits": [0],
+                    "bits": [],
                 },
             ),
             (
@@ -927,7 +927,7 @@ endif
                     "corename": "DMA0",
                     "if_name": "dma_input",
                     "port": "tready_o",
-                    "bits": [0],
+                    "bits": [],
                 },
             ),
             (
@@ -941,7 +941,7 @@ endif
                     "corename": "DMA0",
                     "if_name": "dma_input",
                     "port": "tdata_i",
-                    "bits": list(range(32)),
+                    "bits": [],
                 },
             ),
             (
