@@ -47,17 +47,14 @@ void send_axistream() {
     printf("0x%08x ", byte_stream[i]);
   printf("\n");
 
-  // Send bytes to AXI stream output via DMA, except the last word.
-  printf("Loading AXI words via DMA...\n");
   iob_axis_out_reset();
   iob_sysfs_write_file(IOB_AXISTREAM_OUT_SYSFILE_ENABLE, 1);
-  iob_sysfs_write_file(IOB_AXISTREAM_OUT_SYSFILE_MODE, 1);
-  iob_sysfs_write_file(IOB_AXISTREAM_OUT_SYSFILE_NWORDS, words_in_byte_stream);
-  dma_start_transfer(byte_stream, words_in_byte_stream-1, 0, 0);
-  // Send the last word with via SWregs with the TLAST signal.
-  printf("Loading last AXI word via SWregs...\n\n");
+
+  printf("Loading AXI words via SWregs...\n\n");
   iob_sysfs_write_file(IOB_AXISTREAM_OUT_SYSFILE_MODE, 0);
-  iob_axis_write(byte_stream[words_in_byte_stream-1]);
+  iob_sysfs_write_file(IOB_AXISTREAM_OUT_SYSFILE_NWORDS, words_in_byte_stream);
+  for (i = 0; i < words_in_byte_stream; i++)
+    iob_axis_write(byte_stream[i]);
 
   free(byte_stream);
 }
