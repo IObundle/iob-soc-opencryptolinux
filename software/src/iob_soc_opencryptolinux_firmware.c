@@ -382,17 +382,13 @@ void send_axistream() {
     printf("0x%02x ", ((uint8_t *)byte_stream)[i]);
   uart16550_puts("\n");
 
-  // Send bytes to AXI stream output via DMA, except the last word.
-  uart16550_puts("Loading AXI words via DMA...\n");
+  // Send bytes to AXI stream output via DMA
+  uart16550_puts("Loading AXI words via DMA...\n\n");
   iob_axis_out_reset();
   IOB_AXISTREAM_OUT_SET_ENABLE(1);
   IOB_AXISTREAM_OUT_SET_MODE(1);
   IOB_AXISTREAM_OUT_SET_NWORDS(words_in_byte_stream);
-  dma_start_transfer(byte_stream, words_in_byte_stream-1, 0, 0);
-  // Send the last word with via SWregs with the TLAST signal.
-  uart16550_puts("Loading last AXI word via SWregs...\n\n");
-  IOB_AXISTREAM_OUT_SET_MODE(0);
-  iob_axis_write(byte_stream[words_in_byte_stream-1]);
+  dma_start_transfer(byte_stream, words_in_byte_stream, 0, 0);
 
   free(byte_stream);
 }
