@@ -5,14 +5,6 @@
 # check `timeout` in: https://linux.die.net/man/1/runscript
 timeout 900
 
-print "\n[minicom] Waiting to receive test.log..."
-# expect has default timeout of 60 seconds
-expect {
-    "B00000000000000"
-    timeout 300
-}
-! rz
-
 # Wait for the "buildroot login:" message
 print "\n[minicom] Waiting for buildroot login..."
 expect {
@@ -27,18 +19,16 @@ expect {
     timeout 10
 }
 
-send "rz"
-! sz ../../software/tests/dma/dma_demo ../../software/tests/dma/runTest.sh ../../software/tests/dma/drivers/iob_dma.ko ../../software/tests/dma/drivers/iob_axistream_in.ko ../../software/tests/dma/drivers/iob_axistream_out.ko
-
-send "./runTest.sh"
+send "./dma_demo/dma_demo"
 
 expect {
     "#"
     timeout 100
 }
 
-# send "sz test.log"
-# ! rz --overwrite
+send "echo 'Test passed!' > test.log"
+send "sz -e test.log"
+! rz --overwrite
 
 print "\n[minicom] Done Test"
 

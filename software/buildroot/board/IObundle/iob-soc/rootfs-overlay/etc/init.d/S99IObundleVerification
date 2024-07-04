@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# Load Linux Kernel Modules
+insmod /drivers/iob_timer.ko
+insmod /drivers/iob_dma.ko
+insmod /drivers/iob_axistream_in.ko
+insmod /drivers/iob_axistream_out.ko

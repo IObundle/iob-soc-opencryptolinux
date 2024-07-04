@@ -1,0 +1,189 @@
+Platform Name             : iob-soc
+Platform Features         : medeleg
+Platform HART Count       : 1
+Platform IPI Device       : aclint-mswi
+Platform Timer Device     : aclint-mtimer @ 100000000Hz
+Platform Console Device   : uart8250
+Platform HSM Device       : ---
+Platform PMU Device       : ---
+Platform Reboot Device    : ---
+Platform Shutdown Device  : ---
+Firmware Base             : 0x80000000
+Firmware Size             : 148 KB
+Runtime SBI Version       : 1.0
+
+Domain0 Name              : root
+Domain0 Boot HART         : 0
+Domain0 HARTs             : 0*
+Domain0 Region00          : 0xf9008000-0xf900bfff (I)
+Domain0 Region01          : 0xf9000000-0xf9007fff (I)
+Domain0 Region02          : 0x80000000-0x8003ffff ()
+Domain0 Region03          : 0x00000000-0xffffffff (R,W,X)
+Domain0 Next Address      : 0x80400000
+Domain0 Next Arg1         : 0x80f80000
+Domain0 Next Mode         : S-mode
+Domain0 SysReset          : yes
+
+Boot HART ID              : 0
+Boot HART Domain          : root
+Boot HART Priv Version    : v1.10
+Boot HART Base ISA        : rv32imac
+Boot HART ISA Extensions  : time
+Boot HART PMP Count       : 0
+Boot HART PMP Granularity : 0
+Boot HART PMP Address Bits: 0
+Boot HART MHPM Count      : 0
+Boot HART MIDELEG         : 0x00000222
+Boot HART MEDELEG         : 0x0000b109
+[    0.000000] Linux version 5.15.98 (artur@pc-artur) (riscv64-unknown-linux-gnu-gcc (g) 11.1.0, GNU ld (GNU Binutils) 2.38) #1 SMP Wed Jul 3 23:58:15 WEST 2024
+[    0.000000] OF: fdt: Ignoring memory range 0x80000000 - 0x80400000
+[    0.000000] Machine model: IOb-SoC, VexRiscv
+[    0.000000] earlycon: sbi0 at I/O port 0x0 (options '')
+[    0.000000] printk: bootconsole [sbi0] enabled
+[    0.000000] Zone ranges:
+[    0.000000]   Normal   [mem 0x0000000080400000-0x0000000081ffffff]
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000080400000-0x0000000081ffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000080400000-0x0000000081ffffff]
+[    0.000000] SBI specification v1.0 detected
+[    0.000000] SBI implementation ID=0x1 Version=0x10002
+[    0.000000] SBI TIME extension detected
+[    0.000000] SBI IPI extension detected
+[    0.000000] SBI RFENCE extension detected
+[    0.000000] SBI v0.2 HSM extension detected
+[    0.000000] riscv: ISA extensions acim
+[    0.000000] riscv: ELF capabilities acim
+[    0.000000] percpu: Embedded 10 pages/cpu s11340 r8192 d21428 u40960
+[    0.000000] pcpu-alloc: s11340 r8192 d21428 u40960 alloc=10*4096
+[    0.000000] pcpu-alloc: [0] 0 
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 7112
+[    0.000000] Kernel command line: rootwait console=hvc0 earlycon=sbi root=/dev/ram0 init=/sbin/init swiotlb=32 loglevel=8
+[    0.000000] Unknown kernel command line parameters "swiotlb=32", will be passed to user space.
+[    0.000000] Dentry cache hash table entries: 4096 (order: 2, 16384 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 2048 (order: 1, 8192 bytes, linear)
+[    0.000000] mem auto-init: stack:off, heap alloc:off, heap free:off
+[    0.000000] Memory: 14852K/28672K available (3568K kernel code, 555K rwdata, 833K rodata, 146K init, 215K bss, 13820K reserved, 0K cma-reserved)
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+[    0.000000] rcu: Hierarchical RCU implementation.
+[    0.000000] rcu: 	RCU restricting CPUs from NR_CPUS=8 to nr_cpu_ids=1.
+[    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 25 jiffies.
+[    0.000000] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=1
+[    0.000000] NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 0
+[    0.000000] riscv-intc: 32 local interrupts mapped
+[    0.000000] riscv_timer_init_dt: Registering clocksource cpuid [0] hartid [0]
+[    0.000000] clocksource: riscv_clocksource: mask: 0xffffffffffffffff max_cycles: 0x171024e7e0, max_idle_ns: 440795205315 ns
+[    0.000046] sched_clock: 64 bits at 100MHz, resolution 10ns, wraps every 4398046511100ns
+[    0.014578] Console: colour dummy device 80x25
+[    0.020158] printk: console [hvc0] enabled
+[    0.020158] printk: console [hvc0] enabled
+[    0.029316] printk: bootconsole [sbi0] disabled
+[    0.029316] printk: bootconsole [sbi0] disabled
+[    0.039915] Calibrating delay loop (skipped), value calculated using timer frequency.. 200.00 BogoMIPS (lpj=400000)
+[    0.051637] pid_max: default: 32768 minimum: 301
+[    0.064615] Mount-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.073533] Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.153429] ASID allocator using 9 bits (512 entries)
+[    0.166074] rcu: Hierarchical SRCU implementation.
+[    0.188390] smp: Bringing up secondary CPUs ...
+[    0.193859] smp: Brought up 1 node, 1 CPU
+[    0.211397] devtmpfs: initialized
+[    0.261714] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
+[    0.272867] futex hash table entries: 256 (order: 2, 16384 bytes, linear)
+[    0.319840] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    0.666221] FPGA manager framework
+[    0.701032] clocksource: Switched to clocksource riscv_clocksource
+[    1.068913] NET: Registered PF_INET protocol family
+[    1.083151] IP idents hash table entries: 2048 (order: 2, 16384 bytes, linear)
+[    1.111734] tcp_listen_portaddr_hash hash table entries: 512 (order: 0, 6144 bytes, linear)
+[    1.122968] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    1.132820] TCP established hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    1.142420] TCP bind hash table entries: 1024 (order: 1, 8192 bytes, linear)
+[    1.151564] TCP: Hash tables configured (established 1024 bind 1024)
+[    1.163725] UDP hash table entries: 256 (order: 1, 8192 bytes, linear)
+[    1.173214] UDP-Lite hash table entries: 256 (order: 1, 8192 bytes, linear)
+[    1.246648] Unpacking initramfs...
+[    1.396935] workingset: timestamp_bits=30 max_order=12 bucket_order=0
+[    1.850981] io scheduler mq-deadline registered
+[    1.856865] io scheduler kyber registered
+[    6.648024] Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
+[    6.815644] NET: Registered PF_INET6 protocol family
+[    6.975957] Segment Routing with IPv6
+[    6.983675] In-situ OAM (IOAM) with IPv6
+[    6.991437] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
+[    7.026625] NET: Registered PF_PACKET protocol family
+[   10.178345] Initramfs unpacking failed: invalid magic at start of compressed archive
+[   11.062843] Freeing initrd memory: 8192K
+[   11.094923] Freeing unused kernel image (initmem) memory: 140K
+[   11.102014] Kernel memory protection not selected by kernel config.
+[   11.109638] Run /init as init process
+[   11.114264]   with arguments:
+[   11.118129]     /init
+[   11.121338]   with environment:
+[   11.125383]     HOME=/
+[   11.128706]     TERM=linux
+[   11.131861]     swiotlb=32
+Starting syslogd: OK
+Starting klogd: OK
+Running sysctl: OK
+Starting mdev... OK
+modprobe: can't change directory to '/lib/modules': No such file or directory
+Saving random seed: [   70.134039] random: dd: uninitialized urandom read (32 bytes read)
+OK
+Starting network: OK
+Starting dropbear sshd: OK
+[   77.307762] iob_timer: loading out-of-tree module taints kernel.
+[   77.405159] [Driver] iob_timer: initializing.
+[   77.878775] [Driver] iob_dma: initializing.
+[   77.885910] [Driver] iob_dma: probing.
+[   77.930396] iob_dma f8000000.dma: initialized.
+[   78.445220] [Driver] iob_axistream_in: initializing.
+[   78.452902] [Driver] iob_axistream_in: probing.
+[   78.503602] iob_axistream_in f6000000.axistream_in: initialized.
+[   79.029075] [Driver] iob_axistream_out: initializing.
+[   79.036924] [Driver] iob_axistream_out: probing.
+[   79.080941] iob_axistream_out f7000000.axistream_out: initialized.
+
+Welcome to Buildroot
+buildroot login:root
+login[220]: root login on 'console'
+#./dma_demo/dma_demo
+[   82.646690] [iob_axistream_in] Sysfs - Write: 0x1
+[   82.665889] [iob_axistream_out] Sysfs - Write: 0x1
+Sending AXI stream bytes: 0x03020100 0x07060504 0xbbaa0908 0xffeeddcc 
+Loading AXI words via DMA...
+[   82.722313] [iob_axistream_out] Sysfs - Write: 0x1
+[   82.750063] [iob_axistream_out] Sysfs - Write: 0x0
+[   82.764882] [iob_axistream_out] Sysfs - Write: 0x1
+[   82.790174] [iob_axistream_out] Sysfs - Write: 0x1
+[   82.814086] [iob_axistream_out] Sysfs - Write: 0x4
+[   82.829714] [Driver] iob_dma device opened
+[   82.845109] [Driver] MMAP: Page Size: 4096	size = 4096
+[   82.851381] [Driver] BASE_ADDR iob_dma: 81bf3000
+[   82.873914] [iob_dma] Sysfs - Write: 0x0
+[   82.894637] [iob_dma] Sysfs - Write: 0x0
+[   82.918461] [iob_dma] Sysfs - Write: 0x3
+[   82.938392] [iob_dma] Sysfs - Read: 0x1
+[   82.975602] [iob_dma] Sysfs - Read: 0x1
+Loading last AXI word via SWregs...
+
+[   83.004814] [iob_axistream_out] Sysfs - Write: 0x0
+[   83.030837] [iob_axistream_out] Sysfs - Read: 0x0
+[   83.054157] [iob_axistream_out] Sysfs - Write: 0xffeeddcc
+[   83.077915] [iob_axistream_in] Sysfs - Read: 0x4
+Storing AXI words via DMA...
+[   83.109180] [iob_axistream_in] Sysfs - Write: 0x1
+[   83.121600] [Driver] iob_dma device opened
+[   83.137029] [Driver] MMAP: Page Size: 4096	size = 4096
+[   83.143303] [Driver] BASE_ADDR iob_dma: 80edc000
+[   83.163810] [iob_dma] Sysfs - Write: 0x1
+[   83.181021] [iob_dma] Sysfs - Write: 0x0
+[   83.200938] [iob_dma] Sysfs - Write: 0x4
+[   83.225977] [iob_dma] Sysfs - Read: 0x1
+[   83.253311] [iob_dma] Sysfs - Read: 0x1
+Received AXI stream 16 bytes: 0x00000000 0xffffffff 0x00000000 0xffeeddcc 
+
+[   83.301534] [Driver] VM: Closing virtual address: (ptrval)
+[   83.317755] [Driver] VM: Closing virtual address: (ptrval)
+[   83.333683] [Driver] iob_dma device closed
+[   83.346623] [Driver] iob_dma device closed

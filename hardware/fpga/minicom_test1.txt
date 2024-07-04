@@ -5,14 +5,6 @@
 # check `timeout` in: https://linux.die.net/man/1/runscript
 timeout 900
 
-print "\n[minicom] Waiting to receive test.log..."
-# expect has default timeout of 60 seconds
-expect {
-    "B00000000000000"
-    timeout 300
-}
-! rz
-
 # Wait for the "buildroot login:" message
 print "\n[minicom] Waiting for buildroot login..."
 expect {
@@ -29,6 +21,11 @@ expect {
 
 send "rz"
 ! sz ../../software/crypto ../../software/versat.ko  ../../software/exampleTransfer.sh ../../software/setupTest.sh ../../software/test.sh
+
+expect {
+    "#"
+    timeout 100
+}
 
 send "./setupTest.sh"
 

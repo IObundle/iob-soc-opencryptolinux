@@ -42,7 +42,7 @@
     };
     memory@80000000 {
         device_type = "memory";
-        reg = <0x80000000 0x04000000>; // 26 bits (size of external memory)
+        reg = <0x80000000 0x02000000>; // 26 bits (size of external memory)
     };
     chosen {
         bootargs = "rootwait console=hvc0 earlycon=sbi root=/dev/ram0 init=/sbin/init swiotlb=32 loglevel=8";
