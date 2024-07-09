@@ -11,7 +11,7 @@
 #include "plic.h"
 #include "printf.h"
 #include <string.h>
-#ifdef DMA_DEMO
+#ifdef IOB_SOC_OPENCRYPTOLINUX_DMA_DEMO
 #include "iob-dma.h"
 #include "iob-axistream-in.h"
 #include "iob-axistream-out.h"
@@ -123,7 +123,7 @@ int main() {
   eth_init(ETH0_BASE, &clear_cache);
   eth_wait_phy_rst();
 
-#ifdef DMA_DEMO
+#ifdef IOB_SOC_OPENCRYPTOLINUX_DMA_DEMO
   // init dma
   dma_init(DMA0_BASE);
   // init axistream
@@ -145,7 +145,7 @@ int main() {
 
   printf("\n\n\nHello world!\n\n\n");
 
-#ifdef DMA_DEMO
+#ifdef IOB_SOC_OPENCRYPTOLINUX_DMA_DEMO
   send_axistream();
   receive_axistream();
 #endif
@@ -368,7 +368,7 @@ static void irq_entry(void) {
 #pragma GCC pop_options
 
 
-#ifdef DMA_DEMO
+#ifdef IOB_SOC_OPENCRYPTOLINUX_DMA_DEMO
 void send_axistream() {
   uint8_t i;
   uint8_t words_in_byte_stream = 4; 
@@ -419,4 +419,4 @@ void receive_axistream() {
 
   free((uint32_t *)byte_stream);
 }
-#endif // DMA_DEMO
+#endif // IOB_SOC_OPENCRYPTOLINUX_DMA_DEMO

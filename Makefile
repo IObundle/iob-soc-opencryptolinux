@@ -80,6 +80,16 @@ dma-linux-fpga-connect: build_dir_name
 
 .PHONY: setup sim-run sim-test fpga-test test-all test-linux-fpga-connect dma-linux-fpga-connect
 
+# Run this target to configure system for a DMA data transfer demo in linux and run it on a FPGA.
+dma-demo:
+	# Try to setup, so that it generates correct linux_build_macros.txt (ignore errors as well)
+	-make setup DMA_DEMO=1
+	make build-linux-files DMA_DEMO=1
+	make fpga-run RUN_LINUX=0 DMA_DEMO=1
+	make dma-linux-fpga-connect
+
+.PHONY: dma-demo
+
 #
 # Linux targets
 #

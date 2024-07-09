@@ -357,6 +357,17 @@ endif
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
+        if DMA_DEMO:
+            extra_confs += [
+                {
+                    "name": "DMA_DEMO",
+                    "type": "M",
+                    "val": True,
+                    "min": "0",
+                    "max": "1",
+                    "descr": "Enable DMA demo",
+                },
+            ]
         # Append confs or override them if they exist
         super()._setup_confs(
             [
