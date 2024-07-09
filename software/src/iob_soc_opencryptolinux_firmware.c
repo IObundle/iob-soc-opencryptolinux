@@ -11,10 +11,11 @@
 #include "plic.h"
 #include "printf.h"
 #include <string.h>
-// For DMA demo
+#ifdef DMA_DEMO
 #include "iob-dma.h"
 #include "iob-axistream-in.h"
 #include "iob-axistream-out.h"
+#endif
 
 #include "riscv-csr.h"
 #include "riscv-interrupts.h"
@@ -122,7 +123,7 @@ int main() {
   eth_init(ETH0_BASE, &clear_cache);
   eth_wait_phy_rst();
 
-  // For DMA demo
+#ifdef DMA_DEMO
   // init dma
   dma_init(DMA0_BASE);
   // init axistream
@@ -130,6 +131,7 @@ int main() {
   IOB_AXISTREAM_OUT_INIT_BASEADDR(AXISTREAMOUT0_BASE);
   IOB_AXISTREAM_IN_SET_ENABLE(1);
   IOB_AXISTREAM_OUT_SET_ENABLE(1);
+#endif
 
   char buffer[5096];
   // Receive data from console via Ethernet
@@ -143,9 +145,10 @@ int main() {
 
   printf("\n\n\nHello world!\n\n\n");
 
-  // DMA demo
+#ifdef DMA_DEMO
   send_axistream();
   receive_axistream();
+#endif
 
   // Global interrupt disable
   csr_clr_bits_mstatus(MSTATUS_MIE_BIT_MASK);
@@ -365,6 +368,7 @@ static void irq_entry(void) {
 #pragma GCC pop_options
 
 
+#ifdef DMA_DEMO
 void send_axistream() {
   uint8_t i;
   uint8_t words_in_byte_stream = 4; 
@@ -415,3 +419,4 @@ void receive_axistream() {
 
   free((uint32_t *)byte_stream);
 }
+#endif // DMA_DEMO

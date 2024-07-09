@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 import shutil
 import math
 
@@ -22,11 +23,14 @@ from iob_reset_sync import iob_reset_sync
 from iob_ram_sp import iob_ram_sp
 from iob_versat import CreateVersatClass
 
+DMA_DEMO = "OCL_DMA_DEMO" in sys.argv
+
 # For DMA demo
-from iob_axistream_in import iob_axistream_in
-from iob_axistream_out import iob_axistream_out
-from iob_dma import iob_dma
-from verilog_gen import insert_verilog_in_module
+if DMA_DEMO:
+    from iob_axistream_in import iob_axistream_in
+    from iob_axistream_out import iob_axistream_out
+    from iob_dma import iob_dma
+    from verilog_gen import insert_verilog_in_module
 
 
 class iob_soc_opencryptolinux(iob_soc):
@@ -75,34 +79,34 @@ class iob_soc_opencryptolinux(iob_soc):
                 )
             )
 
-        # For DMA demo
-        cls.peripherals.append(
-            iob_axistream_in(
-                "AXISTREAMIN0",
-                "AXI stream input interface",
-                parameters={"TDATA_W": "32"},
+        if DMA_DEMO:
+            cls.peripherals.append(
+                iob_axistream_in(
+                    "AXISTREAMIN0",
+                    "AXI stream input interface",
+                    parameters={"TDATA_W": "32"},
+                )
             )
-        )
-        cls.peripherals.append(
-            iob_axistream_out(
-                "AXISTREAMOUT0",
-                "AXI stream output interface",
-                parameters={"TDATA_W": "32"},
+            cls.peripherals.append(
+                iob_axistream_out(
+                    "AXISTREAMOUT0",
+                    "AXI stream output interface",
+                    parameters={"TDATA_W": "32"},
+                )
             )
-        )
-        cls.peripherals.append(
-            iob_dma(
-                "DMA0",
-                "DMA interface",
-                parameters={
-                    "AXI_ID_W": "AXI_ID_W",
-                    "AXI_LEN_W": "AXI_LEN_W",
-                    "AXI_ADDR_W": "AXI_ADDR_W",
-                    "N_INPUTS": "1",
-                    "N_OUTPUTS": "1",
-                },
+            cls.peripherals.append(
+                iob_dma(
+                    "DMA0",
+                    "DMA interface",
+                    parameters={
+                        "AXI_ID_W": "AXI_ID_W",
+                        "AXI_LEN_W": "AXI_LEN_W",
+                        "AXI_ADDR_W": "AXI_ADDR_W",
+                        "N_INPUTS": "1",
+                        "N_OUTPUTS": "1",
+                    },
+                )
             )
-        )
 
         # Add custom N_SLAVES and N_SLAVES_W
         cls.confs += [
@@ -147,6 +151,13 @@ class iob_soc_opencryptolinux(iob_soc):
             False, VERSAT_SPEC, "CryptoAlgos", VERSAT_EXTRA_UNITS, cls.build_dir
         )
 
+        if DMA_DEMO:
+            extra_submodules += [
+                iob_axistream_in,
+                iob_axistream_out,
+                iob_dma,
+            ]
+
         super()._create_submodules_list(
             [
                 {"interface": "peripheral_axi_wire"},
@@ -167,10 +178,6 @@ class iob_soc_opencryptolinux(iob_soc):
                 iob_spi_master,
                 (N25Qxxx, {"purpose": "simulation"}),
                 (iob_uart, {"purpose": "simulation"}),
-                # For DMA demo
-                iob_axistream_in,
-                iob_axistream_out,
-                iob_dma,
             ]
             + extra_submodules
         )
@@ -334,19 +341,19 @@ endif
                 cls.build_dir,
             )
 
-        # For DMA demo
-        # Connect General signals from iob-axis cores
-        insert_verilog_in_module(
-            """
-    assign AXISTREAMIN0_axis_clk_i = clk_i;
-    assign AXISTREAMIN0_axis_cke_i = cke_i;
-    assign AXISTREAMIN0_axis_arst_i = arst_i;
-    assign AXISTREAMOUT0_axis_clk_i = clk_i;
-    assign AXISTREAMOUT0_axis_cke_i = cke_i;
-    assign AXISTREAMOUT0_axis_arst_i = arst_i;
-             """,
-            cls.build_dir + f"/hardware/src/{cls.name}.v",
-        )
+        if DMA_DEMO:
+            # Connect General signals from iob-axis cores
+            insert_verilog_in_module(
+                """
+        assign AXISTREAMIN0_axis_clk_i = clk_i;
+        assign AXISTREAMIN0_axis_cke_i = cke_i;
+        assign AXISTREAMIN0_axis_arst_i = arst_i;
+        assign AXISTREAMOUT0_axis_clk_i = clk_i;
+        assign AXISTREAMOUT0_axis_cke_i = cke_i;
+        assign AXISTREAMOUT0_axis_arst_i = arst_i;
+                 """,
+                cls.build_dir + f"/hardware/src/{cls.name}.v",
+            )
 
     @classmethod
     def _setup_confs(cls, extra_confs=[]):
@@ -813,263 +820,263 @@ endif
                 ),
             ]
 
-        # For DMA demo
-        cls.peripheral_portmap += [
-            # AXISTREAM IN - General signals
-            (
-                {
-                    "corename": "AXISTREAMIN0",
-                    "if_name": "axistream",
-                    "port": "axis_clk_i",
-                    "bits": [],
-                },
-                {
-                    "corename": "internal",
-                    "if_name": "AXISTREAMIN0",
-                    "port": "",
-                    "bits": [],
-                },
-            ),
-            (
-                {
-                    "corename": "AXISTREAMIN0",
-                    "if_name": "axistream",
-                    "port": "axis_cke_i",
-                    "bits": [],
-                },
-                {
-                    "corename": "internal",
-                    "if_name": "AXISTREAMIN0",
-                    "port": "",
-                    "bits": [],
-                },
-            ),
-            (
-                {
-                    "corename": "AXISTREAMIN0",
-                    "if_name": "axistream",
-                    "port": "axis_arst_i",
-                    "bits": [],
-                },
-                {
-                    "corename": "internal",
-                    "if_name": "AXISTREAMIN0",
-                    "port": "",
-                    "bits": [],
-                },
-            ),
-            # AXISTREAM OUT - General signals
-            (
-                {
-                    "corename": "AXISTREAMOUT0",
-                    "if_name": "axistream",
-                    "port": "axis_clk_i",
-                    "bits": [],
-                },
-                {
-                    "corename": "internal",
-                    "if_name": "AXISTREAMOUT0",
-                    "port": "",
-                    "bits": [],
-                },
-            ),
-            (
-                {
-                    "corename": "AXISTREAMOUT0",
-                    "if_name": "axistream",
-                    "port": "axis_cke_i",
-                    "bits": [],
-                },
-                {
-                    "corename": "internal",
-                    "if_name": "AXISTREAMOUT0",
-                    "port": "",
-                    "bits": [],
-                },
-            ),
-            (
-                {
-                    "corename": "AXISTREAMOUT0",
-                    "if_name": "axistream",
-                    "port": "axis_arst_i",
-                    "bits": [],
-                },
-                {
-                    "corename": "internal",
-                    "if_name": "AXISTREAMOUT0",
-                    "port": "",
-                    "bits": [],
-                },
-            ),
-            # AXISTREAM IN DMA
-            (
-                {
-                    "corename": "AXISTREAMIN0",
-                    "if_name": "sys_axis",
-                    "port": "sys_tvalid_o",
-                    "bits": [],
-                },
-                {
-                    "corename": "DMA0",
-                    "if_name": "dma_input",
-                    "port": "tvalid_i",
-                    "bits": [],
-                },
-            ),
-            (
-                {
-                    "corename": "AXISTREAMIN0",
-                    "if_name": "sys_axis",
-                    "port": "sys_tready_i",
-                    "bits": [],
-                },
-                {
-                    "corename": "DMA0",
-                    "if_name": "dma_input",
-                    "port": "tready_o",
-                    "bits": [],
-                },
-            ),
-            (
-                {
-                    "corename": "AXISTREAMIN0",
-                    "if_name": "sys_axis",
-                    "port": "sys_tdata_o",
-                    "bits": [],
-                },
-                {
-                    "corename": "DMA0",
-                    "if_name": "dma_input",
-                    "port": "tdata_i",
-                    "bits": [],
-                },
-            ),
-            (
-                {
-                    "corename": "AXISTREAMIN0",
-                    "if_name": "general",
-                    "port": "interrupt_o",
-                    "bits": [],
-                },
-                {
-                    "corename": "internal",
-                    "if_name": "AXISTREAMIN0",
-                    "port": "",
-                    "bits": [],
-                },
-            ),
-            # AXISTREAM OUT DMA
-            (
-                {
-                    "corename": "AXISTREAMOUT0",
-                    "if_name": "sys_axis",
-                    "port": "sys_tvalid_i",
-                    "bits": [],
-                },
-                {
-                    "corename": "DMA0",
-                    "if_name": "dma_output",
-                    "port": "tvalid_o",
-                    "bits": [],
-                },
-            ),
-            (
-                {
-                    "corename": "AXISTREAMOUT0",
-                    "if_name": "sys_axis",
-                    "port": "sys_tready_o",
-                    "bits": [],
-                },
-                {
-                    "corename": "DMA0",
-                    "if_name": "dma_output",
-                    "port": "tready_i",
-                    "bits": [],
-                },
-            ),
-            (
-                {
-                    "corename": "AXISTREAMOUT0",
-                    "if_name": "sys_axis",
-                    "port": "sys_tdata_i",
-                    "bits": [],
-                },
-                {
-                    "corename": "DMA0",
-                    "if_name": "dma_output",
-                    "port": "tdata_o",
-                    "bits": [],
-                },
-            ),
-            (
-                {
-                    "corename": "AXISTREAMOUT0",
-                    "if_name": "general",
-                    "port": "interrupt_o",
-                    "bits": [],
-                },
-                {
-                    "corename": "internal",
-                    "if_name": "AXISTREAMOUT0",
-                    "port": "",
-                    "bits": [],
-                },
-            ),
-            # Connect AXISTREAM IN to AXISTREAM OUT
-            (
-                {
-                    "corename": "AXISTREAMIN0",
-                    "if_name": "axistream",
-                    "port": "axis_tvalid_i",
-                    "bits": [],
-                },
-                {
-                    "corename": "AXISTREAMOUT0",
-                    "if_name": "axistream",
-                    "port": "axis_tvalid_o",
-                    "bits": [],
-                },
-            ),
-            (
-                {
-                    "corename": "AXISTREAMIN0",
-                    "if_name": "axistream",
-                    "port": "axis_tready_o",
-                    "bits": [],
-                },
-                {
-                    "corename": "AXISTREAMOUT0",
-                    "if_name": "axistream",
-                    "port": "axis_tready_i",
-                    "bits": [],
-                },
-            ),
-            (
-                {
-                    "corename": "AXISTREAMIN0",
-                    "if_name": "axistream",
-                    "port": "axis_tdata_i",
-                    "bits": [],
-                },
-                {
-                    "corename": "AXISTREAMOUT0",
-                    "if_name": "axistream",
-                    "port": "axis_tdata_o",
-                    "bits": [],
-                },
-            ),
-            (
-                {
-                    "corename": "AXISTREAMIN0",
-                    "if_name": "axistream",
-                    "port": "axis_tlast_i",
-                    "bits": [],
-                },
-                {
-                    "corename": "AXISTREAMOUT0",
-                    "if_name": "axistream",
-                    "port": "axis_tlast_o",
-                    "bits": [],
-                },
-            ),
-        ]
+        if DMA_DEMO:
+            cls.peripheral_portmap += [
+                # AXISTREAM IN - General signals
+                (
+                    {
+                        "corename": "AXISTREAMIN0",
+                        "if_name": "axistream",
+                        "port": "axis_clk_i",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "AXISTREAMIN0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "AXISTREAMIN0",
+                        "if_name": "axistream",
+                        "port": "axis_cke_i",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "AXISTREAMIN0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "AXISTREAMIN0",
+                        "if_name": "axistream",
+                        "port": "axis_arst_i",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "AXISTREAMIN0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                # AXISTREAM OUT - General signals
+                (
+                    {
+                        "corename": "AXISTREAMOUT0",
+                        "if_name": "axistream",
+                        "port": "axis_clk_i",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "AXISTREAMOUT0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "AXISTREAMOUT0",
+                        "if_name": "axistream",
+                        "port": "axis_cke_i",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "AXISTREAMOUT0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "AXISTREAMOUT0",
+                        "if_name": "axistream",
+                        "port": "axis_arst_i",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "AXISTREAMOUT0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                # AXISTREAM IN DMA
+                (
+                    {
+                        "corename": "AXISTREAMIN0",
+                        "if_name": "sys_axis",
+                        "port": "sys_tvalid_o",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "DMA0",
+                        "if_name": "dma_input",
+                        "port": "tvalid_i",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "AXISTREAMIN0",
+                        "if_name": "sys_axis",
+                        "port": "sys_tready_i",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "DMA0",
+                        "if_name": "dma_input",
+                        "port": "tready_o",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "AXISTREAMIN0",
+                        "if_name": "sys_axis",
+                        "port": "sys_tdata_o",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "DMA0",
+                        "if_name": "dma_input",
+                        "port": "tdata_i",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "AXISTREAMIN0",
+                        "if_name": "general",
+                        "port": "interrupt_o",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "AXISTREAMIN0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                # AXISTREAM OUT DMA
+                (
+                    {
+                        "corename": "AXISTREAMOUT0",
+                        "if_name": "sys_axis",
+                        "port": "sys_tvalid_i",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "DMA0",
+                        "if_name": "dma_output",
+                        "port": "tvalid_o",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "AXISTREAMOUT0",
+                        "if_name": "sys_axis",
+                        "port": "sys_tready_o",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "DMA0",
+                        "if_name": "dma_output",
+                        "port": "tready_i",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "AXISTREAMOUT0",
+                        "if_name": "sys_axis",
+                        "port": "sys_tdata_i",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "DMA0",
+                        "if_name": "dma_output",
+                        "port": "tdata_o",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "AXISTREAMOUT0",
+                        "if_name": "general",
+                        "port": "interrupt_o",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "internal",
+                        "if_name": "AXISTREAMOUT0",
+                        "port": "",
+                        "bits": [],
+                    },
+                ),
+                # Connect AXISTREAM IN to AXISTREAM OUT
+                (
+                    {
+                        "corename": "AXISTREAMIN0",
+                        "if_name": "axistream",
+                        "port": "axis_tvalid_i",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "AXISTREAMOUT0",
+                        "if_name": "axistream",
+                        "port": "axis_tvalid_o",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "AXISTREAMIN0",
+                        "if_name": "axistream",
+                        "port": "axis_tready_o",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "AXISTREAMOUT0",
+                        "if_name": "axistream",
+                        "port": "axis_tready_i",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "AXISTREAMIN0",
+                        "if_name": "axistream",
+                        "port": "axis_tdata_i",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "AXISTREAMOUT0",
+                        "if_name": "axistream",
+                        "port": "axis_tdata_o",
+                        "bits": [],
+                    },
+                ),
+                (
+                    {
+                        "corename": "AXISTREAMIN0",
+                        "if_name": "axistream",
+                        "port": "axis_tlast_i",
+                        "bits": [],
+                    },
+                    {
+                        "corename": "AXISTREAMOUT0",
+                        "if_name": "axistream",
+                        "port": "axis_tlast_o",
+                        "bits": [],
+                    },
+                ),
+            ]

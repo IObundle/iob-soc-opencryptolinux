@@ -41,8 +41,9 @@ expect {
     timeout 900
 }
 
-# send "sz test.log"
-# ! rz --overwrite
+send "echo 'Test passed!' > test.log"
+send "sz -e test.log"
+! rz --overwrite
 
 print "\n[minicom] Done Test"
 

@@ -17,6 +17,10 @@ ifeq ($(INIT_MEM),1)
 SETUP_ARGS += INIT_MEM
 endif
 
+ifeq ($(DMA_DEMO),1)
+SETUP_ARGS += OCL_DMA_DEMO
+endif
+
 setup:
 	make build-setup SETUP_ARGS="$(SETUP_ARGS)"
 
@@ -84,10 +88,14 @@ LINUX_OS_DIR ?= submodules/OS
 # Relative path from OS directory to OpenCryptoLinux (OCL) directory
 REL_OS2OCL :=`realpath . --relative-to=$(LINUX_OS_DIR)`
 
+ifeq ($(DMA_DEMO),1)
+DTS_FILE_STR := DTS_FILE=$(REL_OS2OCL)/software/iob_soc_dma_demo.dts
+endif
+
 build-linux-dts:
-	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/simulation/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/simulation OS_SOFTWARE_DIR=$(REL_OS2OCL)/software'
-	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G OS_SOFTWARE_DIR=$(REL_OS2OCL)/software'
-	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK OS_SOFTWARE_DIR=$(REL_OS2OCL)/software'
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/simulation/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/simulation $(DTS_FILE_STR)'
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G $(DTS_FILE_STR)'
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK $(DTS_FILE_STR)'
 
 build-linux-opensbi:
 	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-opensbi MACROS_FILE=$(REL_OS2OCL)/hardware/simulation/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/simulation'
@@ -102,15 +110,21 @@ combine-buildroot:
 	cp -r $(LINUX_OS_DIR)/software/buildroot $(COMBINED_BUILDROOT_DIR)/
 	cp -r ./software/buildroot $(COMBINED_BUILDROOT_DIR)/
 
-build-linux-buildroot: combine-buildroot build-linux-drivers build-linux-dma-demo
+ifeq ($(DMA_DEMO),1)
+BUILDROOT_DEPS += build-linux-dma-demo
+endif
+
+build-linux-buildroot: combine-buildroot build-linux-drivers $(BUILDROOT_DEPS)
 	make -C $(LINUX_OS_DIR) build-buildroot OS_SUBMODULES_DIR=$(REL_OS2OCL)/.. OS_SOFTWARE_DIR=../`realpath $(COMBINED_BUILDROOT_DIR) --relative-to=..` OS_BUILD_DIR=$(REL_OS2OCL)/software/src
 
 .PHONY: combine-buildroot build-linux-buildroot
 
 # System peripherals
+ifeq ($(DMA_DEMO),1)
 MODULE_NAMES += iob_dma
 MODULE_NAMES += iob_axistream_in
 MODULE_NAMES += iob_axistream_out
+endif
 MODULE_NAMES += iob_timer
 
 build-driver-headers:
