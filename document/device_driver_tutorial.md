@@ -233,10 +233,10 @@ make build-linux-kernel
 
 3.2. Compile driver module
 
-Copy device driver files to [`iob-linux/software/drivers`](https://github.com/IObundle/iob-linux/tree/main/software/drivers).
+Copy device driver files to the [`iob-linux/software/drivers`](https://github.com/IObundle/iob-linux/tree/main/software/drivers) folder.
 
 ```bash
-cp /path/to/device/software/linux/drivers/* /path/to/iob-linux/software/drivers/
+cp /path/to/device/repo/software/linux/drivers/* /path/to/iob-linux/software/drivers/
 ```
 
 Run the `make all` target.
