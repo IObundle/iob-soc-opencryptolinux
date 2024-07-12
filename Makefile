@@ -17,6 +17,10 @@ ifeq ($(INIT_MEM),1)
 SETUP_ARGS += INIT_MEM
 endif
 
+ifeq ($(DMA_DEMO),1)
+SETUP_ARGS += OCL_DMA_DEMO
+endif
+
 setup:
 	make build-setup SETUP_ARGS="$(SETUP_ARGS)"
 
@@ -66,7 +70,138 @@ test-all:
 
 test-linux-fpga-connect: build_dir_name
 	-rm $(BUILD_DIR)/hardware/fpga/test.log
-	-ln -s minicom_test1.txt $(BUILD_DIR)/hardware/fpga/minicom_linux_script.txt
+	-ln -fs minicom_test1.txt $(BUILD_DIR)/hardware/fpga/minicom_linux_script.txt
 	make fpga-connect RUN_LINUX=1 BOOT_FLOW=$(BOOT_FLOW)
 
-.PHONY: setup sim-run sim-test fpga-test test-all test-linux-fpga-connect
+dma-linux-fpga-connect: build_dir_name
+	-rm $(BUILD_DIR)/hardware/fpga/test.log
+	-ln -fs minicom_dma_test.txt $(BUILD_DIR)/hardware/fpga/minicom_linux_script.txt
+	make fpga-connect RUN_LINUX=1 BOOT_FLOW=$(BOOT_FLOW)
+
+.PHONY: setup sim-run sim-test fpga-test test-all test-linux-fpga-connect dma-linux-fpga-connect
+
+# Run this target to configure system for a DMA data transfer demo in linux and run it on a FPGA.
+dma-demo:
+	# Try to setup, so that it generates correct linux_build_macros.txt (ignore errors as well)
+	-make setup DMA_DEMO=1
+	make build-linux-files DMA_DEMO=1
+	make fpga-run RUN_LINUX=0 DMA_DEMO=1
+	make dma-linux-fpga-connect
+
+.PHONY: dma-demo
+
+#
+# Linux targets
+#
+
+LINUX_OS_DIR ?= submodules/OS
+# Relative path from OS directory to OpenCryptoLinux (OCL) directory
+REL_OS2OCL :=`realpath . --relative-to=$(LINUX_OS_DIR)`
+
+ifeq ($(DMA_DEMO),1)
+DTS_FILE_STR := DTS_FILE=$(REL_OS2OCL)/software/iob_soc_dma_demo.dts
+endif
+
+build-linux-dts:
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/simulation/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/simulation $(DTS_FILE_STR)'
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G $(DTS_FILE_STR)'
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-dts MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK $(DTS_FILE_STR)'
+
+build-linux-opensbi:
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-opensbi MACROS_FILE=$(REL_OS2OCL)/hardware/simulation/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/simulation'
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-opensbi MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/vivado/AES-KU040-DB-G'
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-opensbi MACROS_FILE=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK/linux_build_macros.txt OS_BUILD_DIR=$(REL_OS2OCL)/hardware/fpga/quartus/CYCLONEV-GT-DK'
+
+.PHONY: build-linux-dts build-linux-opensbi
+
+COMBINED_BUILDROOT_DIR=..
+combine-buildroot:
+	rm -rf $(COMBINED_BUILDROOT_DIR)/buildroot
+	cp -r $(LINUX_OS_DIR)/software/buildroot $(COMBINED_BUILDROOT_DIR)/
+	cp -r ./software/buildroot $(COMBINED_BUILDROOT_DIR)/
+
+ifeq ($(DMA_DEMO),1)
+BUILDROOT_DEPS += build-linux-dma-demo
+endif
+
+build-linux-buildroot: combine-buildroot build-linux-drivers $(BUILDROOT_DEPS)
+	make -C $(LINUX_OS_DIR) build-buildroot OS_SUBMODULES_DIR=$(REL_OS2OCL)/.. OS_SOFTWARE_DIR=../`realpath $(COMBINED_BUILDROOT_DIR) --relative-to=..` OS_BUILD_DIR=$(REL_OS2OCL)/software/src
+
+.PHONY: combine-buildroot build-linux-buildroot
+
+# System peripherals
+ifeq ($(DMA_DEMO),1)
+MODULE_NAMES += iob_dma
+MODULE_NAMES += iob_axistream_in
+MODULE_NAMES += iob_axistream_out
+endif
+MODULE_NAMES += iob_timer
+
+build-driver-headers:
+	@$(foreach module,$(MODULE_NAMES), \
+		./$(LINUX_OS_DIR)/scripts/drivers.py $(module) -o `realpath $(COMBINED_BUILDROOT_DIR)`/buildroot/board/IObundle/iob-soc/rootfs-overlay/root/dma_demo/; \
+	)
+
+.PHONY: build-driver-headers
+
+build-linux-drivers:
+	@$(foreach module,$(MODULE_NAMES), \
+		printf "\n\n\nMaking $(module)\n\n\n"; \
+		$(eval MODULE_LINUX_DIR=$(shell realpath $(shell find . -type f -name '$(module).py' -printf '%h' -quit))/software/linux) \
+		nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-linux-drivers \
+			MODULE_DRIVER_DIR=$(MODULE_LINUX_DIR)/drivers \
+			OS_SUBMODULES_DIR=$(REL_OS2OCL)/.. \
+			CALLING_DIR=`realpath $(CURDIR)` \
+			MODULE_NAME=$(module) \
+			ROOTFS_OVERLAY_DIR=`realpath $(COMBINED_BUILDROOT_DIR)`/buildroot/board/IObundle/iob-soc/rootfs-overlay/ \
+			PYTHON_DIR=`realpath $(LIB_DIR)`/scripts'; \
+	)
+
+
+clean-linux-drivers:
+	@$(foreach module,$(MODULE_NAMES), \
+		$(eval MODULE_LINUX_DIR=$(shell realpath $(shell find . -type f -name '$(module).py' -printf '%h' -quit))/software/linux) \
+		nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) clean-linux-drivers \
+			MODULE_DRIVER_DIR=$(MODULE_LINUX_DIR)/drivers \
+			OS_SUBMODULES_DIR=$(REL_OS2OCL)/.. \
+			CALLING_DIR=`realpath $(CURDIR)` \
+			MODULE_NAME=$(module) \
+			ROOTFS_OVERLAY_DIR=`realpath $(COMBINED_BUILDROOT_DIR)`/buildroot/board/IObundle/iob-soc/rootfs-overlay/ \
+			PYTHON_DIR=`realpath $(LIB_DIR)`/scripts'; \
+	)
+
+.PHONY: build-linux-drivers clean-linux-drivers
+
+build-linux-kernel:
+	-rm ../linux-5.15.98/arch/riscv/boot/Image
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'make -C $(LINUX_OS_DIR) build-linux-kernel OS_SUBMODULES_DIR=$(REL_OS2OCL)/.. OS_SOFTWARE_DIR=../`realpath . --relative-to=..`/software OS_BUILD_DIR=$(REL_OS2OCL)/software/src'
+
+.PHONY: build-linux-kernel
+
+# Main target to build all linux related files
+build-linux-files:
+	make build-linux-dts
+	make build-linux-opensbi
+	make build-linux-kernel
+	make build-linux-buildroot
+
+.PHONY: build-linux-files
+
+#
+# Linux software targets
+#
+
+INCLUDE = -I.
+SRC = *.c
+FLAGS = -Wall -O2
+FLAGS += -Werror
+#FLAGS += -static
+FLAGS += -march=rv32imac
+FLAGS += -mabi=ilp32
+BIN = dma_demo
+CC = riscv64-unknown-linux-gnu-gcc
+build-linux-dma-demo: build-driver-headers
+	nix-shell $(LINUX_OS_DIR)/default.nix --run 'cd $(COMBINED_BUILDROOT_DIR)/buildroot/board/IObundle/iob-soc/rootfs-overlay/root/dma_demo/ && \
+	$(CC) $(FLAGS) $(INCLUDE) -o $(BIN) $(SRC)'
+
+.PHONY: build-linux-dma-demo

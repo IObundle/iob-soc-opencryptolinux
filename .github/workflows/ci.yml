@@ -116,7 +116,22 @@ jobs:
       - name: test baremetal
         run: make fpga-run RUN_LINUX=0 BOARD=AES-KU040-DB-G
       - name: test linux
-        run: make test-linux-fpga-connect BOARD=AES-KU040-DB-G BOOT_FLOW=CONSOLE_TO_EXTMEM
+        run: make test-linux-fpga-connect BOARD=AES-KU040-DB-G
+
+  dma_demo:
+    runs-on: self-hosted
+    timeout-minutes: 90
+    # run even if previous job failed
+    if: ${{ !cancelled() }}
+    # run after indicated job
+    needs: [ aes-ku040 ]
+  
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+      - name: test dma
+        run: make dma-demo
 
 ##  doc:
 ##    runs-on: self-hosted
