@@ -164,7 +164,7 @@ hopefully, each variable is explained by a comment.
 ## Set environment variables for local or remote building and running
 
 The various simulators, FPGA compilers, and FPGA boards may run locally or
-remotely. For running a tool remotely, you need to set two environmental
+remotely. For running a tool remotely, you need to set two environment
 variables: the server logical name and the server user name. Consider placing
 these settings in your `.bashrc` file so that they apply to every session.
 
@@ -176,7 +176,7 @@ Using the open-source simulator Icarus Verilog (`iverilog`) as an example, note 
 `SIM_SERVER,` is set to `IVSIM_SERVER,` and the variable for the user name,
 `SIM_USER` is set to `IVSIM_USER`.
 
-To run the simulator on the server *mysimserver.myorg.com* as user *ivsimuser*, set the following environmental
+To run the simulator on the server *mysimserver.myorg.com* as user *ivsimuser*, set the following environment
 variables beforehand, or place them in your `.bashrc` file:
 
 ```Bash

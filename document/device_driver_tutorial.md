@@ -1,9 +1,17 @@
 # Tutorial: Add New Device Driver
+
 This tutorial presents the steps required to create simple linux character device drivers for a device and use them in OpenCryptoLinux.
+
 The [IOb-SPI](https://github.com/IObundle/iob-spi) device is used as an example.
+
+See [this commit](https://github.com/IObundle/iob-spi/commit/dce9c93f1202da96d3570f88e31b9409afb43419) for the full SPI linux driver implementation.
+
 To follow this tutorial, clone the [iob-linux](https://github.com/IObundle/iob-linux) repository.
 
-1. Create device drivers: on the device repository create a `software/linux` directory with the following files:
+## 1. Create device drivers
+
+On the device repository create a `software/linux` directory with the following files:
+
 ```bash
 software/
 ├── linux
@@ -14,14 +22,44 @@ software/
 │   └── Readme.md
 ```
 
-1.1. `software/linux/drivers/driver.mk`: compilation makefile segment
+1.1. Create compilation makefile segment
+
+`software/linux/drivers/driver.mk`
+
 ```make
 iob_spi_master-objs := iob_spi_main.o iob_class/iob_class_utils.o
 ```
 
-1.2. `software/linux/drivers/iob_spi_main.c`: main driver file, see [this commit](https://github.com/IObundle/iob-spi/commit/dce9c93f1202da96d3570f88e31b9409afb43419) for full code snippet. 
+1.2. Create main driver file
+
+`software/linux/drivers/iob_spi_main.c`
+
+Copy the [SPI driver source](https://github.com/IObundle/iob-spi/blob/main/software/linux/drivers/iob_spi_main.c) to use it as a template for the new driver.
+
+```bash
+cp iob-spi/software/linux/drivers/iob_spi_main.c <new_core_name>/software/linux/drivers/<new_core_name>_main.c
+```
+
+Replace `<new_core_name>` with the new device name.
+
 1.2.1. Rename the functions to the particular device
-1.2.2. Update the `iob_spi_read()` function implementation according with the read registers of the device. SPI has the `FL_READY`, `FL_DATAOUT`  and `VERSION` (implicit) read registers:
+
+Use the following commands to rename the functions from the template:
+
+```bash
+NEW_CORE_NAME=<new_core_name>
+sed -i "s/IOB_SPI_MASTER/${NEW_CORE_NAME}/g" ${NEW_CORE_NAME}/software/linux/drivers/${NEW_CORE_NAME}_main.c
+sed -i "s/iob_spi_master/${NEW_CORE_NAME}/g" ${NEW_CORE_NAME}/software/linux/drivers/${NEW_CORE_NAME}_main.c
+sed -i "s/iob_spi/${NEW_CORE_NAME}/g" ${NEW_CORE_NAME}/software/linux/drivers/${NEW_CORE_NAME}_main.c
+sed -i "s/spi/${NEW_CORE_NAME}/g" ${NEW_CORE_NAME}/software/linux/drivers/${NEW_CORE_NAME}_main.c
+```
+
+Replace `<new_core_name>` with the new device name.
+
+1.2.2. Update read function
+
+Update the `iob_spi_read()` function implementation according with the read registers of the device. SPI has the `FL_READY`, `FL_DATAOUT`  and `VERSION` (implicit) read registers:
+
 ```C
 static ssize_t iob_spi_read(struct file *file, char __user *buf, size_t count,
                              loff_t *ppos) {
@@ -61,13 +99,18 @@ static ssize_t iob_spi_read(struct file *file, char __user *buf, size_t count,
   // (...)
 }
 ```
-1.2.3. Update the `iob_spi_write()` function implementation according with the write registers of the device. SPI had the `FL_RESET`, `FL_DATAIN`, `FL_ADDRESS`, `FL_COMMAND`, `FL_COMMANDTP` and `FL_VALIDFLG`write registers:
+
+1.2.3. Update write function
+
+Update the `iob_spi_write()` function implementation according with the write registers of the device. SPI had the `FL_RESET`, `FL_DATAIN`, `FL_ADDRESS`, `FL_COMMAND`, `FL_COMMANDTP` and `FL_VALIDFLG` write registers:
+
 ```C
 static ssize_t iob_spi_write(struct file *file, const char __user *buf,
                               size_t count, loff_t *ppos) {
   // (...)
 
   switch (*ppos) {
+  // Add one case for each Write software register
   case IOB_SPI_MASTER_FL_RESET_ADDR:
     size = (IOB_SPI_MASTER_FL_RESET_W >> 3); // bit to bytes
     if (read_user_data(buf, size, &value))
@@ -103,7 +146,11 @@ static ssize_t iob_spi_write(struct file *file, const char __user *buf,
   return count;
 }
 ```
-1.2.4. Notice the string used in the `struct of_device_id`. This string must match the `compatible` field in the device tree to associate the hardware device with the correct driver.
+
+1.2.4. Verify device `compatible` field
+
+Notice the string used in the `struct of_device_id`. This string must match the `compatible` field in the device tree to associate the hardware device with the correct driver.
+
 ```C
 static const struct of_device_id of_iob_spi_match[] = {
     {.compatible = "iobundle,spi0"},
@@ -111,12 +158,30 @@ static const struct of_device_id of_iob_spi_match[] = {
 };
 ```
 
-1.3. Generate `iob_spi_master.h` and `iob_spi_master_sysfs_multi.h` header files with the [`drivers.py`](https://github.com/IObundle/iob-linux/blob/main/scripts/drivers.py) script:
+1.3. Generate driver header files
+
+Generate `iob_spi_master.h` and `iob_spi_master_sysfs_multi.h` header files with the [`drivers.py`](https://github.com/IObundle/iob-linux/blob/main/scripts/drivers.py) script:
+
 ```bash
-python3 .path/to/iob-linux/scripts/drivers.py iob_spi_master -o [output_dir]
+python3 ./path/to/iob-linux/scripts/drivers.py iob_spi_master -o [output_dir]
 ```
 
-2. Update device tree with device node. The `compatible` string must match with the `compatible` field in the driver source:
+The `output_dir` should be a directory that is included by the linux user space software.
+
+These headers are commonly placed in the Linux root filesystem along with the user space software that uses them.
+
+For example, for the `dma_demo` program, the sources are placed in the following location:
+
+`software/buildroot/board/IObundle/iob-soc/rootfs-overlay/root/dma_demo/`
+
+## 2. Update the Linux Device Tree
+
+Include the device node in the Linux Device Tree.
+
+`software/linux/iob_spi.dts`
+
+The `compatible` string must match with the `compatible` field in the driver source.
+
 ```
 // SPDX-License-Identifier: (GPL-2.0 OR MIT)
 /* Copyright (c) 2024 IObundle */
@@ -149,30 +214,62 @@ python3 .path/to/iob-linux/scripts/drivers.py iob_spi_master -o [output_dir]
 };
 ```
 
-3. Compile driver module and add to rootfs.
+The `size-cells` field (`0x100`) of the following device tree line must updated to match the size of the device register address space.
 
-3.1. Copy device driver files to [`iob-linux/software/drivers`](https://github.com/IObundle/iob-linux/tree/main/software/drivers)
+```
+            reg = <0x/*SPI0_ADDR_MACRO*/ 0x100>;
+```
 
-3.2. Run `make all` target. Note that linux driver module compilation requires an already built linux kernel:
+## 3. Compile kernel, driver module, and add to rootfs
+
+3.1. Compile Linux kernel
+
+A compiled kernel is required to be able to later build the driver module.
+
 ```bash
-cd ./path/to/iob-linux/software/drivers
+cd /path/to/iob-linux
+make build-linux-kernel
+```
+
+3.2. Compile driver module
+
+Copy device driver files to the [`iob-linux/software/drivers`](https://github.com/IObundle/iob-linux/tree/main/software/drivers) folder.
+
+```bash
+cp /path/to/device/repo/software/linux/drivers/* /path/to/iob-linux/software/drivers/
+```
+
+Run the `make all` target.
+
+```bash
+cd /path/to/iob-linux/software/drivers
 make all
 ```
 
-3.3. Add module files to buildroot:
+3.3. Add module files to buildroot (optional)
+
+To add the built driver modules to the Linux root filesystem, move the modules to a folder inside the buildroot filesystem.
+For the SPI driver example, the module is placed in the `drivers` folder of the rootfs.
+
 ```bash
-# copy module files to directory used to build rootfs
-cp ./path/to/iob-linux/software/drivers $OS_SOFTWARE_DIR
-# change directory to iob-linux
-cd ./path/to/iob-linux
-# re-build buildroot
-make build-buildroot OS_SOFTWARE_DIR=$OS_SOFTWARE_DIR
+cd /path/to/iob-linux
+mkdir software/buildroot/board/IObundle/iob-soc/rootfs-overlay/drivers
+cp software/drivers/* software/buildroot/board/IObundle/iob-soc/rootfs-overlay/drivers/
 ```
 
-4. Load module in linux. After booting into linux, use the `insmod` command to load the new driver modules:
+Re-build buildroot:
+
+```bash
+make build-buildroot
+```
+
+## 4. Load module in linux
+
+After booting into linux, use the `insmod` command to load the new driver modules:
+
 ```bash
 # inside linux console
-insmod ./path/to/driver.ko
+insmod /path/to/driver.ko
 # iob-spi example:
 insmod /drivers/iob_spi_master.ko
 ```
